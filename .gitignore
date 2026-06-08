@@ -1,0 +1,36 @@
+# =============================================================================
+#  windows-status — .gitignore
+#  Versioni gli SCRIPT e i DOCUMENTI (la tua IP). NON versioni per default le
+#  fotografie dello stato: contengono dettagli specifici della macchina.
+# =============================================================================
+
+# Output degli snapshot (dati specifici della macchina/account)
+snapshots/*
+!snapshots/LEGGIMI.txt
+
+# Segreti — non devono MAI finire nel repo (specie se diventa pubblico)
+*.credentials.json
+.credentials.json
+*.env
+.env
+*.key
+*.pem
+*.pfx
+id_rsa
+id_ed25519
+id_ecdsa
+known_hosts
+secrets*
+*token*
+*.secret
+
+# Copia "compilata" della mappa con dati reali (decidi tu se versionarla in privato)
+docs/**
+
+# Sistema
+Thumbs.db
+desktop.ini
+*.tmp
+
+Notes.txt
+CLAUDE.md
