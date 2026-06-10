@@ -1,0 +1,81 @@
+# Registro delle decisioni architetturali
+
+> Convenzione ADR-lite, append-only. Ogni decisione architetturale non ovvia entra come voce
+> numerata con data, stato, contesto, decisione, motivazione e conseguenze. Una decisione non si
+> cancella e non si riscrive: quando viene superata, si aggiunge una nuova voce che dichiara di
+> superare la precedente e ne cita il numero. Le inferenze non confermate si marcano come da
+> verificare e si promuovono a decisione solo quando una fonte le conferma.
+
+## ADR-001 — Lo stato del PC si rigenera, non si scrive a mano
+
+Data: 2026-06-08 (implicita nel commit iniziale)
+Stato: accettata
+Contesto: serve una fotografia completa e ripetibile di un PC Windows 11 aziendale
+(Entra ID joined) e di ogni account.
+Decisione: lo stato viene prodotto da uno script di sola lettura (`Snapshot-Stato.ps1`) e il
+cambiamento si misura confrontando due fotografie (`Compare-Snapshot.ps1`); la mappa documentale
+deriva dagli snapshot, non da trascrizioni manuali.
+Motivazione: ripetibilità, assenza di errori di trascrizione, diff esatti tra stati.
+Conseguenze: ogni miglioria passa dagli script; le sezioni 🔄 della mappa si rigenerano, le ✍️
+restano decisioni umane.
+
+## ADR-002 — Ripristino a due gambe: immagine Veeam + repo riproducibile
+
+Data: 2026-06-08 (implicita nel commit iniziale)
+Stato: accettata
+Contesto: il PC deve poter essere ricostruito altrove in qualsiasi momento.
+Decisione: il ripristino poggia su una immagine Veeam (bare metal, anche su hardware diverso) e
+su questo progetto (reinstallazione software, dotfiles, git/Claude, mappa).
+Motivazione: l'immagine copre il ripristino letterale, il repo copre la ricostruzione anche
+senza immagine.
+Conseguenze: il job Veeam va documentato a mano nella mappa; `Reinstall-Software.ps1` e gli
+export WinGet sono parte della strategia di portabilità.
+
+## ADR-003 — Segreti mai nel repo né negli snapshot
+
+Data: 2026-06-08 (implicita nel commit iniziale)
+Stato: accettata
+Contesto: gli snapshot leggono configurazioni che possono contenere token, chiavi e credenziali;
+il repo può essere pubblico.
+Decisione: i segreti vengono esclusi o oscurati alla fonte (`Protect-Secrets`), la cartella
+`snapshots/` è ignorata da git, nella mappa si annota solo dove i segreti sono custoditi.
+Motivazione: la fotografia deve essere condivisibile senza esporre credenziali.
+Conseguenze: ogni nuova sezione dello snapshot deve passare dalla redazione; verifica
+anti-segreti prima di ogni push.
+
+## ADR-004 — Identità git personale, locale al repo, su macchina aziendale
+
+Data: 2026-06-08 (implicita nel commit iniziale e in docs/04)
+Stato: accettata
+Contesto: la macchina ha identità git globale di lavoro; questo è un repo personale.
+Decisione: identità (`user.name`, `user.email`) e `core.sshCommand` impostati in `--local`,
+remoto via alias SSH `github-personal`, repo fuori dalle cartelle di sync cloud,
+`user.useConfigOnly=true` a livello globale.
+Motivazione: impedire commit con l'identità sbagliata e corruzioni da sync concorrente.
+Conseguenze: ogni nuovo repo personale segue la stessa sequenza; verifica dell'autore dopo il
+primo commit.
+
+## ADR-005 — Adozione del sistema di progetto portabile
+
+Data: 2026-06-10
+Stato: accettata
+Contesto: il progetto necessita di uno stato interamente recuperabile da un clone e di
+documentazione che resti allineata al codice senza rilettura integrale a ogni sessione.
+Decisione: adottare il sistema descritto in `.claude/PROJECT-SYSTEM.md`, con motore di
+riconciliazione ancorato ai commit e doppio livello documentale tracciato/ignorato.
+Motivazione: persistenza strutturale su disco indipendente dalla sessione di chat, e controllo
+umano sul versionamento.
+Conseguenze: ogni passo significativo aggiorna schede, `last-verified-commit`, snapshot e
+work-log; commit e push restano manuali.
+
+## ADR-006 — Repo pubblico: file tracciati anonimi, valori reali in CLAUDE.local.md
+
+Data: 2026-06-10
+Stato: accettata
+Contesto: il repository GitHub è pubblico; lo standard vuole `.claude/` e i docs tracciati, ma
+alcuni file contenevano email, username e percorsi reali.
+Decisione: nei file tracciati i dati identificativi si sostituiscono con segnaposto tra
+parentesi angolari; la mappatura reale vive solo in `CLAUDE.local.md`, ignorato da git.
+Motivazione: pubblicare la metodologia senza esporre identità personali e aziendali.
+Conseguenze: i `docs/` diventano tracciabili (si ignorano solo le copie `*.compilata.md`);
+prima di ogni push si verifica l'assenza di identificativi reali nei file tracciati.
