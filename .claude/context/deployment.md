@@ -5,7 +5,7 @@ generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
   - docs/02_VEEAM_BACKUP_PORTABILITA.md
-last-verified-commit: ff519f0
+last-verified-commit: e32d96b
 ---
 
 # Deployment e uso operativo

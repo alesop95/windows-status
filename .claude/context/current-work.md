@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: ff519f0
+last-verified-commit: e32d96b
 status: implementata, collaudata, in attesa di commit
 ---
 
@@ -52,7 +52,30 @@ Definition of done:
 Collaudo del 2026-06-10: test con snapshot sintetico manomesso in 7 punti — tutte le 8 categorie
 di alert sono scattate correttamente; con snapshot identici la sezione riporta "nessun alert".
 
+## Feature attiva 3 — Snapshot/Compare: postura hardware/OS
+
+Cosa fa: la sezione 8 SICUREZZA dello snapshot produce `sicurezza_postura.txt` (Secure Boot,
+TPM, VBS/Credential Guard/HVCI, LSA RunAsPPL, UAC, SMBv1 e firma SMB, RDP+NLA, WinRM, build
+completa) e `hotfix.csv`; il compare ha la categoria POSTURA che segnala ogni valore cambiato
+(esclusi i conteggi hotfix).
+
+Definition of done:
+- [x] tutti i controlli sopra, degradanti senza admin ("non leggibile (serve admin)")
+- [x] output chiave:valore diffabile + CSV hotfix robusto al locale italiano
+- [x] alert POSTURA nel compare, con esclusione del rumore (hotfix; porte UDP effimere ≥49152
+      escluse dalla categoria PORTE)
+
+Collaudo del 2026-06-10 (non elevato): VBS in esecuzione ma senza CredentialGuard/HVCI,
+RunAsPPL=2, SMBv1 off ma firma SMB non richiesta, RDP off, WinRM fermo, 25H2 26200.8457 con
+7 hotfix. Confronto reale baseline→nuovo: 4 alert tutti legittimi (porte Veeam, mDNS Edge).
+
 ## Domande aperte
 
 Il server MCP locale è rimandato: in radice c'è un `.mcp.json` segnaposto non funzionante per
 scelta, da compilare quando si deciderà l'implementazione (vedi roadmap).
+
+Dallo snapshot reale del 2026-06-10: la macchina NON è Entra ID joined (solo
+workplace-registered, niente Intune) mentre CLAUDE.md e README la descrivono come "Entra ID
+joined / gestita" — decisione umana pendente su come riallineare i documenti. Da rieseguire lo
+snapshot da PowerShell ELEVATO per BitLocker, Defender (che da non-admin risulta "False": da
+confermare), Secure Boot e TPM.

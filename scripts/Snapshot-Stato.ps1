@@ -115,7 +115,8 @@ if($doMachine){
   try {
       Add-Sum ''; Add-Sum 'Profili presenti in C:\Users:'
       Get-ChildItem 'C:\Users' -Directory -ErrorAction Stop |
-          Where-Object { $_.Name -notin @('Public','Default','Default User','All Users') } |
+          Where-Object { $_.Name -notin @('Public','Default','Default User','All Users') -and
+                         $_.Name -notmatch '^(TEMP|UMFD-\d+)(\.|$)' } |
           ForEach-Object { Add-Sum "  $($_.Name)" }
   } catch {}
   try {
@@ -199,6 +200,56 @@ if($doMachine){
       Add-Sum '  >> Su PC Entra ID joined la chiave di ripristino e di norma in Entra ID (entra.microsoft.com / account utente).'
       Add-Sum '  >> La chiave NON viene salvata qui: nella mappa annota solo DOVE recuperarla.'
   } catch { Add-Sum "Stato BitLocker non leggibile (serve admin): $_" }
+
+  # --- Postura hardware/OS: Secure Boot, TPM, VBS, LSA, UAC, SMB, RDP, WinRM, patch ---
+  try {
+      $post = New-Object System.Collections.Generic.List[string]
+      function Add-Post([string]$k,[string]$v){ $post.Add(("{0,-30}: {1}" -f $k,$v)) }
+      try { Add-Post 'SecureBoot' ([string](Confirm-SecureBootUEFI -ErrorAction Stop)) }
+      catch { Add-Post 'SecureBoot' 'non leggibile (serve admin, o firmware legacy BIOS)' }
+      try {
+          $tpm = Get-Tpm -ErrorAction Stop
+          if($null -ne $tpm.TpmPresent -and "$($tpm.TpmPresent)" -ne ''){ Add-Post 'TPM presente / pronto' "$($tpm.TpmPresent) / $($tpm.TpmReady)" }
+          else { Add-Post 'TPM' 'non leggibile (serve admin)' }
+      } catch { Add-Post 'TPM' 'non leggibile (serve admin)' }
+      try {
+          $dg = Get-CimInstance -Namespace root\Microsoft\Windows\DeviceGuard -ClassName Win32_DeviceGuard -ErrorAction Stop
+          Add-Post 'VBS (0=off 1=on 2=running)' ([string]$dg.VirtualizationBasedSecurityStatus)
+          Add-Post 'Servizi VBS attivi' (($dg.SecurityServicesRunning -join ',') + '  (1=CredentialGuard, 2=HVCI)')
+      } catch { Add-Post 'VBS/CredentialGuard' 'non leggibile' }
+      $lsa = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa' -ErrorAction SilentlyContinue
+      Add-Post 'LSA RunAsPPL' ($(if($null -ne $lsa.RunAsPPL){ [string]$lsa.RunAsPPL } else { 'non impostato (=0)' }))
+      $uac = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -ErrorAction SilentlyContinue
+      Add-Post 'UAC EnableLUA' ([string]$uac.EnableLUA)
+      Add-Post 'UAC prompt admin' "$($uac.ConsentPromptBehaviorAdmin)  (5=default, 2=consenso su desktop sicuro, 0=MAI: pericoloso)"
+      try { $smb = Get-SmbServerConfiguration -ErrorAction Stop
+            Add-Post 'SMBv1 server' ([string]$smb.EnableSMB1Protocol)
+            Add-Post 'SMB firma richiesta' ([string]$smb.RequireSecuritySignature) }
+      catch { Add-Post 'SMBv1' 'non leggibile (serve admin)' }
+      $rdp = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server' -ErrorAction SilentlyContinue
+      $nla = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -ErrorAction SilentlyContinue
+      Add-Post 'RDP abilitato' ($(if($rdp.fDenyTSConnections -eq 0){ 'SI' } else { 'no' }))
+      Add-Post 'RDP NLA richiesta' ([string]$nla.UserAuthentication)
+      $winrm = Get-Service WinRM -ErrorAction SilentlyContinue
+      Add-Post 'WinRM servizio' "$($winrm.Status) (avvio: $($winrm.StartType))"
+      $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue
+      Add-Post 'Versione / build completa' "$($cv.DisplayVersion)  $($cv.CurrentBuildNumber).$($cv.UBR)"
+      $hfRaw = Get-HotFix -ErrorAction SilentlyContinue
+      if($hfRaw){
+          # InstalledOn e' una proprieta' calcolata che su locale italiano puo' non parsare: accesso protetto
+          $hf = foreach($h in $hfRaw){
+              $dInst = $null; try { $dInst = $h.InstalledOn } catch {}
+              [pscustomobject]@{ HotFixID=$h.HotFixID; Description=$h.Description; InstalledOn=$dInst }
+          }
+          $hf | Export-Csv (Join-Path $outDir 'hotfix.csv') -NoTypeInformation -Encoding UTF8
+          $last = $hf | Where-Object InstalledOn | Sort-Object InstalledOn | Select-Object -Last 1
+          Add-Post 'Hotfix installati' "$(@($hf).Count) (ultimo: $($last.HotFixID) del $($last.InstalledOn.ToString('yyyy-MM-dd'))) -> hotfix.csv"
+      } else { Add-Post 'Hotfix' 'elenco non disponibile' }
+      Save 'sicurezza_postura.txt' ($post -join "`r`n")
+      Add-Sum ''
+      Add-Sum 'Postura hardware/OS (sicurezza_postura.txt + hotfix.csv):'
+      $post | ForEach-Object { Add-Sum "  $_" }
+  } catch { Add-Sum "Postura di sicurezza non leggibile: $_" }
 
   Section '9. VEEAM (rilevamento)'
   try {
@@ -343,8 +394,10 @@ if($doMachine){
 if($doMachine){
   Section '11. CONFIGURAZIONI PER ACCOUNT (Claude / git / SSH)  [da disco]'
   try {
+      # Esclusi anche i profili di servizio (TEMP*, UMFD-* dei Font Driver Host): non sono account reali
       $profiles = Get-ChildItem 'C:\Users' -Directory -ErrorAction Stop |
-          Where-Object { $_.Name -notin @('Public','Default','Default User','All Users') }
+          Where-Object { $_.Name -notin @('Public','Default','Default User','All Users') -and
+                         $_.Name -notmatch '^(TEMP|UMFD-\d+)(\.|$)' }
   } catch { $profiles=@(); Add-Sum "Impossibile elencare i profili: $_" }
 
   foreach($p in $profiles){

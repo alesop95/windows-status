@@ -6,6 +6,24 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — Mappa compilata, blocco postura hardware/OS, riduzione rumore alert
+
+Commit: e32d96b (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Snapshot-Stato.ps1` (postura hardware/OS in sezione 8 →
+`sicurezza_postura.txt` + `hotfix.csv`; filtro profili di servizio TEMP*/UMFD*; TPM e
+InstalledOn robusti senza admin e su locale italiano), `scripts/Compare-Snapshot.ps1`
+(categoria alert POSTURA; esclusione porte UDP effimere ≥49152 dal rumore),
+`docs/01_MAPPA_CONFIGURAZIONE.md` (righe postura in sezione 9),
+`docs/01_MAPPA_CONFIGURAZIONE.compilata.md` (NUOVA, ignorata da git: mappa con i dati reali
+dello snapshot 20260610_123233), schede `roadmap.md` e `current-work.md`.
+Esito del collaudo non elevato: VBS attivo senza CredentialGuard/HVCI, firma SMB non richiesta,
+RDP off, 25H2 26200.8457; confronto baseline→nuovo con 4 alert tutti legittimi.
+Scoperte di mappatura: la macchina NON è Entra ID joined (solo workplace-registered al tenant
+di lavoro, niente Intune) contrariamente a quanto assunto in CLAUDE.md/README; account
+Administrator locale abilitato e account `dev` abilitato senza profilo (da indagare ✍️);
+Defender risulta False da snapshot non elevato (da riconfermare da admin); lo snapshot non
+legge ancora i profili Claude multi-account `~\.claude-account*` (voce aggiunta in roadmap).
+
 ## 2026-06-10 — Feature di sicurezza: superficie d'attacco nello snapshot e alert nel compare
 
 Commit: ff519f0 (modifiche preparate, commit manuale dell'utente da fare).
