@@ -60,6 +60,9 @@ function Protect-Secrets([string]$t){
     $t = [regex]::Replace($t,'sk-ant-[A-Za-z0-9\-_]+','***REDACTED***')
     $t = [regex]::Replace($t,'gh[pousr]_[A-Za-z0-9]{20,}','***REDACTED***')
     $t = [regex]::Replace($t,'eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}','***REDACTED.JWT***')
+    $t = [regex]::Replace($t,'AKIA[0-9A-Z]{16}','***REDACTED.AWS***')
+    $t = [regex]::Replace($t,'xox[baprs]-[A-Za-z0-9\-]{10,}','***REDACTED.SLACK***')
+    $t = [regex]::Replace($t,'(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----','***REDACTED.PRIVATE-KEY***')
     return $t
 }
 
@@ -258,6 +261,34 @@ if($doMachine){
       $fwRows | Export-Csv (Join-Path $outDir 'firewall_regole_inbound_allow.csv') -NoTypeInformation -Encoding UTF8
       Add-Sum "Regole firewall INBOUND consentite e attive: $($fwRules.Count) (firewall_regole_inbound_allow.csv)"
   } catch { Add-Sum "Regole firewall non leggibili: $_" }
+
+  # --- Catena di fiducia: root CA, Trusted Publishers, hosts, proxy, DoH ---
+  try {
+      $rootCerts = @(Get-ChildItem Cert:\LocalMachine\Root -ErrorAction Stop |
+          Select-Object Subject,Thumbprint,NotBefore,NotAfter | Sort-Object Subject)
+      $rootCerts | Export-Csv (Join-Path $outDir 'cert_root_ca.csv') -NoTypeInformation -Encoding UTF8
+      $tp = @(Get-ChildItem Cert:\LocalMachine\TrustedPublisher -ErrorAction SilentlyContinue |
+          Select-Object Subject,Thumbprint,NotAfter)
+      $tp | Export-Csv (Join-Path $outDir 'cert_trusted_publishers.csv') -NoTypeInformation -Encoding UTF8
+      Add-Sum "Certificati: $($rootCerts.Count) root CA macchina, $($tp.Count) Trusted Publishers (cert_root_ca.csv, cert_trusted_publishers.csv)"
+  } catch { Add-Sum "Archivi certificati non leggibili: $_" }
+  try {
+      $hosts = Get-Content "$env:SystemRoot\System32\drivers\etc\hosts" -Raw -ErrorAction Stop
+      Save 'hosts.txt' $hosts
+      $hostsActive = @($hosts -split "`r?`n" | Where-Object { $_ -match '^\s*[^#\s]' }).Count
+      Add-Sum "File hosts: $hostsActive righe attive (hosts.txt)"
+  } catch { Add-Sum "hosts non leggibile: $_" }
+  try {
+      $px = @('## Proxy WinHTTP (macchina):'); $px += (netsh winhttp show proxy 2>$null)
+      $ie = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings' -ErrorAction SilentlyContinue
+      $px += ''; $px += '## Proxy utente corrente (Internet Settings):'
+      $px += "ProxyEnable=$($ie.ProxyEnable)  ProxyServer=$($ie.ProxyServer)  AutoConfigURL=$($ie.AutoConfigURL)"
+      $doh = Get-DnsClientDohServerAddress -ErrorAction SilentlyContinue
+      $px += ''; $px += '## Server DNS-over-HTTPS configurati:'
+      if($doh){ $doh | ForEach-Object { $px += "  $($_.ServerAddress)  $($_.DohTemplate)" } } else { $px += '  (nessuno)' }
+      Save 'proxy_doh.txt' ($px -join "`r`n")
+      Add-Sum 'Proxy e DNS-over-HTTPS: proxy_doh.txt'
+  } catch { Add-Sum "Proxy/DoH non leggibili: $_" }
   try {
       Add-Sum 'BitLocker:'
       Get-BitLockerVolume -ErrorAction Stop | ForEach-Object {
@@ -457,13 +488,58 @@ if($doMachine){
       $svcBad | Export-Csv (Join-Path $outDir 'servizi_percorsi_non_quotati.csv') -NoTypeInformation -Encoding UTF8
       Add-Sum "Servizi con percorso non quotato e spazi: $(@($svcBad).Count) (servizi_percorsi_non_quotati.csv)"
   } catch { Add-Sum "Controllo percorsi servizi fallito: $_" }
+
+  Section '11. EXPORT RIPRISTINABILI (per ricostruire altrove)'
+
+  # --- Profili Wi-Fi (SENZA chiavi) ---
+  try {
+      $wifiDir = Join-Path $outDir 'wifi'; New-Item -ItemType Directory -Force -Path $wifiDir | Out-Null
+      netsh wlan export profile folder="$wifiDir" 2>$null | Out-Null
+      $nWifi = @(Get-ChildItem $wifiDir -Filter '*.xml' -ErrorAction SilentlyContinue).Count
+      if($nWifi -gt 0){ Add-Sum "Profili Wi-Fi esportati SENZA chiavi: $nWifi (wifi\)" }
+      else { Remove-Item $wifiDir -Force -ErrorAction SilentlyContinue; Add-Sum 'Nessun profilo Wi-Fi (o interfaccia WLAN assente).' }
+  } catch { Add-Sum "Export Wi-Fi fallito: $_" }
+
+  # --- Associazioni file predefinite (riusabili con Dism /Import-DefaultAppAssociations) ---
+  try {
+      $assoc = Join-Path $outDir 'associazioni_file.xml'
+      dism /online /Export-DefaultAppAssociations:$assoc 2>$null | Out-Null
+      if(Test-Path $assoc){ Add-Sum 'Associazioni file predefinite: associazioni_file.xml' }
+      else { Add-Sum 'Associazioni file non esportate (serve admin).' }
+  } catch { Add-Sum "Export associazioni fallito: $_" }
+
+  # --- Piano energetico e impostazioni internazionali ---
+  try { (powercfg /query) -join "`r`n" | Out-File (Join-Path $outDir 'powercfg_query.txt') -Encoding UTF8
+        Add-Sum 'Dettaglio piano energetico: powercfg_query.txt' } catch {}
+  try {
+      $reg = @("Culture            : $((Get-Culture).Name)",
+               "SystemLocale       : $((Get-WinSystemLocale).Name)",
+               "Lingue utente      : $(((Get-WinUserLanguageList).LanguageTag) -join ', ')")
+      Save 'impostazioni_internazionali.txt' ($reg -join "`r`n")
+      Add-Sum 'Impostazioni internazionali: impostazioni_internazionali.txt'
+  } catch {}
+
+  # --- XML delle attivita pianificate non Microsoft (ricreabili con Register-ScheduledTask) ---
+  try {
+      $txDir = Join-Path $outDir 'task_xml'; New-Item -ItemType Directory -Force -Path $txDir | Out-Null
+      $nx = 0
+      Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $_.TaskPath -notlike '\Microsoft\*' } | ForEach-Object {
+          try {
+              $safe = ($_.TaskPath + $_.TaskName) -replace '[\\/:*?"<>|]','_'
+              $xml = Export-ScheduledTask -TaskName $_.TaskName -TaskPath $_.TaskPath -ErrorAction Stop
+              (Protect-Secrets $xml) | Out-File (Join-Path $txDir "$safe.xml") -Encoding UTF8
+              $nx++
+          } catch {}
+      }
+      Add-Sum "XML delle task non Microsoft esportati: $nx (task_xml\)"
+  } catch { Add-Sum "Export XML task fallito: $_" }
 }
 
 # ============================================================================
 #  PARTE PER-UTENTE (file-based, da disco) — Claude / git / SSH per OGNI account
 # ============================================================================
 if($doMachine){
-  Section '11. CONFIGURAZIONI PER ACCOUNT (Claude / git / SSH)  [da disco]'
+  Section '12. CONFIGURAZIONI PER ACCOUNT (Claude / git / SSH)  [da disco]'
   try {
       # Esclusi anche i profili di servizio (TEMP*, UMFD-* dei Font Driver Host): non sono account reali
       $profiles = Get-ChildItem 'C:\Users' -Directory -ErrorAction Stop |
@@ -532,7 +608,7 @@ if($doMachine){
 #  PARTE UTENTE LIVE — ambiente di sviluppo dell'account corrente
 # ============================================================================
 if($doUser){
-  Section "12. AMBIENTE DI SVILUPPO (account corrente: $env:USERNAME)"
+  Section "13. AMBIENTE DI SVILUPPO E PERSONALIZZAZIONI (account corrente: $env:USERNAME)"
   $dev = @("# Ambiente sviluppo — $env:USERDOMAIN\$env:USERNAME — $(Get-Date)","")
   function Try-Cmd($label,$scriptblock){
       try { $out = & $scriptblock 2>$null; if($out){ $script:dev += "## ${label}:"; $script:dev += ($out | Out-String).TrimEnd(); $script:dev += "" } }
@@ -556,17 +632,78 @@ if($doUser){
   Try-Cmd 'VS Code estensioni' { code --list-extensions --show-versions }
   Try-Cmd 'WSL distro'         { wsl -l -v }
   Try-Cmd 'claude version'     { claude --version }
+  # --- Windows Terminal e profili PowerShell (oscurati) ---
+  $wt = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+  if(Test-Path $wt){ $dev += '## Windows Terminal settings.json (oscurato):'; $dev += (Protect-Secrets (Get-Content $wt -Raw)); $dev += '' }
+  foreach($pp in @($PROFILE.AllUsersAllHosts,$PROFILE.CurrentUserAllHosts,$PROFILE.CurrentUserCurrentHost)){
+      if($pp -and (Test-Path $pp)){ $dev += "## Profilo PowerShell ${pp} (oscurato):"; $dev += (Protect-Secrets (Get-Content $pp -Raw)); $dev += '' }
+  }
+  # --- Credenziali salvate: SOLO le destinazioni (mai i segreti) ---
+  $ck = cmdkey /list 2>$null
+  if($ck){ $dev += '## Credenziali salvate (solo destinazioni, cmdkey /list):'; $dev += ($ck | Out-String).TrimEnd(); $dev += '' }
   $dev += "## PATH:"; $dev += ($env:Path -split ';' | Sort-Object)
   SaveUser "_dev_${env:USERNAME}.txt" ($dev -join "`r`n")
+
+  # --- Estensioni browser dell'account corrente (Edge / Chrome) ---
+  try {
+      $ext = New-Object System.Collections.Generic.List[object]
+      $browsers = @(
+          @{ Nome='Edge';   Base="$env:LOCALAPPDATA\Microsoft\Edge\User Data" },
+          @{ Nome='Chrome'; Base="$env:LOCALAPPDATA\Google\Chrome\User Data" }
+      )
+      foreach($b in $browsers){
+          if(-not (Test-Path $b.Base)){ continue }
+          $profs = Get-ChildItem $b.Base -Directory -ErrorAction SilentlyContinue |
+              Where-Object { $_.Name -eq 'Default' -or $_.Name -like 'Profile *' }
+          foreach($pr in $profs){
+              $exDir = Join-Path $pr.FullName 'Extensions'
+              if(-not (Test-Path $exDir)){ continue }
+              foreach($ed in (Get-ChildItem $exDir -Directory -ErrorAction SilentlyContinue)){
+                  $ver = Get-ChildItem $ed.FullName -Directory -ErrorAction SilentlyContinue | Sort-Object Name | Select-Object -Last 1
+                  if(-not $ver){ continue }
+                  $nome = ''
+                  $man = Join-Path $ver.FullName 'manifest.json'
+                  if(Test-Path $man){ try { $nome = (Get-Content $man -Raw | ConvertFrom-Json).name } catch {} }
+                  $ext.Add([pscustomobject]@{ Browser=$b.Nome; ProfiloBrowser=$pr.Name; Id=$ed.Name; Versione=$ver.Name; Nome=$nome })
+              }
+          }
+      }
+      $csv = ($ext | ConvertTo-Csv -NoTypeInformation) -join "`r`n"
+      SaveUser "_browser_estensioni_${env:USERNAME}.csv" $csv
+      Add-Sum "Estensioni browser dell'account ${env:USERNAME}: $($ext.Count) (utenti\_browser_estensioni_${env:USERNAME}.csv)"
+  } catch { Add-Sum "Estensioni browser non leggibili: $_" }
   Add-Sum ''
   Add-Sum "Ambiente di sviluppo dell'account $env:USERNAME salvato in utenti\_dev_${env:USERNAME}.txt"
   Add-Sum '(Per gli altri account, riesegui -Scope User loggato con quegli utenti.)'
 }
 
-# --- Riepilogo ---------------------------------------------------------------
+# --- Verifica finale anti-segreti su TUTTO l'output --------------------------
+try {
+    $leakPatterns = @('sk-ant-[A-Za-z0-9\-_]{8,}','gh[pousr]_[A-Za-z0-9]{20,}','AKIA[0-9A-Z]{16}',
+                      'xox[baprs]-[A-Za-z0-9\-]{10,}','BEGIN [A-Z ]*PRIVATE KEY','eyJ[A-Za-z0-9_\-]{10,}\.eyJ')
+    $leaks = @(Get-ChildItem $outDir -Recurse -File -Include *.txt,*.csv,*.json,*.xml,*.inf |
+        Select-String -Pattern ($leakPatterns -join '|') -ErrorAction SilentlyContinue)
+    Add-Sum ''
+    if($leaks.Count -gt 0){
+        Add-Sum "ATTENZIONE: la scansione finale ha trovato $($leaks.Count) possibili segreti NON oscurati:"
+        $leaks | Select-Object -First 20 | ForEach-Object { Add-Sum "  $($_.Filename):$($_.LineNumber)" }
+        Add-Sum '  >> Verifica e rigenera prima di condividere lo snapshot.'
+    } else { Add-Sum 'Scansione finale anti-segreti su tutto l''output: PULITA.' }
+} catch { Add-Sum "Scansione finale anti-segreti fallita: $_" }
+
+# --- Riepilogo e manifest -----------------------------------------------------
 Save 'SUMMARY.txt' ($summary -join "`r`n")
+try {
+    # Manifest SHA256 per l'integrita' (tamper-evident); esclude se stesso
+    $mf = Get-ChildItem $outDir -Recurse -File | Where-Object Name -ne 'MANIFEST.sha256' |
+        Sort-Object FullName | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash, $_.FullName.Replace("$outDir\",'')
+        }
+    $mf | Out-File (Join-Path $outDir 'MANIFEST.sha256') -Encoding UTF8
+} catch {}
 Write-Host ''
 Write-Host 'Snapshot completato.' -ForegroundColor Green
 Write-Host "Cartella: $outDir"
 Write-Host 'Apri SUMMARY.txt per la sintesi; CSV/TXT e la sottocartella utenti\ per i dettagli.'
+Write-Host 'Integrita: MANIFEST.sha256 (hash di ogni file dello snapshot).'
 Write-Host 'Confronto tra due snapshot: scripts\Compare-Snapshot.ps1'

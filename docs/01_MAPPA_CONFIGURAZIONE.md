@@ -142,6 +142,8 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Esclusioni AV / regole ASR                 | `__________` (da `defender_esclusioni.csv` / `defender_asr.csv`) |
 | Logging PowerShell / audit policy          | `__________` (da `powershell_logging.txt` / `auditpol.txt`) |
 | Regole firewall inbound consentite         | `___` regole (da `firewall_regole_inbound_allow.csv`)  |
+| Root CA macchina / Trusted Publishers      | `___ / ___` (da `cert_root_ca.csv`, `cert_trusted_publishers.csv`) |
+| File hosts / proxy / DoH                   | `__________` (da `hosts.txt`, `proxy_doh.txt`)         |
 
 ---
 

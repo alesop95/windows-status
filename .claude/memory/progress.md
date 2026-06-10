@@ -6,6 +6,23 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — Quattro blocchi finali: fiducia, export, ambiente esteso, integrità; verdetto task
+
+Commit: 74fb6c7 (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Snapshot-Stato.ps1` (catena di fiducia in sezione 8: root CA, Trusted
+Publishers, hosts, proxy, DoH; nuova sezione 11 EXPORT RIPRISTINABILI: Wi-Fi senza chiavi,
+associazioni file, powercfg, internazionali, XML task oscurati; sezione 13: Windows Terminal,
+profili PowerShell, cmdkey, estensioni browser; Protect-Secrets esteso ad AWS/Slack/PEM;
+scansione anti-segreti finale e MANIFEST.sha256; rinumerazione 11/12→12/13),
+`scripts/Compare-Snapshot.ps1` (categorie TRUST e BROWSER), mappa template e compilata.
+Collaudo su snapshot completo reale: 76 root CA e 1 Trusted Publisher in baseline, hosts con 11
+righe attive tutte legittime (NAS, Docker, progetti locali), 21 XML di task esportati, 27
+estensioni browser (notata estensione VPN/proxy → ✍️ in mappa), scansione finale anti-segreti
+PULITA, manifest prodotto; confronto tra snapshot omogenei con un solo alert benigno (mDNS).
+Verdetto su `RiavvioSingoloNotturno` (XML esportato da elevato con consenso UAC dell'utente):
+TimeTrigger SINGOLO del 2025-11-30 04:00 senza ripetizione, residuo già scaduto, innocuo;
+rimozione proposta e in attesa di conferma.
+
 ## 2026-06-10 — Blocco Defender/policy in profondità e indagine task di riavvio notturno
 
 Commit: 2552033 (modifiche preparate, commit manuale dell'utente da fare).

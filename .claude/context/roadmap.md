@@ -5,7 +5,7 @@ generated-date: 2026-06-10
 covers-paths:
   - scripts/**
   - docs/**
-last-verified-commit: 2552033
+last-verified-commit: 74fb6c7
 ---
 
 # Roadmap
@@ -23,6 +23,12 @@ Snapshot multi-profilo Claude: tutti i `.claude*` per account, inclusi i profili
 Defender e policy in profondità: esclusioni e regole ASR (con alert DEFENDER), Tamper
 Protection, auditpol, logging PowerShell, export `secedit`, regole firewall inbound consentite
 (con alert FIREWALL), più i trigger delle attività pianificate nel CSV (2026-06-10).
+
+Catena di fiducia (root CA, Trusted Publishers, hosts, proxy/DoH, con alert TRUST), export
+ripristinabili (Wi-Fi senza chiavi, associazioni file, piano energetico, internazionali, XML
+task), ambiente utente esteso (Terminal, profili PowerShell, cmdkey, estensioni browser con
+alert BROWSER) e integrità dello snapshot (Protect-Secrets esteso, scansione anti-segreti
+finale, MANIFEST.sha256) (2026-06-10).
 
 ## Prossimi blocchi candidati (decisi il 2026-06-10, in ordine di valore)
 
