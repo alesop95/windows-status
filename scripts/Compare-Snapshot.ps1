@@ -119,10 +119,12 @@ if($null -ne $to -and $null -ne $tn){
 }
 
 # 5. Nuove porte in ascolto (chiave: protocollo + porta + processo)
+#    Le UDP effimere (>=49152, tipicamente browser) cambiano a ogni avvio: escluse per il rumore
 $po2 = Load-Csv $Old 'porte_in_ascolto.csv'; $pn2 = Load-Csv $New 'porte_in_ascolto.csv'
 if($null -ne $po2 -and $null -ne $pn2){
-    $keyO = @($po2 | ForEach-Object { "$($_.Protocollo):$($_.Porta):$($_.Processo)" } | Sort-Object -Unique)
-    $keyN = @($pn2 | ForEach-Object { "$($_.Protocollo):$($_.Porta):$($_.Processo)" } | Sort-Object -Unique)
+    $stabile = { -not ($_.Protocollo -eq 'UDP' -and [int]$_.Porta -ge 49152) }
+    $keyO = @($po2 | Where-Object $stabile | ForEach-Object { "$($_.Protocollo):$($_.Porta):$($_.Processo)" } | Sort-Object -Unique)
+    $keyN = @($pn2 | Where-Object $stabile | ForEach-Object { "$($_.Protocollo):$($_.Porta):$($_.Processo)" } | Sort-Object -Unique)
     foreach($k in $keyN){ if($k -notin $keyO){ Add-Alert 'PORTE' "nuova porta in ascolto: $k" } }
 }
 
@@ -149,7 +151,23 @@ if($null -ne $do2 -and $null -ne $dn2 -and @($dn2).Count -gt 0){
     foreach($d in $dn2){ if($d.$col -notin $namesO){ Add-Alert 'DRIVER' "nuovo driver NON firmato: $($d.$col)" } }
 }
 
-# 8. Servizi con percorso non quotato comparsi dopo
+# 8. Postura hardware/OS: ogni valore cambiato e' un alert (esclusi i conteggi hotfix)
+function Load-Post([string]$dir){
+    $p = Join-Path $dir 'sicurezza_postura.txt'
+    if(-not (Test-Path $p)){ return $null }
+    $h=@{}
+    Get-Content $p | ForEach-Object { if($_ -match '^(.+?)\s*:\s*(.*)$'){ $h[$matches[1].Trim()]=$matches[2].Trim() } }
+    $h
+}
+$ppo = Load-Post $Old; $ppn = Load-Post $New
+if($null -ne $ppo -and $null -ne $ppn){
+    foreach($k in $ppn.Keys){
+        if($k -like 'Hotfix*'){ continue }
+        if($ppo.ContainsKey($k) -and $ppo[$k] -ne $ppn[$k]){ Add-Alert 'POSTURA' "$($k): '$($ppo[$k])' -> '$($ppn[$k])'" }
+    }
+}
+
+# 9. Servizi con percorso non quotato comparsi dopo
 $qo = Load-Csv $Old 'servizi_percorsi_non_quotati.csv'; $qn = Load-Csv $New 'servizi_percorsi_non_quotati.csv'
 if($null -ne $qo -and $null -ne $qn){
     foreach($s in $qn){ if($s.Name -notin @($qo.Name)){ Add-Alert 'SERVIZI' "nuovo servizio con percorso non quotato: $($s.Name) -> $($s.PathName)" } }

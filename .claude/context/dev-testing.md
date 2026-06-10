@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: ff519f0
+last-verified-commit: e32d96b
 ---
 
 # Test di sviluppo

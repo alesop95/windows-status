@@ -125,7 +125,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 
 ---
 
-## 9. 🔄✍️ Sicurezza -  *da `SUMMARY.txt`*
+## 9. 🔄✍️ Sicurezza -  *da `SUMMARY.txt`, `sicurezza_postura.txt`, `hotfix.csv`*
 
 | Campo                                      | Valore                                                 |
 | ------------------------------------------ | ------------------------------------------------------ |
@@ -133,6 +133,12 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Firewall                                   | `__________`                                           |
 | BitLocker                                  | `Attivo/Disattivo` + tipo protezione                   |
 | **Chiave di ripristino BitLocker -  dove** | `Entra ID (entra.microsoft.com) / ___` (NON la chiave) |
+| Secure Boot / TPM                          | `__________` (serve snapshot da admin)                 |
+| VBS / Credential Guard / HVCI              | `__________`                                           |
+| LSA RunAsPPL / UAC                         | `__________`                                           |
+| SMBv1 / firma SMB richiesta                | `__________`                                           |
+| RDP (+NLA) / WinRM                         | `__________`                                           |
+| Build completa / ultimo hotfix             | `__________`                                           |
 
 ---
 
