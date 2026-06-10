@@ -1,7 +1,8 @@
 # CLAUDE.md — contesto e regole per Claude Code
 
 Progetto: **windows-status** — fotografia completa e ripristinabile di un PC Windows 11
-aziendale (Entra ID joined, tenant Microsoft 365), con backup Veeam Agent verso NAS.
+aziendale, registrato al tenant Microsoft 365 in modalità workplace join (NON Entra ID joined
+né gestito da Intune: verificato dallo snapshot), con backup Veeam Agent verso NAS.
 Gli script sono proprietari e versionati su GitHub (repo **pubblico**): devono restare puliti,
 generici, riusabili e **anonimi** — i valori reali della macchina vivono solo in
 `CLAUDE.local.md`, ignorato da git.
@@ -32,9 +33,12 @@ servono. Il materiale sotto `_notes/` si apre solo per verificare un requisito o
 2. Prima di qualsiasi modifica: ricorda backup immagine Veeam recente + punto di ripristino.
 3. Una categoria di modifiche alla volta, con riavvio e verifica (Outlook/Teams/OneDrive/VPN/SSO)
    prima di procedere.
-4. Macchina **Entra ID joined / gestita**: NON toccare senza ordine esplicito Windows Update,
-   Microsoft Defender, attivazione Office, Microsoft Edge/WebView2, OneDrive, agenti Intune/MDM,
-   ne azzerare la telemetria (Intune la usa per la conformita).
+4. Macchina **aziendale, registrata al tenant** (workplace join, senza Intune): NON toccare
+   comunque senza ordine esplicito Windows Update, Microsoft Defender, attivazione Office,
+   Microsoft Edge/WebView2, OneDrive, ne azzerare la telemetria. Sono cautele prudenziali, non
+   imposte: se la macchina venisse in futuro aggiunta a Entra ID o a Intune, tornerebbero
+   vincoli obbligatori. Nota correlata: NON essendo Entra-joined, la chiave BitLocker NON e
+   archiviata in Entra ID di default — va custodita e annotata nella mappa.
 5. **Mai segreti nel repo.** Token, API key, password Veeam, chiavi private SSH, chiave BitLocker,
    `.credentials.json` di Claude: esclusi dagli snapshot (oscurati) e dal git (`.gitignore`).
    Nella mappa va solo *dove* sono custoditi.

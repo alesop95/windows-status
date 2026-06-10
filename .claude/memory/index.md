@@ -12,10 +12,11 @@ Commit di riferimento: e32d96b
 Data snapshot:        2026-06-10
 ```
 
-Working tree non pulito: il blocco postura hardware/OS (snapshot+compare), il filtro profili di
-servizio e la riduzione del rumore degli alert sono implementati e collaudati ma il commit è
-manuale dell'utente. La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` è locale
-(ignorata da git). Al commit successivo portare i `last-verified-commit` al nuovo HEAD.
+Working tree non pulito: postura hardware/OS (snapshot+compare), filtro profili di servizio,
+riduzione rumore alert, riallineamento CLAUDE.md/README al join reale (workplace, non Entra) e
+lettura multi-profilo Claude `.claude*` sono implementati e collaudati; il commit è manuale
+dell'utente. La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` è locale (ignorata
+da git). Al commit successivo portare i `last-verified-commit` al nuovo HEAD.
 
 ## Stato di verifica delle schede
 
@@ -30,7 +31,7 @@ manuale dell'utente. La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.
 
 ## Punto di ripresa
 
-Dopo il commit manuale: (1) rieseguire lo snapshot da PowerShell ELEVATO e completare nella
-mappa compilata BitLocker, Defender, Secure Boot e TPM; (2) decidere come riallineare
-CLAUDE.md/README al fatto che la macchina NON è Entra ID joined; (3) prossimo blocco dalla
-roadmap (consigliato: snapshot multi-profilo Claude `~\.claude-account*`).
+Dopo il commit manuale: (1) snapshot da PowerShell ELEVATO (l'utente lo esegue) e
+completamento nella mappa compilata di BitLocker, Defender, Secure Boot, TPM e dei dati
+per-account degli altri profili; (2) prossimo blocco dalla roadmap (consigliato: Defender e
+policy in profondità, che beneficia anch'esso dell'esecuzione elevata).

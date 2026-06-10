@@ -36,8 +36,10 @@ persistenza (10): porte TCP/UDP in ascolto con processo proprietario, autoruns p
 (Run/RunOnce per hive, Winlogon, IFEO con Debugger, SilentProcessExit), sottoscrizioni WMI in
 `root\subscription`, azioni complete delle attività pianificate non Microsoft, firme dei driver
 con estrazione dei non firmati, servizi con percorso non quotato. La parte per-account (11)
-legge da disco, per ogni profilo in `C:\Users`, le configurazioni di Claude, git e SSH, sempre
-tramite redazione dei segreti. La parte utente live (12) fotografa l'ambiente di sviluppo
+legge da disco, per ogni profilo in `C:\Users` (esclusi i profili di servizio TEMP*/UMFD-*), le
+configurazioni di Claude — tutti i profili `.claude*`, inclusi i multi-account selezionati via
+`CLAUDE_CONFIG_DIR`, con inventario limitato alle prime 200 voci e `settings.json`/`CLAUDE.md`/
+`.claude.json` oscurati — più git e SSH, sempre tramite redazione dei segreti. La parte utente live (12) fotografa l'ambiente di sviluppo
 dell'account che esegue. Ogni sezione scrive file CSV o TXT dedicati e righe di sintesi in
 `SUMMARY.txt`. I CSV con comandi potenzialmente sensibili (autoruns, azioni delle task) passano
 da `Protect-Secrets` prima del salvataggio.

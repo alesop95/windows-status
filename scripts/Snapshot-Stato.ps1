@@ -25,9 +25,10 @@
 
  MULTI-ACCOUNT
    I dati "file-based" (Claude/git/SSH) di TUTTI i profili in C:\Users vengono letti
-   dal disco (serve admin). I dati "live" (versioni di node/python, estensioni VS Code,
-   git config attivo) riflettono SOLO l'account che esegue lo script: per averli
-   completi, esegui anche -Scope User loggato in ciascun account.
+   dal disco (serve admin), inclusi i profili Claude multi-account (.claude-account*
+   selezionati via CLAUDE_CONFIG_DIR). I dati "live" (versioni di node/python,
+   estensioni VS Code, git config attivo) riflettono SOLO l'account che esegue lo
+   script: per averli completi, esegui anche -Scope User loggato in ciascun account.
 ================================================================================
 #>
 
@@ -405,24 +406,33 @@ if($doMachine){
       $u = $p.Name; $homeDir = $p.FullName
       Add-Sum ''; Add-Sum "--- Account: $u ---"
 
-      # --- Claude (mai i segreti) ---
-      $claudeDir = Join-Path $homeDir '.claude'
-      $claudeJson= Join-Path $homeDir '.claude.json'
+      # --- Claude: TUTTI i profili .claude* (default e multi-account via CLAUDE_CONFIG_DIR; mai i segreti) ---
+      $claudeDirs = @(Get-ChildItem $homeDir -Directory -Filter '.claude*' -Force -ErrorAction SilentlyContinue)
+      $claudeJson = Join-Path $homeDir '.claude.json'
       $lines = @("# Configurazione Claude per $u","")
-      if(Test-Path $claudeDir){
-          $lines += "Cartella .claude presente. Inventario (esclusi i segreti):"
-          Get-ChildItem $claudeDir -Recurse -File -ErrorAction SilentlyContinue |
-              Where-Object { $_.Name -ne '.credentials.json' } |
-              ForEach-Object { $lines += ("  {0}  ({1} byte)" -f $_.FullName.Replace($homeDir,'~'), $_.Length) }
-          if(Test-Path (Join-Path $claudeDir '.credentials.json')){ $lines += "  ~\.claude\.credentials.json  (PRESENTE — NON letto: contiene credenziali)" }
-          foreach($f in @('settings.json','CLAUDE.md')){
-              $fp = Join-Path $claudeDir $f
-              if(Test-Path $fp){ $lines += ""; $lines += "### .claude\$f (oscurato):"; $lines += (Protect-Secrets (Get-Content $fp -Raw)) }
+      if($claudeDirs.Count -gt 0){
+          foreach($cd in $claudeDirs){
+              $lines += "## Profilo $($cd.Name)"
+              $inv = @(Get-ChildItem $cd.FullName -Recurse -File -ErrorAction SilentlyContinue |
+                       Where-Object { $_.Name -ne '.credentials.json' })
+              $lines += "Inventario: $($inv.Count) file (esclusi i segreti); primi 200:"
+              $inv | Select-Object -First 200 |
+                  ForEach-Object { $lines += ("  {0}  ({1} byte)" -f $_.FullName.Replace($homeDir,'~'), $_.Length) }
+              if($inv.Count -gt 200){ $lines += "  ... (+$($inv.Count-200) altri file non elencati)" }
+              if(Test-Path (Join-Path $cd.FullName '.credentials.json')){
+                  $lines += "  ~\$($cd.Name)\.credentials.json  (PRESENTE — NON letto: contiene credenziali)"
+              }
+              # Nei profili multi-account il file di stato .claude.json vive DENTRO la cartella profilo
+              foreach($f in @('settings.json','CLAUDE.md','.claude.json')){
+                  $fp = Join-Path $cd.FullName $f
+                  if(Test-Path $fp){ $lines += ""; $lines += "### $($cd.Name)\$f (oscurato):"; $lines += (Protect-Secrets (Get-Content $fp -Raw)) }
+              }
+              $lines += ""
           }
-          Add-Sum "  Claude: cartella .claude presente (dettaglio in utenti\${u}_claude.txt)"
-      } else { $lines += "Nessuna cartella .claude."; Add-Sum "  Claude: non configurato" }
+          Add-Sum "  Claude: $($claudeDirs.Count) profilo/i [$(($claudeDirs | ForEach-Object Name) -join ', ')] (dettaglio in utenti\${u}_claude.txt)"
+      } else { $lines += "Nessuna cartella .claude*."; Add-Sum "  Claude: non configurato" }
       if(Test-Path $claudeJson){
-          $lines += ""; $lines += "### .claude.json (oscurato, utile per progetti e server MCP):"
+          $lines += ""; $lines += "### .claude.json (radice del profilo utente — oscurato, utile per progetti e server MCP):"
           $lines += (Protect-Secrets (Get-Content $claudeJson -Raw))
       }
       SaveUser "${u}_claude.txt" ($lines -join "`r`n")

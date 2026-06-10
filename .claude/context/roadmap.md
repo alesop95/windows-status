@@ -18,11 +18,10 @@ last-verified-commit: e32d96b
 Superficie d'attacco e persistenza nello snapshot + alert di sicurezza nel compare
 (2026-06-10). Postura hardware/OS nello snapshot (Secure Boot, TPM, VBS/Credential Guard, LSA,
 UAC, SMB, RDP, WinRM, patch level) con categoria di alert POSTURA nel compare (2026-06-10).
+Snapshot multi-profilo Claude: tutti i `.claude*` per account, inclusi i profili
+`CLAUDE_CONFIG_DIR`, con inventario limitato e config oscurate (2026-06-10).
 
 ## Prossimi blocchi candidati (decisi il 2026-06-10, in ordine di valore)
-
-Snapshot multi-profilo Claude: inventariare anche `~\.claude-account*` (su questa macchina i
-profili reali vivono lì, non in `~\.claude`) — limite emerso compilando la mappa.
 
 Defender e policy in profondità: esclusioni Defender, regole ASR, Tamper Protection, audit
 policy, logging PowerShell, export `secedit`, regole firewall personalizzate.

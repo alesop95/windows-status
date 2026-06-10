@@ -6,6 +6,18 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — Riallineamento documenti al join reale e snapshot multi-profilo Claude
+
+Commit: e32d96b (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `CLAUDE.md` e `README.md` (la macchina è aziendale e registrata al tenant in
+workplace join, NON Entra ID joined né Intune: vincoli del paletto 4 riformulati come cautele
+prudenziali; nota che la chiave BitLocker NON è in Entra ID di default),
+`scripts/Snapshot-Stato.ps1` (sezione 11: legge TUTTI i profili `.claude*` per account, inclusi
+i multi-account via CLAUDE_CONFIG_DIR, inventario limitato a 200 voci, anche `.claude.json`
+interno al profilo, sempre oscurato), schede `STACK.md` e `roadmap.md`.
+Collaudo: 3 profili rilevati sull'account principale (.claude, .claude-account1 con 4815 file,
+.claude-account2 con 788), scansione segreti sull'output pulita.
+
 ## 2026-06-10 — Mappa compilata, blocco postura hardware/OS, riduzione rumore alert
 
 Commit: e32d96b (modifiche preparate, commit manuale dell'utente da fare).
