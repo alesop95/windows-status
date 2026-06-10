@@ -6,6 +6,23 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — Blocco Defender/policy in profondità e indagine task di riavvio notturno
+
+Commit: 2552033 (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Snapshot-Stato.ps1` (sezione 8: esclusioni Defender, regole ASR, Tamper
+Protection e modalità, auditpol, logging PowerShell, secedit, regole firewall inbound
+consentite; sezione 10: colonna Trigger nelle azioni delle task), `scripts/Compare-Snapshot.ps1`
+(categorie DEFENDER e FIREWALL), mappa template e compilata (nuove righe sezione 9).
+Collaudo: degradazione senza admin corretta; alert DEFENDER/FIREWALL verificati con test
+sintetico (3/3); baseline di 215 regole firewall inbound; logging PowerShell risultato non
+configurato (✍️ candidato hardening). Con AV di terze parti attivo, Defender è "Not running" e
+le sue esclusioni non sono leggibili localmente (vivono nella console dell'AV).
+Indagine `RiavvioSingoloNotturno`: la task esiste (Ready, percorso radice, autore vuoto, azione
+shutdown /r /f /t 0) ma è visibile solo da sessione elevata; la sessione utente è attiva dal
+03/06, quindi NON sta riavviando ogni notte — probabile one-shot residua. Trigger esatto da
+leggere con export elevato (comando lasciato all'utente); decisione di rimozione rinviata a
+quando si conoscerà il trigger.
+
 ## 2026-06-10 — Snapshot elevato, mappa completata, AV registrati, avviso elevazione
 
 Commit: 2552033 (modifiche preparate, commit manuale dell'utente da fare).

@@ -20,11 +20,11 @@ Superficie d'attacco e persistenza nello snapshot + alert di sicurezza nel compa
 UAC, SMB, RDP, WinRM, patch level) con categoria di alert POSTURA nel compare (2026-06-10).
 Snapshot multi-profilo Claude: tutti i `.claude*` per account, inclusi i profili
 `CLAUDE_CONFIG_DIR`, con inventario limitato e config oscurate (2026-06-10).
+Defender e policy in profondità: esclusioni e regole ASR (con alert DEFENDER), Tamper
+Protection, auditpol, logging PowerShell, export `secedit`, regole firewall inbound consentite
+(con alert FIREWALL), più i trigger delle attività pianificate nel CSV (2026-06-10).
 
 ## Prossimi blocchi candidati (decisi il 2026-06-10, in ordine di valore)
-
-Defender e policy in profondità: esclusioni Defender, regole ASR, Tamper Protection, audit
-policy, logging PowerShell, export `secedit`, regole firewall personalizzate.
 
 Catena di fiducia: inventario root CA macchina, Trusted Publishers, file hosts, proxy
 WinHTTP/utente, DoH, inventario `cmdkey` (solo nomi).

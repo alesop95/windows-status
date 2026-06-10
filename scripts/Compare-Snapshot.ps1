@@ -10,7 +10,8 @@
  le voci aggiunte (+) e rimosse (-). In coda produce gli ALERT DI SICUREZZA:
  variazioni critiche (nuovi amministratori, account abilitati, autorun, azioni di
  task pianificate, porte in ascolto, cambi di StartMode/account dei servizi,
- driver non firmati) evidenziate per la revisione. Di sola lettura.
+ driver non firmati, postura hardware/OS, esclusioni Defender e regole ASR,
+ nuove regole firewall inbound) evidenziate per la revisione. Di sola lettura.
 
  Gli alert usano anche i CSV della sezione "superficie d'attacco" dello snapshot:
  se un CSV manca in uno dei due snapshot (es. snapshot vecchio), la relativa
@@ -180,7 +181,36 @@ if($null -ne $ppo -and $null -ne $ppn){
     }
 }
 
-# 9. Servizi con percorso non quotato comparsi dopo
+# 9. Defender: nuove esclusioni (vettore classico di accecamento dell'AV) e ASR indebolite
+$exo = Load-Csv $Old 'defender_esclusioni.csv'; $exn = Load-Csv $New 'defender_esclusioni.csv'
+if($null -ne $exo -and $null -ne $exn){
+    $keyO = @($exo | ForEach-Object { "$($_.Tipo)|$($_.Valore)" })
+    foreach($e in $exn){ if("$($e.Tipo)|$($e.Valore)" -notin $keyO){ Add-Alert 'DEFENDER' "NUOVA esclusione $($e.Tipo): $($e.Valore)" } }
+}
+$asro = Load-Csv $Old 'defender_asr.csv'; $asrn = Load-Csv $New 'defender_asr.csv'
+if($null -ne $asro -and $null -ne $asrn){
+    $oldBy=@{}; $asro | ForEach-Object { $oldBy[$_.Regola]=$_.Azione }
+    foreach($r in $asrn){
+        if($oldBy.ContainsKey($r.Regola) -and $oldBy[$r.Regola] -eq '1' -and $r.Azione -ne '1'){
+            Add-Alert 'DEFENDER' "regola ASR indebolita: $($r.Regola) da Blocca(1) ad Azione=$($r.Azione)"
+        }
+    }
+    foreach($k in $oldBy.Keys){
+        if($oldBy[$k] -eq '1' -and $k -notin @($asrn.Regola)){ Add-Alert 'DEFENDER' "regola ASR rimossa (era Blocca): $k" }
+    }
+}
+
+# 10. Firewall: nuove regole inbound consentite e attive
+$fwo = Load-Csv $Old 'firewall_regole_inbound_allow.csv'; $fwn = Load-Csv $New 'firewall_regole_inbound_allow.csv'
+if($null -ne $fwo -and $null -ne $fwn){
+    foreach($r in $fwn){
+        if($r.Nome -notin @($fwo.Nome)){
+            Add-Alert 'FIREWALL' "nuova regola inbound consentita: $($r.NomeVisualizzato) [$($r.Programma) $($r.Porta) profilo=$($r.Profilo)]"
+        }
+    }
+}
+
+# 11. Servizi con percorso non quotato comparsi dopo
 $qo = Load-Csv $Old 'servizi_percorsi_non_quotati.csv'; $qn = Load-Csv $New 'servizi_percorsi_non_quotati.csv'
 if($null -ne $qo -and $null -ne $qn){
     foreach($s in $qn){ if($s.Name -notin @($qo.Name)){ Add-Alert 'SERVIZI' "nuovo servizio con percorso non quotato: $($s.Name) -> $($s.PathName)" } }

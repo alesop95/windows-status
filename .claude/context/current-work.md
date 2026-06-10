@@ -80,6 +80,22 @@ visibilità).
 Definition of done: tutte le voci fatte e collaudate il 2026-06-10 (3 profili rilevati,
 redazione pulita; avviso elevazione verificato sul confronto non-elevato vs elevato).
 
+## Feature attiva 5 — Snapshot/Compare: Defender e policy in profondità
+
+Cosa fa: la sezione 8 dello snapshot esporta esclusioni Defender (`defender_esclusioni.csv`),
+regole ASR (`defender_asr.csv`), Tamper Protection e modalità Defender, audit policy
+(`auditpol.txt`), logging PowerShell (`powershell_logging.txt`), criteri locali
+(`secedit_policy.inf`, solo admin) e regole firewall inbound consentite
+(`firewall_regole_inbound_allow.csv`); la sezione 10 aggiunge la colonna Trigger alle azioni
+delle task. Il compare ha le categorie DEFENDER (nuove esclusioni, ASR indebolite/rimosse) e
+FIREWALL (nuove regole inbound consentite).
+
+Definition of done: tutto implementato e collaudato il 2026-06-10 (degradazione senza admin
+verificata; alert DEFENDER e FIREWALL verificati con test sintetico 3/3; 215 regole inbound in
+baseline; trovato che il logging PowerShell non è configurato → ✍️ candidato hardening).
+Nota: con AV di terze parti attivo, Defender è "Not running" e le sue esclusioni non sono
+leggibili localmente — le esclusioni reali vivono nella console dell'AV aziendale.
+
 ## Domande aperte
 
 Il server MCP locale è rimandato: in radice c'è un `.mcp.json` segnaposto non funzionante per
