@@ -28,3 +28,35 @@ Il "ripristino ovunque" poggia su due gambe:
 6. **I segreti non entrano nei file né nel repo.** Si annota solo *dove* sono custoditi.
 
 ---
+
+## Uso
+
+**Snapshot completo** (consigliato: da PowerShell **amministratore**, altrimenti mancano BitLocker,
+Secure Boot, TPM, Defender e i dati degli altri account — il riepilogo segnala con cosa è stato eseguito):
+
+```powershell
+cd <cartella del progetto>
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\Snapshot-Stato.ps1                 # tutto
+.\scripts\Snapshot-Stato.ps1 -Scope Machine  # solo macchina
+.\scripts\Snapshot-Stato.ps1 -Scope User     # solo account corrente (ripetere per ogni account)
+```
+
+**Confronto tra i due snapshot più recenti** (diff + sezione ALERT DI SICUREZZA in coda;
+confrontare snapshot presi con gli stessi privilegi, altrimenti il diff è rumore di visibilità):
+
+```powershell
+.\scripts\Compare-Snapshot.ps1
+.\scripts\Compare-Snapshot.ps1 -Old <cartella> -New <cartella>
+```
+
+**Reinstallazione su un PC nuovo** (da amministratore, dopo aver rivisto il JSON):
+
+```powershell
+.\scripts\Reinstall-Software.ps1
+```
+
+L'output va in `snapshots\snapshot_<data>\` (ignorato da git): `SUMMARY.txt` per la sintesi,
+CSV/TXT per i dettagli, `utenti\` per le configurazioni per-account.
+
+---

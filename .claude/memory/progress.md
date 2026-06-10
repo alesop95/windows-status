@@ -6,6 +6,21 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — Snapshot elevato, mappa completata, AV registrati, avviso elevazione
+
+Commit: 2552033 (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Snapshot-Stato.ps1` (sezione 8: antivirus registrati via
+SecurityCenter2), `scripts/Compare-Snapshot.ps1` (avviso quando i due snapshot hanno privilegi
+diversi), `README.md` (nuova sezione "Uso" con i comandi di snapshot/confronto/reinstallazione
+e l'avvertenza sull'esecuzione elevata), mappa compilata aggiornata con i dati elevati.
+Esiti dello snapshot ELEVATO (eseguito dall'utente, snapshot_20260610_151411): BitLocker OFF su
+tutti i volumi; Secure Boot disattivo con TPM presente e pronto; Defender in passivo perché
+l'AV attivo è un endpoint di terze parti registrato in SecurityCenter2 (normale, non
+un'anomalia; il nome è nella mappa compilata locale); 72 porte TCP, 26
+autoruns, 30 task non Microsoft; trovate la task custom di riavvio forzato notturno e una task
+residua Lenovo su PC ASUS (✍️ da spiegare/pulire). Il confronto non-elevato vs elevato genera
+rumore di visibilità: da qui l'avviso nel compare e la regola di confrontare snapshot omogenei.
+
 ## 2026-06-10 — Riallineamento documenti al join reale e snapshot multi-profilo Claude
 
 Commit: e32d96b (modifiche preparate, commit manuale dell'utente da fare).

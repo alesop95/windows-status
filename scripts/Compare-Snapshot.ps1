@@ -30,6 +30,19 @@ if(-not $Old -or -not $New){
 Write-Host "PRIMA: $Old"
 Write-Host "DOPO : $New`n"
 
+# Avvisa se i due snapshot sono stati presi con privilegi diversi: da admin si vede di piu'
+# (Appx -AllUsers, tutte le task, hive di servizio), quindi il diff sarebbe rumore di visibilita'
+function Get-Elev([string]$dir){
+    $p = Join-Path $dir 'SUMMARY.txt'
+    if(Test-Path $p){ $s = Get-Content $p | Select-String '^Amministratore'; if($s){ return ($s.Line -split ':')[-1].Trim() } }
+    $null
+}
+$eo = Get-Elev $Old; $en = Get-Elev $New
+if($eo -and $en -and $eo -ne $en){
+    Write-Host "ATTENZIONE: snapshot presi con privilegi diversi (PRIMA admin=$eo, DOPO admin=$en):" -ForegroundColor Yellow
+    Write-Host "molte differenze saranno di VISIBILITA', non cambiamenti reali. Confronta snapshot omogenei.`n" -ForegroundColor Yellow
+}
+
 function Load-Csv([string]$dir,[string]$file){
     $p = Join-Path $dir $file
     if(Test-Path $p){ ,@(Import-Csv $p) } else { $null }
