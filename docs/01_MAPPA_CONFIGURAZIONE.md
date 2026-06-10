@@ -138,6 +138,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | LSA RunAsPPL / UAC                         | `__________`                                           |
 | SMBv1 / firma SMB richiesta                | `__________`                                           |
 | RDP (+NLA) / WinRM                         | `__________`                                           |
+| RDP cache bitmap persistente (client)      | `Attiva / Disattivata` (sicuro se disattivata; da `sicurezza_postura.txt`) |
 | Build completa / ultimo hotfix             | `__________`                                           |
 | Esclusioni AV / regole ASR                 | `__________` (da `defender_esclusioni.csv` / `defender_asr.csv`) |
 | Logging PowerShell / audit policy          | `__________` (da `powershell_logging.txt` / `auditpol.txt`) |

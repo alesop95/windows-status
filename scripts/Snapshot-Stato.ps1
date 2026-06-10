@@ -327,6 +327,23 @@ if($doMachine){
       $nla = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -ErrorAction SilentlyContinue
       Add-Post 'RDP abilitato' ($(if($rdp.fDenyTSConnections -eq 0){ 'SI' } else { 'no' }))
       Add-Post 'RDP NLA richiesta' ([string]$nla.UserAuthentication)
+      # Cache bitmap persistente del CLIENT RDP (mstsc): se disattivata non resta su disco copia
+      # delle schermate remote (rischio di disclosure). Chiave per-utente; leggo SOLO questo valore,
+      # mai gli MRU (contengono IP/host interni). DisablePersistentCache=1 => disattivata (sicuro).
+      # Due segnali: la chiave di registro (robusta, applicabile via GPO su tutte le macchine) e
+      # il profilo Default.rdp (la checkbox della GUI mstsc). Disattivata solo se ENTRAMBI lo confermano.
+      $tscDpc = (Get-ItemProperty 'HKCU:\Software\Microsoft\Terminal Server Client' -Name 'DisablePersistentCache' -ErrorAction SilentlyContinue).DisablePersistentCache
+      $rdpBcp = $null
+      $defRdp = "$env:USERPROFILE\Documents\Default.rdp"
+      if(Test-Path $defRdp){ $m = Select-String -Path $defRdp -Pattern 'bitmapcachepersistenable:i:(\d)' -ErrorAction SilentlyContinue; if($m){ $rdpBcp = $m.Matches[0].Groups[1].Value } }
+      $regOff = ($tscDpc -eq 1)
+      $rdpOff = ($rdpBcp -eq '0')
+      $stato = if($regOff -and ($rdpOff -or $null -eq $rdpBcp)){ 'DISATTIVATA (sicuro)' }
+               elseif($rdpOff -and $null -eq $tscDpc){ 'disattivata in Default.rdp (ma non forzata da registro)' }
+               else { 'ATTIVA' }
+      Add-Post 'RDP cache bitmap persistente' "$stato (registro DisablePersistentCache=$(if($null -ne $tscDpc){$tscDpc}else{'assente'}), Default.rdp=$(if($null -ne $rdpBcp){$rdpBcp}else{'assente'}))"
+      $cacheFiles = @(Get-ChildItem "$env:LOCALAPPDATA\Microsoft\Terminal Server Client\Cache" -File -ErrorAction SilentlyContinue).Count
+      if($cacheFiles -gt 0){ Add-Sum "  (nota: $cacheFiles file nella cache bitmap RDP del client su disco -> la cache sta scrivendo)" }
       $winrm = Get-Service WinRM -ErrorAction SilentlyContinue
       Add-Post 'WinRM servizio' "$($winrm.Status) (avvio: $($winrm.StartType))"
       $cv = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction SilentlyContinue

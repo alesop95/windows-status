@@ -6,6 +6,23 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — Cache RDP disattivata, raccordo checklist VA, quickstart, piano debloating a secco
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Snapshot-Stato.ps1` (tracciamento cache bitmap persistente RDP nella
+postura: legge sia il registro `DisablePersistentCache` sia `Default.rdp`
+`bitmapcachepersistenable`, perché la checkbox della GUI mstsc scrive nel .rdp, non nel
+registro), `docs/05_QUICKSTART.md` (NUOVO, dal recap d'uso, anonimo), `docs/06_RACCORDO_CHECKLIST_VA.md`
+(NUOVO, raccordo concettuale con la checklist di remediation VA — su richiesta utente, dopo aver
+letto il loro tool HTML), `CLAUDE.md` (indice satelliti), mappa template e compilata, `current-work.md`.
+Modifica EFFETTIVA al sistema (approvata): disattivata la cache bitmap RDP in modo robusto
+(registro=1, Default.rdp=0, cache svuotata) — la modifica che l'utente aveva fatto via GUI non
+si era salvata (Default.rdp restava 1, 5 file in cache); ora snapshot conferma DISATTIVATA. A
+changelog nella mappa compilata. Debloating: prodotto SOLO il piano a micro-step (analisi a
+secco, nulla eseguito) su richiesta utente — paracadute non ancora confermato; candidati app
+consumer divisi in gruppi A/B/C dall'inventario reale (212 Appx), MSTeams e PowerAutomate
+esclusi perché di lavoro.
+
 ## 2026-06-10 — snapshot.json e rimozione della task one-shot di riavvio
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente da fare).
