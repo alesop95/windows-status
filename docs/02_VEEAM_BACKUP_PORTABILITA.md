@@ -27,7 +27,7 @@ di sole cartelle ti dà solo i file, non ricostruisce Windows e i programmi → 
 
 ---
 
-## Configurazione del job (poi annotala nella mappa, sez. 10)
+## Configurazione del job (poi annotala nella mappa, sez. 11)
 
 | Impostazione | Scelta consigliata |
 |--------------|--------------------|
@@ -85,12 +85,12 @@ Applica la **3-2-1**: oltre al NAS, tieni una **seconda copia** su disco USB est
 
 Un backup non testato è solo una speranza. Almeno una volta, e dopo ogni cambiamento importante:
 - **Completo:** ripristina su un **disco di scorta** o in una **macchina virtuale** dal NAS, verifica
-  avvio e programmi chiave. Annota la data in `01_…` sez. 10.
+  avvio e programmi chiave. Annota la data in `01_…` sez. 11.
 - **Minimo:** ripristina **singoli file** dal backup, per confermare leggibilità + password di cifratura.
 
 ---
 
-## Da annotare nella mappa (sez. 10)
+## Da annotare nella mappa (sez. 11)
 
 Versione Veeam, tipo job (Intero computer), percorso NAS, dove sono le credenziali NAS, retention,
 cifratura sì/no e *dove* è la password, copie aggiuntive (USB/offsite), data del supporto di ripristino

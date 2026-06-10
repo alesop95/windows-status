@@ -136,7 +136,23 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 
 ---
 
-## 10. ✍️ Veeam -  riepilogo (dettaglio in `02_VEEAM_BACKUP_PORTABILITA.md`)
+## 10. 🔄 Superficie d'attacco e persistenza -  *da `porte_in_ascolto.csv`, `autoruns_registro.csv`, `wmi_sottoscrizioni.txt`, `attivita_pianificate_azioni.csv`, `driver_non_firmati.csv`, `servizi_percorsi_non_quotati.csv`*
+
+| Controllo                                | Stato all'ultimo snapshot | Note (legittimo? perché)     |
+| ---------------------------------------- | ------------------------- | ---------------------------- |
+| Porte in ascolto (TCP/UDP)               | `___ TCP / ___ UDP`       | `__________`                 |
+| Autoruns registro (Run/Winlogon/IFEO)    | `___ voci -  IFEO: ___`   | `__________`                 |
+| Sottoscrizioni WMI                       | `___ binding`             | `SCM Event Log = di serie`   |
+| Task non Microsoft (con azioni complete) | `___ task`                | `__________`                 |
+| Driver non firmati                       | `___`                     | `__________`                 |
+| Servizi con percorso non quotato         | `___`                     | `__________`                 |
+
+> ✍️ Ogni voce che `Compare-Snapshot.ps1` segnala nella sezione **ALERT DI SICUREZZA** (nuovi admin,
+> account, autorun, task, porte, cambi StartMode, driver non firmati) va spiegata qui o indagata.
+
+---
+
+## 11. ✍️ Veeam -  riepilogo (dettaglio in `02_VEEAM_BACKUP_PORTABILITA.md`)
 
 | Campo                                  | Valore                                                   |
 | -------------------------------------- | -------------------------------------------------------- |
@@ -151,7 +167,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 
 ---
 
-## 11. ✍️ Registro modifiche (changelog)
+## 12. ✍️ Registro modifiche (changelog)
 
 > Ogni intervento qui. È ciò che rende tutto reversibile e auditabile.
 

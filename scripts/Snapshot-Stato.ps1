@@ -1,11 +1,12 @@
-<#
+﻿<#
 ================================================================================
  Snapshot-Stato.ps1  —  Fotografia di SOLA LETTURA di un PC Windows 11
 ================================================================================
  SCOPO
    Crea una fotografia completa e ripetibile dello stato della macchina e di
    OGNI account: identita, utenti, sessioni, software, servizi, avvio, rete,
-   sicurezza, Veeam, e (per ogni profilo) configurazioni di Claude, git, SSH e
+   sicurezza, superficie d'attacco e persistenza (porte, autoruns, WMI, task,
+   driver), Veeam, e (per ogni profilo) configurazioni di Claude, git, SSH e
    ambiente di sviluppo. Output in ..\snapshots\snapshot_<data>.
 
  GARANZIE
@@ -106,8 +107,10 @@ if($doMachine){
   } catch { Add-Sum "Get-LocalUser non disponibile: $_" }
   try {
       Add-Sum ''; Add-Sum 'Amministratori locali:'
-      Get-LocalGroupMember -SID 'S-1-5-32-544' -ErrorAction Stop |
-          ForEach-Object { Add-Sum "  $($_.Name)  [$($_.ObjectClass)/$($_.PrincipalSource)]" }
+      $admins = Get-LocalGroupMember -SID 'S-1-5-32-544' -ErrorAction Stop
+      $admins | Select-Object Name,ObjectClass,PrincipalSource |
+          Export-Csv (Join-Path $outDir 'amministratori_locali.csv') -NoTypeInformation -Encoding UTF8
+      $admins | ForEach-Object { Add-Sum "  $($_.Name)  [$($_.ObjectClass)/$($_.PrincipalSource)]" }
   } catch { Add-Sum "Impossibile leggere gli amministratori locali: $_" }
   try {
       Add-Sum ''; Add-Sum 'Profili presenti in C:\Users:'
@@ -209,31 +212,155 @@ if($doMachine){
   Add-Sum 'NOTA: il JOB Veeam (sorgente=Intero computer, destinazione=NAS \\server\share, retention,'
   Add-Sum 'cifratura, pianificazione, data supporto di ripristino, data ultimo test) va documentato a mano'
   Add-Sum 'nella sezione Veeam della mappa: Veeam Agent non lo esporta in modo affidabile via script.'
+
+  Section "10. SUPERFICIE D'ATTACCO E PERSISTENZA"
+
+  # --- Porte in ascolto con processo proprietario ---
+  try {
+      $procInfo = @{}
+      Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+          ForEach-Object { $procInfo[[string]$_.ProcessId] = $_ }
+      $porte = @()
+      $porte += Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | ForEach-Object {
+          $p = $procInfo[[string]$_.OwningProcess]
+          [pscustomobject]@{ Protocollo='TCP'; IndirizzoLocale=$_.LocalAddress; Porta=$_.LocalPort
+                             PID=$_.OwningProcess; Processo=$p.Name; Percorso=$p.ExecutablePath }
+      }
+      $porte += Get-NetUDPEndpoint -ErrorAction SilentlyContinue | ForEach-Object {
+          $p = $procInfo[[string]$_.OwningProcess]
+          [pscustomobject]@{ Protocollo='UDP'; IndirizzoLocale=$_.LocalAddress; Porta=$_.LocalPort
+                             PID=$_.OwningProcess; Processo=$p.Name; Percorso=$p.ExecutablePath }
+      }
+      $porte | Sort-Object Protocollo,{ [int]$_.Porta } |
+          Export-Csv (Join-Path $outDir 'porte_in_ascolto.csv') -NoTypeInformation -Encoding UTF8
+      $tcpN = @($porte | Where-Object Protocollo -eq 'TCP').Count
+      $udpN = @($porte | Where-Object Protocollo -eq 'UDP').Count
+      Add-Sum "Porte in ascolto: $tcpN TCP, $udpN UDP, con processo proprietario (porte_in_ascolto.csv)"
+  } catch { Add-Sum "Porte in ascolto non leggibili: $_" }
+
+  # --- Autoruns profondi: Run/RunOnce per hive, Winlogon, IFEO, SilentProcessExit ---
+  try {
+      $auto = New-Object System.Collections.Generic.List[object]
+      $runKeys = @(
+          'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run',
+          'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce',
+          'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run',
+          'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\RunOnce'
+      )
+      # Hive utente caricati in HKEY_USERS: coprono gli account con sessione attiva e .DEFAULT
+      Get-ChildItem 'Registry::HKEY_USERS' -ErrorAction SilentlyContinue |
+          Where-Object { $_.PSChildName -notmatch '_Classes$' } | ForEach-Object {
+              $runKeys += "Registry::HKEY_USERS\$($_.PSChildName)\Software\Microsoft\Windows\CurrentVersion\Run"
+              $runKeys += "Registry::HKEY_USERS\$($_.PSChildName)\Software\Microsoft\Windows\CurrentVersion\RunOnce"
+          }
+      foreach($k in $runKeys){
+          if(-not (Test-Path $k)){ continue }
+          $vals = Get-ItemProperty $k -ErrorAction SilentlyContinue
+          foreach($p in $vals.PSObject.Properties){
+              if($p.Name -in 'PSPath','PSParentPath','PSChildName','PSDrive','PSProvider'){ continue }
+              $auto.Add([pscustomobject]@{ Origine=$k; Nome=$p.Name; Comando=[string]$p.Value })
+          }
+      }
+      $wl = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -ErrorAction SilentlyContinue
+      foreach($n in 'Shell','Userinit','Taskman'){
+          if($wl.$n){ $auto.Add([pscustomobject]@{ Origine='Winlogon'; Nome=$n; Comando=[string]$wl.$n }) }
+      }
+      Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options' -ErrorAction SilentlyContinue |
+          ForEach-Object {
+              $d = (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).Debugger
+              if($d){ $auto.Add([pscustomobject]@{ Origine='IFEO'; Nome=$_.PSChildName; Comando=[string]$d }) }
+          }
+      Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SilentProcessExit' -ErrorAction SilentlyContinue |
+          ForEach-Object {
+              $m = (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).MonitorProcess
+              if($m){ $auto.Add([pscustomobject]@{ Origine='SilentProcessExit'; Nome=$_.PSChildName; Comando=[string]$m }) }
+          }
+      # I comandi possono contenere credenziali negli argomenti: si salva tramite redazione
+      $csv = ($auto | ConvertTo-Csv -NoTypeInformation) -join "`r`n"
+      Save 'autoruns_registro.csv' (Protect-Secrets $csv)
+      $ifeoN = @($auto | Where-Object Origine -eq 'IFEO').Count
+      Add-Sum "Autoruns registro: $($auto.Count) voci (autoruns_registro.csv) | IFEO con Debugger: $ifeoN"
+  } catch { Add-Sum "Autoruns non leggibili: $_" }
+
+  # --- Sottoscrizioni WMI (persistenza classica: di norma vuote o tutte note) ---
+  try {
+      $flt  = Get-CimInstance -Namespace root\subscription -ClassName __EventFilter -ErrorAction SilentlyContinue
+      $cons = Get-CimInstance -Namespace root\subscription -ClassName __EventConsumer -ErrorAction SilentlyContinue
+      $bind = Get-CimInstance -Namespace root\subscription -ClassName __FilterToConsumerBinding -ErrorAction SilentlyContinue
+      $w = @("# Sottoscrizioni WMI (root\subscription) — $(Get-Date)","")
+      $w += "## EventFilter ($(@($flt).Count)):";  $flt  | ForEach-Object { $w += "  $($_.Name): $($_.Query)" }
+      $w += ""; $w += "## EventConsumer ($(@($cons).Count)):"
+      $cons | ForEach-Object { $w += "  [$($_.CimClass.CimClassName)] $($_.Name)" }
+      $w += ""; $w += "## FilterToConsumerBinding ($(@($bind).Count)):"
+      $bind | ForEach-Object { $w += "  $($_.Filter) -> $($_.Consumer)" }
+      Save 'wmi_sottoscrizioni.txt' (Protect-Secrets ($w -join "`r`n"))
+      Add-Sum "Sottoscrizioni WMI: $(@($bind).Count) binding, $(@($cons).Count) consumer (wmi_sottoscrizioni.txt)"
+  } catch { Add-Sum "Sottoscrizioni WMI non leggibili: $_" }
+
+  # --- Azioni complete delle attivita pianificate non Microsoft ---
+  try {
+      $tasks = Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $_.TaskPath -notlike '\Microsoft\*' }
+      $rows = foreach($t in $tasks){
+          foreach($a in $t.Actions){
+              [pscustomobject]@{
+                  TaskPath=$t.TaskPath; TaskName=$t.TaskName; Stato=[string]$t.State; Autore=$t.Author
+                  Esegui=$a.Execute; Argomenti=$a.Arguments; CartellaLavoro=$a.WorkingDirectory
+              }
+          }
+      }
+      $csv = ($rows | ConvertTo-Csv -NoTypeInformation) -join "`r`n"
+      Save 'attivita_pianificate_azioni.csv' (Protect-Secrets $csv)
+      Add-Sum "Attivita pianificate non Microsoft, con azioni: $(@($tasks).Count) task (attivita_pianificate_azioni.csv)"
+  } catch { Add-Sum "Azioni delle attivita pianificate non leggibili: $_" }
+
+  # --- Driver: inventario firme e non firmati ---
+  try {
+      $dq = driverquery /si /fo csv 2>$null | ConvertFrom-Csv
+      if($dq){
+          # I nomi colonna sono localizzati ma l'ordine e' fisso: 1=dispositivo, 3=firmato
+          $cols = @(@($dq)[0].PSObject.Properties.Name)
+          $dq | Export-Csv (Join-Path $outDir 'driver_firme.csv') -NoTypeInformation -Encoding UTF8
+          $unsigned = @($dq | Where-Object { $_.($cols[2]) -match '^(FALSE|FALSO|NO)$' })
+          $unsigned | Export-Csv (Join-Path $outDir 'driver_non_firmati.csv') -NoTypeInformation -Encoding UTF8
+          Add-Sum "Driver: $(@($dq).Count) totali, NON firmati: $($unsigned.Count) (driver_firme.csv, driver_non_firmati.csv)"
+      } else { Add-Sum 'driverquery non ha prodotto output.' }
+  } catch { Add-Sum "Firme driver non leggibili: $_" }
+
+  # --- Servizi con percorso non quotato contenente spazi (escalation classica) ---
+  try {
+      $svcBad = Get-CimInstance Win32_Service -ErrorAction SilentlyContinue | Where-Object {
+          $_.PathName -and $_.PathName.Trim() -notmatch '^"' -and
+          ($_.PathName -split '\.exe')[0] -match '\s'
+      } | Select-Object Name,DisplayName,StartMode,StartName,PathName
+      $svcBad | Export-Csv (Join-Path $outDir 'servizi_percorsi_non_quotati.csv') -NoTypeInformation -Encoding UTF8
+      Add-Sum "Servizi con percorso non quotato e spazi: $(@($svcBad).Count) (servizi_percorsi_non_quotati.csv)"
+  } catch { Add-Sum "Controllo percorsi servizi fallito: $_" }
 }
 
 # ============================================================================
 #  PARTE PER-UTENTE (file-based, da disco) — Claude / git / SSH per OGNI account
 # ============================================================================
 if($doMachine){
-  Section '10. CONFIGURAZIONI PER ACCOUNT (Claude / git / SSH)  [da disco]'
+  Section '11. CONFIGURAZIONI PER ACCOUNT (Claude / git / SSH)  [da disco]'
   try {
       $profiles = Get-ChildItem 'C:\Users' -Directory -ErrorAction Stop |
           Where-Object { $_.Name -notin @('Public','Default','Default User','All Users') }
   } catch { $profiles=@(); Add-Sum "Impossibile elencare i profili: $_" }
 
   foreach($p in $profiles){
-      $u = $p.Name; $home = $p.FullName
+      # NB: non usare $home come nome: HOME e' una variabile read-only di PowerShell
+      $u = $p.Name; $homeDir = $p.FullName
       Add-Sum ''; Add-Sum "--- Account: $u ---"
 
       # --- Claude (mai i segreti) ---
-      $claudeDir = Join-Path $home '.claude'
-      $claudeJson= Join-Path $home '.claude.json'
+      $claudeDir = Join-Path $homeDir '.claude'
+      $claudeJson= Join-Path $homeDir '.claude.json'
       $lines = @("# Configurazione Claude per $u","")
       if(Test-Path $claudeDir){
           $lines += "Cartella .claude presente. Inventario (esclusi i segreti):"
           Get-ChildItem $claudeDir -Recurse -File -ErrorAction SilentlyContinue |
               Where-Object { $_.Name -ne '.credentials.json' } |
-              ForEach-Object { $lines += ("  {0}  ({1} byte)" -f $_.FullName.Replace($home,'~'), $_.Length) }
+              ForEach-Object { $lines += ("  {0}  ({1} byte)" -f $_.FullName.Replace($homeDir,'~'), $_.Length) }
           if(Test-Path (Join-Path $claudeDir '.credentials.json')){ $lines += "  ~\.claude\.credentials.json  (PRESENTE — NON letto: contiene credenziali)" }
           foreach($f in @('settings.json','CLAUDE.md')){
               $fp = Join-Path $claudeDir $f
@@ -248,14 +375,14 @@ if($doMachine){
       SaveUser "${u}_claude.txt" ($lines -join "`r`n")
 
       # --- git (mai i token) ---
-      $gitcfg = Join-Path $home '.gitconfig'
+      $gitcfg = Join-Path $homeDir '.gitconfig'
       if(Test-Path $gitcfg){
           SaveUser "${u}_gitconfig.txt" (Protect-Secrets (Get-Content $gitcfg -Raw))
           Add-Sum "  git: .gitconfig presente (utenti\${u}_gitconfig.txt)"
       } else { Add-Sum "  git: nessun .gitconfig globale" }
 
       # --- SSH (solo chiavi PUBBLICHE e inventario; mai chiavi private) ---
-      $sshDir = Join-Path $home '.ssh'
+      $sshDir = Join-Path $homeDir '.ssh'
       if(Test-Path $sshDir){
           $sl = @("# SSH per $u — solo inventario e chiavi pubbliche","")
           Get-ChildItem $sshDir -File -ErrorAction SilentlyContinue | ForEach-Object { $sl += "  $($_.Name)  ($($_.Length) byte)" }
@@ -272,7 +399,7 @@ if($doMachine){
 #  PARTE UTENTE LIVE — ambiente di sviluppo dell'account corrente
 # ============================================================================
 if($doUser){
-  Section "11. AMBIENTE DI SVILUPPO (account corrente: $env:USERNAME)"
+  Section "12. AMBIENTE DI SVILUPPO (account corrente: $env:USERNAME)"
   $dev = @("# Ambiente sviluppo — $env:USERDOMAIN\$env:USERNAME — $(Get-Date)","")
   function Try-Cmd($label,$scriptblock){
       try { $out = & $scriptblock 2>$null; if($out){ $script:dev += "## ${label}:"; $script:dev += ($out | Out-String).TrimEnd(); $script:dev += "" } }
