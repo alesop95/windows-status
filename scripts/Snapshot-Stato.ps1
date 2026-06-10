@@ -694,6 +694,28 @@ try {
 # --- Riepilogo e manifest -----------------------------------------------------
 Save 'SUMMARY.txt' ($summary -join "`r`n")
 try {
+    # Riepilogo strutturato leggibile a macchina (conteggi chiave + indice dei file)
+    function Count-Csv([string]$name){ $p = Join-Path $outDir $name; if(Test-Path $p){ @(Import-Csv $p).Count } else { $null } }
+    $js = [ordered]@{
+        data                  = (Get-Date -Format 's')
+        scope                 = $Scope
+        amministratore        = [bool]$isAdmin
+        accountLocali         = Count-Csv 'account_locali.csv'
+        amministratoriLocali  = Count-Csv 'amministratori_locali.csv'
+        softwareRegistro      = Count-Csv 'software_registro.csv'
+        porteInAscolto        = Count-Csv 'porte_in_ascolto.csv'
+        autorunsRegistro      = Count-Csv 'autoruns_registro.csv'
+        taskNonMicrosoft      = Count-Csv 'attivita_pianificate_azioni.csv'
+        driverNonFirmati      = Count-Csv 'driver_non_firmati.csv'
+        serviziNonQuotati     = Count-Csv 'servizi_percorsi_non_quotati.csv'
+        rootCA                = Count-Csv 'cert_root_ca.csv'
+        regoleFirewallInbound = Count-Csv 'firewall_regole_inbound_allow.csv'
+        hotfix                = Count-Csv 'hotfix.csv'
+        file                  = @(Get-ChildItem $outDir -Recurse -File | ForEach-Object { $_.FullName.Replace("$outDir\",'') })
+    }
+    ($js | ConvertTo-Json -Depth 3) | Out-File (Join-Path $outDir 'snapshot.json') -Encoding UTF8
+} catch {}
+try {
     # Manifest SHA256 per l'integrita' (tamper-evident); esclude se stesso
     $mf = Get-ChildItem $outDir -Recurse -File | Where-Object Name -ne 'MANIFEST.sha256' |
         Sort-Object FullName | ForEach-Object {
