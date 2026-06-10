@@ -6,6 +6,24 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — Feature di sicurezza: superficie d'attacco nello snapshot e alert nel compare
+
+Commit: ff519f0 (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Snapshot-Stato.ps1` (nuova sezione 10 superficie d'attacco, export CSV
+degli amministratori in sezione 2, rinumerazione 10→11 e 11→12), `scripts/Compare-Snapshot.ps1`
+(sezione ALERT DI SICUREZZA a 8 categorie, diff per attributo dei servizi),
+`docs/01_MAPPA_CONFIGURAZIONE.md` (nuova sezione 🔄 10, Veeam→11, changelog→12),
+`docs/02_VEEAM_BACKUP_PORTABILITA.md` (richiami sez. 10→11), schede `STACK.md` e
+`current-work.md`.
+Motivo: caratterizzazione di cybersecurity decisa il 2026-06-10 (vedi roadmap).
+Collaudo: snapshot reale completo senza errori e con scansione anti-segreti pulita; alert
+verificati con uno snapshot sintetico manomesso in 7 punti (8/8 categorie scattate), poi
+eliminato. Tre bug corretti strada facendo: gli script devono essere UTF-8 con BOM (PowerShell
+5.1 legge l'UTF-8 senza BOM come ANSI e i caratteri tipografici spezzano le stringhe); la
+sezione per-account assegnava `$home`, variabile read-only di PowerShell (ora `$homeDir`,
+avrebbe attribuito i dati di ogni profilo all'esecutore); il diff generico esplodeva con CSV
+vuoti (`Compare-Object` non accetta null).
+
 ## 2026-06-10 — Allineamento al sistema di progetto portabile
 
 Commit: 7db4de7 (modifiche preparate, commit manuale dell'utente da fare).

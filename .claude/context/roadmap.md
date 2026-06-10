@@ -5,7 +5,7 @@ generated-date: 2026-06-10
 covers-paths:
   - scripts/**
   - docs/**
-last-verified-commit: 7db4de7
+last-verified-commit: ff519f0
 ---
 
 # Roadmap

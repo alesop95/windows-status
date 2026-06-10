@@ -4,8 +4,8 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: 7db4de7
-status: in lavorazione
+last-verified-commit: ff519f0
+status: implementata, collaudata, in attesa di commit
 ---
 
 # Lavoro in corso
@@ -22,14 +22,18 @@ File da modificare: `scripts/Snapshot-Stato.ps1` (nuova sezione macchina dopo la
 `docs/01_MAPPA_CONFIGURAZIONE.md` (nuova sezione 🔄 corrispondente).
 
 Definition of done:
-- [ ] porte TCP/UDP in ascolto con processo proprietario (PID, nome, percorso eseguibile)
-- [ ] autoruns profondi: chiavi Run/RunOnce per HKLM e per ogni hive utente, Winlogon
-      (Shell/Userinit), Image File Execution Options con Debugger impostato
-- [ ] sottoscrizioni eventi WMI (EventFilter, EventConsumer, FilterToConsumerBinding)
-- [ ] azioni complete delle attività pianificate non Microsoft (comando ed argomenti, non solo
+- [x] porte TCP/UDP in ascolto con processo proprietario (PID, nome, percorso eseguibile)
+- [x] autoruns profondi: chiavi Run/RunOnce per HKLM e per ogni hive utente, Winlogon
+      (Shell/Userinit), Image File Execution Options con Debugger impostato (+ SilentProcessExit)
+- [x] sottoscrizioni eventi WMI (EventFilter, EventConsumer, FilterToConsumerBinding)
+- [x] azioni complete delle attività pianificate non Microsoft (comando ed argomenti, non solo
       il nome)
-- [ ] driver non firmati e servizi con percorso non quotato contenente spazi
-- [ ] tutto in sola lettura, con redazione, output CSV/TXT diffabile e righe in SUMMARY.txt
+- [x] driver non firmati e servizi con percorso non quotato contenente spazi
+- [x] tutto in sola lettura, con redazione, output CSV/TXT diffabile e righe in SUMMARY.txt
+
+Collaudo del 2026-06-10: snapshot reale eseguito senza errori; la sezione ha rilevato 69 porte
+TCP e 71 UDP, 23 autoruns, il binding WMI di serie "SCM Event Log", 21 task non Microsoft, un
+driver non firmato (lettore smartcard); scansione anti-segreti sull'output pulita.
 
 ## Feature attiva 2 — Compare: alert di sicurezza
 
@@ -39,11 +43,14 @@ evidenza le variazioni critiche per la sicurezza.
 File da modificare: `scripts/Compare-Snapshot.ps1`.
 
 Definition of done:
-- [ ] alert su nuovo membro del gruppo Administrators e nuovo account locale abilitato
-- [ ] alert su nuovo autorun e nuova attività pianificata con la sua azione
-- [ ] alert su cambio di StartMode/StartName dei servizi (diff per attributo, non solo per nome)
-- [ ] alert su nuova porta in ascolto e nuovo driver non firmato (richiede i CSV della feature 1)
-- [ ] exit code o sezione finale "ALERT" leggibile a colpo d'occhio
+- [x] alert su nuovo membro del gruppo Administrators e nuovo account locale abilitato/riabilitato
+- [x] alert su nuovo autorun e nuova attività pianificata con la sua azione
+- [x] alert su cambio di StartMode/StartName dei servizi (diff per attributo, non solo per nome)
+- [x] alert su nuova porta in ascolto e nuovo driver non firmato (richiede i CSV della feature 1)
+- [x] sezione finale "ALERT DI SICUREZZA" leggibile a colpo d'occhio (con conteggio totale)
+
+Collaudo del 2026-06-10: test con snapshot sintetico manomesso in 7 punti — tutte le 8 categorie
+di alert sono scattate correttamente; con snapshot identici la sezione riporta "nessun alert".
 
 ## Domande aperte
 
