@@ -12,10 +12,11 @@ Commit di riferimento: 2552033
 Data snapshot:        2026-06-10
 ```
 
-Working tree non pulito: AV registrati nello snapshot, avviso elevazione nel compare, sezione
-"Uso" nel README e mappa compilata aggiornata con i dati elevati; il commit è manuale
-dell'utente. La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` è locale (ignorata
-da git). Al commit successivo portare i `last-verified-commit` al nuovo HEAD.
+Working tree non pulito: blocco Defender/policy in profondità (snapshot+compare, categorie
+DEFENDER e FIREWALL), trigger delle task nel CSV, AV registrati, avviso elevazione, sezione
+"Uso" nel README e mappa aggiornata; il commit è manuale dell'utente. La mappa compilata
+`docs/01_MAPPA_CONFIGURAZIONE.compilata.md` è locale (ignorata da git). Al commit successivo
+portare i `last-verified-commit` al nuovo HEAD.
 
 ## Stato di verifica delle schede
 
@@ -30,7 +31,9 @@ da git). Al commit successivo portare i `last-verified-commit` al nuovo HEAD.
 
 ## Punto di ripresa
 
-Dopo il commit manuale: (1) decisioni ✍️ dell'utente dalla mappa compilata — BitLocker OFF su
-tutti i volumi, Secure Boot disattivo con TPM pronto, task `RiavvioSingoloNotturno` e residuo
-Lenovo; (2) prossimo blocco dalla roadmap: Defender e policy in profondità (esclusioni AV, ASR,
-auditpol, logging PowerShell), da eseguire con snapshot elevato.
+Dopo il commit manuale: (1) leggere il trigger di `RiavvioSingoloNotturno` dall'export elevato
+(`snapshots\task_riavvio.xml`, comando già dato all'utente) e decidere se rimuoverla; (2)
+decisioni ✍️ dalla mappa compilata — BitLocker OFF, Secure Boot disattivo con TPM pronto,
+logging PowerShell non configurato, residuo Lenovo; (3) prossimo blocco dalla roadmap
+(candidati: catena di fiducia, export ripristinabili, integrità snapshot); (4) un nuovo
+snapshot ELEVATO completerebbe auditpol e secedit nella mappa.

@@ -199,6 +199,65 @@ if($doMachine){
       Add-Sum 'Antivirus registrati (SecurityCenter2):'
       $avs | ForEach-Object { Add-Sum ("  {0}  (productState={1})" -f $_.displayName, $_.productState) }
   } catch { Add-Sum "SecurityCenter2 non leggibile: $_" }
+
+  # --- Defender in profondita': esclusioni, regole ASR, Tamper Protection ---
+  try {
+      $pref = Get-MpPreference -ErrorAction Stop
+      $esc = New-Object System.Collections.Generic.List[object]
+      foreach($p in @($pref.ExclusionPath)){      if($p){ $esc.Add([pscustomobject]@{ Tipo='Path';      Valore=$p }) } }
+      foreach($p in @($pref.ExclusionExtension)){ if($p){ $esc.Add([pscustomobject]@{ Tipo='Extension'; Valore=$p }) } }
+      foreach($p in @($pref.ExclusionProcess)){   if($p){ $esc.Add([pscustomobject]@{ Tipo='Process';   Valore=$p }) } }
+      foreach($p in @($pref.ExclusionIpAddress)){ if($p){ $esc.Add([pscustomobject]@{ Tipo='IpAddress'; Valore=$p }) } }
+      $esc | Export-Csv (Join-Path $outDir 'defender_esclusioni.csv') -NoTypeInformation -Encoding UTF8
+      Add-Sum "Esclusioni Defender: $($esc.Count) (defender_esclusioni.csv) — ogni esclusione e' zona cieca dell'AV"
+      $asr = New-Object System.Collections.Generic.List[object]
+      $ids = @($pref.AttackSurfaceReductionRules_Ids); $acts = @($pref.AttackSurfaceReductionRules_Actions)
+      for($i=0; $i -lt $ids.Count; $i++){ $asr.Add([pscustomobject]@{ Regola=$ids[$i]; Azione=$acts[$i] }) }
+      $asr | Export-Csv (Join-Path $outDir 'defender_asr.csv') -NoTypeInformation -Encoding UTF8
+      Add-Sum "Regole ASR configurate: $($asr.Count) (defender_asr.csv; Azione: 0=off 1=blocca 2=audit 6=warn)"
+  } catch { Add-Sum "Preferenze Defender non leggibili (serve admin; con AV di terze parti possono essere vuote): $_" }
+  try {
+      $mp2 = Get-MpComputerStatus -ErrorAction Stop
+      Add-Sum "Tamper Protection: $($mp2.IsTamperProtected) | Modalita' Defender: $($mp2.AMRunningMode)"
+  } catch {}
+
+  # --- Audit policy e logging PowerShell ---
+  try {
+      $ap = auditpol /get /category:* 2>$null
+      if($ap){ Save 'auditpol.txt' ($ap -join "`r`n"); Add-Sum 'Audit policy: auditpol.txt' }
+      else { Add-Sum 'auditpol senza output (serve admin).' }
+  } catch { Add-Sum "auditpol non disponibile: $_" }
+  try {
+      $sb   = Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging' -ErrorAction SilentlyContinue
+      $mlog = Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging' -ErrorAction SilentlyContinue
+      $tr   = Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription' -ErrorAction SilentlyContinue
+      $psl = @()
+      $psl += 'PS ScriptBlockLogging          : ' + $(if($null -ne $sb.EnableScriptBlockLogging){ [string]$sb.EnableScriptBlockLogging } else { 'non configurato' })
+      $psl += 'PS ModuleLogging               : ' + $(if($null -ne $mlog.EnableModuleLogging){ [string]$mlog.EnableModuleLogging } else { 'non configurato' })
+      $psl += 'PS Transcription               : ' + $(if($null -ne $tr.EnableTranscripting){ [string]$tr.EnableTranscripting } else { 'non configurato' })
+      Save 'powershell_logging.txt' ($psl -join "`r`n")
+      Add-Sum 'Logging PowerShell (powershell_logging.txt):'
+      $psl | ForEach-Object { Add-Sum "  $_" }
+  } catch {}
+
+  # --- Criteri locali (secedit) e regole firewall inbound consentite ---
+  try {
+      $sec = Join-Path $outDir 'secedit_policy.inf'
+      secedit /export /cfg $sec /quiet 2>$null | Out-Null
+      if(Test-Path $sec){ Add-Sum 'Criteri di sicurezza locali: secedit_policy.inf (password, lockout, user rights)' }
+      else { Add-Sum 'secedit non esportato (serve admin).' }
+  } catch { Add-Sum "secedit fallito: $_" }
+  try {
+      $fwRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -Enabled True -ErrorAction SilentlyContinue)
+      $apps=@{};  Get-NetFirewallApplicationFilter -All -ErrorAction SilentlyContinue | ForEach-Object { $apps[$_.InstanceID]=$_.Program }
+      $prt=@{};   Get-NetFirewallPortFilter -All -ErrorAction SilentlyContinue | ForEach-Object { $prt[$_.InstanceID]="$($_.Protocol):$($_.LocalPort)" }
+      $fwRows = $fwRules | ForEach-Object {
+          [pscustomobject]@{ Nome=$_.Name; NomeVisualizzato=$_.DisplayName; Gruppo=$_.DisplayGroup
+                             Profilo=[string]$_.Profile; Programma=$apps[$_.InstanceID]; Porta=$prt[$_.InstanceID] }
+      }
+      $fwRows | Export-Csv (Join-Path $outDir 'firewall_regole_inbound_allow.csv') -NoTypeInformation -Encoding UTF8
+      Add-Sum "Regole firewall INBOUND consentite e attive: $($fwRules.Count) (firewall_regole_inbound_allow.csv)"
+  } catch { Add-Sum "Regole firewall non leggibili: $_" }
   try {
       Add-Sum 'BitLocker:'
       Get-BitLockerVolume -ErrorAction Stop | ForEach-Object {
@@ -359,10 +418,15 @@ if($doMachine){
   try {
       $tasks = Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object { $_.TaskPath -notlike '\Microsoft\*' }
       $rows = foreach($t in $tasks){
+          $trig = ($t.Triggers | ForEach-Object {
+              ($_.CimClass.CimClassName -replace '^MSFT_Task','' -replace 'Trigger$','') +
+              $(if($_.StartBoundary){ "@$($_.StartBoundary)" }) +
+              $(if($_.Enabled -eq $false){ '(disabilitato)' })
+          }) -join ' + '
           foreach($a in $t.Actions){
               [pscustomobject]@{
                   TaskPath=$t.TaskPath; TaskName=$t.TaskName; Stato=[string]$t.State; Autore=$t.Author
-                  Esegui=$a.Execute; Argomenti=$a.Arguments; CartellaLavoro=$a.WorkingDirectory
+                  Trigger=$trig; Esegui=$a.Execute; Argomenti=$a.Arguments; CartellaLavoro=$a.WorkingDirectory
               }
           }
       }
