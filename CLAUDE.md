@@ -62,6 +62,15 @@ servono. Il materiale sotto `_notes/` si apre solo per verificare un requisito o
 - Claude non scrive nei file di memoria e contesto di propria iniziativa: li aggiorna su
   richiesta o a passo concluso, e il versionamento resta sotto controllo umano.
 
+## Documenti (in `docs/`, tracciati; le copie compilate `*.compilata.md` restano locali)
+- `00_GUIDA_OTTIMIZZAZIONE.md` debloating e ottimizzazione (Winhance/Winslop, manuale)
+- `01_MAPPA_CONFIGURAZIONE.md` mappa viva (sezioni 🔄 da snapshot, ✍️ decisioni umane)
+- `02_VEEAM_BACKUP_PORTABILITA.md` strategia di backup e ripristino bare metal
+- `03_HANDOFF_CLAUDE_CODE.md` setup di Claude Code sul progetto
+- `04_GIT_VERSIONAMENTO_MULTIACCOUNT.md` identità git multi-account
+- `05_QUICKSTART.md` guida rapida d'uso del tool
+- `06_RACCORDO_CHECKLIST_VA.md` come gli alert alimentano una checklist di remediation VA
+
 ## Struttura
 - `docs/`     guide e mappa (tracciate; le copie compilate `*.compilata.md` restano locali)
 - `scripts/`  Snapshot-Stato.ps1, Compare-Snapshot.ps1, Reinstall-Software.ps1

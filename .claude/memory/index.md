@@ -12,27 +12,29 @@ Commit di riferimento: 9407b27
 Data snapshot:        2026-06-10
 ```
 
-Working tree non pulito: `snapshot.json` (riepilogo strutturato) implementato e collaudato; il
-commit è manuale dell'utente. La mappa compilata è locale (ignorata da git). Al commit
-successivo portare i `last-verified-commit` al nuovo HEAD. La roadmap di caratterizzazione di
-sicurezza è COMPLETA: il lavoro futuro è in "Punto di ripresa".
+Working tree non pulito: tracciamento cache bitmap RDP nello snapshot, `docs/05_QUICKSTART.md` e
+`docs/06_RACCORDO_CHECKLIST_VA.md` nuovi, indice docs nel CLAUDE.md, piano debloating a secco in
+current-work; più due modifiche EFFETTIVE al sistema già applicate (rimozione task one-shot,
+disattivazione cache RDP). Il commit è manuale dell'utente. La mappa compilata è locale. Al
+commit successivo portare i `last-verified-commit` al nuovo HEAD.
 
 ## Stato di verifica delle schede
 
 | Scheda | last-verified | Stato |
 |---|---|---|
-| STACK.md | e32d96b | aggiornata (descrive il working tree, commit in attesa) |
-| design-and-security.md | e32d96b | aggiornata |
-| deployment.md | e32d96b | aggiornata |
-| dev-testing.md | e32d96b | aggiornata |
-| current-work.md | e32d96b | tre feature implementate e collaudate, in attesa di commit |
-| roadmap.md | e32d96b | aggiornata |
+| STACK.md | 9407b27 | aggiornata (descrive il working tree, commit in attesa) |
+| design-and-security.md | 9407b27 | aggiornata |
+| deployment.md | 9407b27 | aggiornata |
+| dev-testing.md | 9407b27 | aggiornata |
+| current-work.md | 9407b27 | caratterizzazione completa; piano debloating a secco |
+| roadmap.md | 9407b27 | aggiornata |
 
 ## Punto di ripresa
 
-Dopo il commit manuale: (1) decisioni ✍️ dalla mappa compilata — BitLocker OFF, Secure Boot
-disattivo con TPM pronto, logging PowerShell non configurato, residuo Lenovo, estensione
-VPN/proxy nel browser — da affrontare una alla volta col paracadute Veeam; (2) un nuovo
-snapshot ELEVATO come baseline pulita post-rimozione task (completa anche auditpol, secedit,
-associazioni file); (3) roadmap residua: server MCP locale, fasi di pulizia guidate da docs/00,
-documentazione manuale del job Veeam in mappa (sezione 11).
+Dopo il commit manuale: (1) DEBLOATING — eseguibile solo dopo che l'utente conferma il
+paracadute (immagine Veeam recente + punto di ripristino); piano a micro-step pronto in
+`current-work.md`, si parte dal Gruppo A (app consumer); nulla è ancora eseguito; (2) decisioni
+✍️ dalla mappa compilata — BitLocker OFF, Secure Boot disattivo con TPM pronto, logging
+PowerShell non configurato, residuo Lenovo, estensione VPN/proxy nel browser; (3) un nuovo
+snapshot ELEVATO come baseline pulita post-modifiche (RDP, task) che completa anche auditpol,
+secedit, associazioni file; (4) roadmap residua: server MCP locale, job Veeam in mappa (sez. 11).
