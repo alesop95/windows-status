@@ -6,6 +6,16 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-10 — snapshot.json e rimozione della task one-shot di riavvio
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Snapshot-Stato.ps1` (riepilogo strutturato `snapshot.json`: data, scope,
+elevazione, conteggi chiave, indice dei file — collaudato con -Scope User, conteggi macchina
+correttamente null). Prima modifica EFFETTIVA al sistema del progetto: rimozione della task
+residua `RiavvioSingoloNotturno` (one-shot del 2025-11-30 scaduta), eseguita da elevato con
+consenso UAC dell'utente e registrata nel changelog della mappa compilata. La roadmap di
+caratterizzazione di sicurezza decisa il 2026-06-10 è completata.
+
 ## 2026-06-10 — Quattro blocchi finali: fiducia, export, ambiente esteso, integrità; verdetto task
 
 Commit: 74fb6c7 (modifiche preparate, commit manuale dell'utente da fare).

@@ -5,7 +5,7 @@ generated-date: 2026-06-10
 covers-paths:
   - scripts/**
   - docs/**
-last-verified-commit: 74fb6c7
+last-verified-commit: 9407b27
 ---
 
 # Roadmap
@@ -28,7 +28,9 @@ Catena di fiducia (root CA, Trusted Publishers, hosts, proxy/DoH, con alert TRUS
 ripristinabili (Wi-Fi senza chiavi, associazioni file, piano energetico, internazionali, XML
 task), ambiente utente esteso (Terminal, profili PowerShell, cmdkey, estensioni browser con
 alert BROWSER) e integrità dello snapshot (Protect-Secrets esteso, scansione anti-segreti
-finale, MANIFEST.sha256) (2026-06-10).
+finale, MANIFEST.sha256) (2026-06-10). Riepilogo strutturato `snapshot.json` con i conteggi
+chiave e l'indice dei file (2026-06-10). La caratterizzazione di sicurezza decisa il 2026-06-10
+è con questo COMPLETA.
 
 ## Prossimi blocchi candidati (decisi il 2026-06-10, in ordine di valore)
 

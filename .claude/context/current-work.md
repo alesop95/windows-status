@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: 74fb6c7
+last-verified-commit: 9407b27
 status: implementata, collaudata, in attesa di commit
 ---
 

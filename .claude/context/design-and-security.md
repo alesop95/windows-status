@@ -5,7 +5,7 @@ generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
   - .gitignore
-last-verified-commit: 74fb6c7
+last-verified-commit: 9407b27
 ---
 
 # Design e sicurezza applicativa
