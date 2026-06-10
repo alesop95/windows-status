@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: e32d96b
+last-verified-commit: 2552033
 status: implementata, collaudata, in attesa di commit
 ---
 
@@ -69,13 +69,23 @@ Collaudo del 2026-06-10 (non elevato): VBS in esecuzione ma senza CredentialGuar
 RunAsPPL=2, SMBv1 off ma firma SMB non richiesta, RDP off, WinRM fermo, 25H2 26200.8457 con
 7 hotfix. Confronto reale baseline→nuovo: 4 alert tutti legittimi (porte Veeam, mDNS Edge).
 
+## Feature attiva 4 — Snapshot multi-profilo Claude e AV registrati
+
+Cosa fa: la sezione per-account legge tutti i profili `.claude*` (default e multi-account via
+`CLAUDE_CONFIG_DIR`) con inventario limitato a 200 voci e config oscurate; la sezione 8 elenca
+gli antivirus registrati in SecurityCenter2 (con AV di terze parti, Defender in passivo è
+normale); il compare avvisa quando i due snapshot hanno privilegi diversi (rumore di
+visibilità).
+
+Definition of done: tutte le voci fatte e collaudate il 2026-06-10 (3 profili rilevati,
+redazione pulita; avviso elevazione verificato sul confronto non-elevato vs elevato).
+
 ## Domande aperte
 
 Il server MCP locale è rimandato: in radice c'è un `.mcp.json` segnaposto non funzionante per
 scelta, da compilare quando si deciderà l'implementazione (vedi roadmap).
 
-Dallo snapshot reale del 2026-06-10: la macchina NON è Entra ID joined (solo
-workplace-registered, niente Intune) mentre CLAUDE.md e README la descrivono come "Entra ID
-joined / gestita" — decisione umana pendente su come riallineare i documenti. Da rieseguire lo
-snapshot da PowerShell ELEVATO per BitLocker, Defender (che da non-admin risulta "False": da
-confermare), Secure Boot e TPM.
+Risolte il 2026-06-10: CLAUDE.md e README riallineati al join reale (workplace, non Entra);
+snapshot elevato eseguito dall'utente. Esiti nella mappa compilata, con tre ✍️ aperti per
+l'utente: BitLocker OFF su tutti i volumi (attivarlo?), Secure Boot disattivo con TPM pronto
+(attivarlo da UEFI?), task `RiavvioSingoloNotturno` e residuo Lenovo da spiegare/pulire.

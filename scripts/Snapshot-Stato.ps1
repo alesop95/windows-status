@@ -194,6 +194,12 @@ if($doMachine){
       Add-Sum "Defender AV attivo: $($mp.AntivirusEnabled) | Realtime: $($mp.RealTimeProtectionEnabled) | Firme: $($mp.AntivirusSignatureLastUpdated)"
   } catch { Add-Sum "Stato Defender non leggibile: $_" }
   try {
+      # Tutti gli AV registrati: se ce n'e' uno di terze parti, Defender in passivo (False) e' normale
+      $avs = Get-CimInstance -Namespace root/SecurityCenter2 -ClassName AntiVirusProduct -ErrorAction Stop
+      Add-Sum 'Antivirus registrati (SecurityCenter2):'
+      $avs | ForEach-Object { Add-Sum ("  {0}  (productState={1})" -f $_.displayName, $_.productState) }
+  } catch { Add-Sum "SecurityCenter2 non leggibile: $_" }
+  try {
       Add-Sum 'BitLocker:'
       Get-BitLockerVolume -ErrorAction Stop | ForEach-Object {
           Add-Sum "  $($_.MountPoint)  Protezione=$($_.ProtectionStatus)  $($_.EncryptionPercentage)%  $($_.KeyProtector.KeyProtectorType -join ',')"

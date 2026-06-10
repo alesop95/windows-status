@@ -8,13 +8,12 @@
 
 ```
 Branch attivo:        main
-Commit di riferimento: e32d96b
+Commit di riferimento: 2552033
 Data snapshot:        2026-06-10
 ```
 
-Working tree non pulito: postura hardware/OS (snapshot+compare), filtro profili di servizio,
-riduzione rumore alert, riallineamento CLAUDE.md/README al join reale (workplace, non Entra) e
-lettura multi-profilo Claude `.claude*` sono implementati e collaudati; il commit è manuale
+Working tree non pulito: AV registrati nello snapshot, avviso elevazione nel compare, sezione
+"Uso" nel README e mappa compilata aggiornata con i dati elevati; il commit è manuale
 dell'utente. La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` è locale (ignorata
 da git). Al commit successivo portare i `last-verified-commit` al nuovo HEAD.
 
@@ -31,7 +30,7 @@ da git). Al commit successivo portare i `last-verified-commit` al nuovo HEAD.
 
 ## Punto di ripresa
 
-Dopo il commit manuale: (1) snapshot da PowerShell ELEVATO (l'utente lo esegue) e
-completamento nella mappa compilata di BitLocker, Defender, Secure Boot, TPM e dei dati
-per-account degli altri profili; (2) prossimo blocco dalla roadmap (consigliato: Defender e
-policy in profondità, che beneficia anch'esso dell'esecuzione elevata).
+Dopo il commit manuale: (1) decisioni ✍️ dell'utente dalla mappa compilata — BitLocker OFF su
+tutti i volumi, Secure Boot disattivo con TPM pronto, task `RiavvioSingoloNotturno` e residuo
+Lenovo; (2) prossimo blocco dalla roadmap: Defender e policy in profondità (esclusioni AV, ASR,
+auditpol, logging PowerShell), da eseguire con snapshot elevato.
