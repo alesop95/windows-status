@@ -8,15 +8,14 @@
 
 ```
 Branch attivo:        main
-Commit di riferimento: 2552033
+Commit di riferimento: 74fb6c7
 Data snapshot:        2026-06-10
 ```
 
-Working tree non pulito: blocco Defender/policy in profondità (snapshot+compare, categorie
-DEFENDER e FIREWALL), trigger delle task nel CSV, AV registrati, avviso elevazione, sezione
-"Uso" nel README e mappa aggiornata; il commit è manuale dell'utente. La mappa compilata
-`docs/01_MAPPA_CONFIGURAZIONE.compilata.md` è locale (ignorata da git). Al commit successivo
-portare i `last-verified-commit` al nuovo HEAD.
+Working tree non pulito: blocchi catena di fiducia (TRUST), export ripristinabili (sezione 11),
+ambiente utente esteso (BROWSER) e integrità (scansione finale + MANIFEST.sha256) implementati
+e collaudati; il commit è manuale dell'utente. La mappa compilata è locale (ignorata da git).
+Al commit successivo portare i `last-verified-commit` al nuovo HEAD.
 
 ## Stato di verifica delle schede
 
@@ -31,9 +30,9 @@ portare i `last-verified-commit` al nuovo HEAD.
 
 ## Punto di ripresa
 
-Dopo il commit manuale: (1) leggere il trigger di `RiavvioSingoloNotturno` dall'export elevato
-(`snapshots\task_riavvio.xml`, comando già dato all'utente) e decidere se rimuoverla; (2)
-decisioni ✍️ dalla mappa compilata — BitLocker OFF, Secure Boot disattivo con TPM pronto,
-logging PowerShell non configurato, residuo Lenovo; (3) prossimo blocco dalla roadmap
-(candidati: catena di fiducia, export ripristinabili, integrità snapshot); (4) un nuovo
-snapshot ELEVATO completerebbe auditpol e secedit nella mappa.
+Dopo il commit manuale: (1) conferma utente per rimuovere `RiavvioSingoloNotturno` (verdetto:
+one-shot scaduta del 2025-11-30, innocua) — la rimozione va a changelog; (2) decisioni ✍️ dalla
+mappa compilata — BitLocker OFF, Secure Boot disattivo con TPM pronto, logging PowerShell non
+configurato, residuo Lenovo, estensione VPN/proxy nel browser; (3) un nuovo snapshot ELEVATO
+completerebbe auditpol, secedit e associazioni file; (4) roadmap residua: output JSON
+strutturato, server MCP locale, fasi di pulizia guidate da docs/00.

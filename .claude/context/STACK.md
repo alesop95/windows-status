@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: 2552033
+last-verified-commit: 74fb6c7
 ---
 
 # Stack applicativo
@@ -31,27 +31,36 @@ fotografia di sola lettura, organizzata in tre parti governate dal parametro `-S
 (`All`, `Machine`, `User`). La parte macchina copre identità e join Entra ID (sezione 1),
 account, sessioni e membri di Administrators (2), configurazioni di macchina (3), software da
 winget, registro e Appx (4), servizi (5), avvio e attività pianificate (6), rete e firewall (7),
-sicurezza Defender e BitLocker (8), rilevamento Veeam (9), e la superficie d'attacco e
+sicurezza (8: Defender e AV registrati, BitLocker, postura hardware/OS, esclusioni e ASR,
+auditpol, logging PowerShell, secedit, regole firewall inbound, catena di fiducia con root CA,
+Trusted Publishers, hosts, proxy e DoH), rilevamento Veeam (9), superficie d'attacco e
 persistenza (10): porte TCP/UDP in ascolto con processo proprietario, autoruns profondi
 (Run/RunOnce per hive, Winlogon, IFEO con Debugger, SilentProcessExit), sottoscrizioni WMI in
-`root\subscription`, azioni complete delle attività pianificate non Microsoft, firme dei driver
-con estrazione dei non firmati, servizi con percorso non quotato. La parte per-account (11)
-legge da disco, per ogni profilo in `C:\Users` (esclusi i profili di servizio TEMP*/UMFD-*), le
+`root\subscription`, azioni e trigger delle attività pianificate non Microsoft, firme dei
+driver con estrazione dei non firmati, servizi con percorso non quotato; e gli export
+ripristinabili (11): profili Wi-Fi senza chiavi, associazioni file, piano energetico,
+impostazioni internazionali, XML delle task non Microsoft. La parte per-account (12) legge da
+disco, per ogni profilo in `C:\Users` (esclusi i profili di servizio TEMP*/UMFD-*), le
 configurazioni di Claude — tutti i profili `.claude*`, inclusi i multi-account selezionati via
 `CLAUDE_CONFIG_DIR`, con inventario limitato alle prime 200 voci e `settings.json`/`CLAUDE.md`/
-`.claude.json` oscurati — più git e SSH, sempre tramite redazione dei segreti. La parte utente live (12) fotografa l'ambiente di sviluppo
-dell'account che esegue. Ogni sezione scrive file CSV o TXT dedicati e righe di sintesi in
-`SUMMARY.txt`. I CSV con comandi potenzialmente sensibili (autoruns, azioni delle task) passano
-da `Protect-Secrets` prima del salvataggio.
+`.claude.json` oscurati — più git e SSH, sempre tramite redazione dei segreti. La parte utente
+live (13) fotografa l'ambiente di sviluppo dell'account che esegue, più Windows Terminal,
+profili PowerShell, destinazioni `cmdkey` ed estensioni browser Edge/Chrome. Ogni sezione
+scrive file CSV o TXT dedicati e righe di sintesi in `SUMMARY.txt`. I contenuti potenzialmente
+sensibili passano da `Protect-Secrets` (api key, token GitHub/AWS/Slack, JWT, blocchi di chiave
+privata PEM); in coda lo script riesegue una scansione anti-segreti su tutto l'output e produce
+`MANIFEST.sha256` con l'hash di ogni file (integrità tamper-evident).
 
 `scripts/Compare-Snapshot.ps1` confronta due snapshot (di default i due più recenti) in due
 passate: il diff generale per chiave sui CSV principali (voci aggiunte e rimosse), e la sezione
 finale di ALERT DI SICUREZZA che incrocia i CSV della superficie d'attacco e gli attributi:
 nuovi membri di Administrators, account creati o riabilitati, autorun nuovi (cartelle e
-registro), task nuove o con azione cambiata, porte in ascolto nuove, servizi nuovi o con
-StartMode/account di esecuzione cambiati, driver non firmati comparsi, servizi con percorso non
-quotato comparsi. Se un CSV manca in uno dei due snapshot la categoria viene saltata senza
-errori. Vincolo di codifica: gli script vanno salvati in UTF-8 con BOM, perché Windows
+registro), task nuove o con azione cambiata, porte in ascolto nuove (escluse le UDP effimere),
+servizi nuovi o con StartMode/account di esecuzione cambiati, driver non firmati comparsi,
+postura hardware/OS cambiata, esclusioni Defender nuove e ASR indebolite, regole firewall
+inbound nuove, root CA e Trusted Publishers nuovi, hosts modificato, estensioni browser nuove,
+servizi con percorso non quotato comparsi. Avvisa se i due snapshot hanno privilegi diversi.
+Se un CSV manca in uno dei due snapshot la categoria viene saltata senza errori. Vincolo di codifica: gli script vanno salvati in UTF-8 con BOM, perché Windows
 PowerShell 5.1 interpreta l'UTF-8 senza BOM come ANSI e i caratteri tipografici nelle stringhe
 spezzano il parsing.
 

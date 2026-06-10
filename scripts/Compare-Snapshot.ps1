@@ -210,7 +210,37 @@ if($null -ne $fwo -and $null -ne $fwn){
     }
 }
 
-# 11. Servizi con percorso non quotato comparsi dopo
+# 11. Catena di fiducia: nuove root CA (criticita' alta), nuovi Trusted Publishers, hosts modificato
+$rco = Load-Csv $Old 'cert_root_ca.csv'; $rcn = Load-Csv $New 'cert_root_ca.csv'
+if($null -ne $rco -and $null -ne $rcn){
+    foreach($c in $rcn){ if($c.Thumbprint -notin @($rco.Thumbprint)){ Add-Alert 'TRUST' "NUOVA root CA di macchina: $($c.Subject) [$($c.Thumbprint)]" } }
+}
+$tpo = Load-Csv $Old 'cert_trusted_publishers.csv'; $tpn = Load-Csv $New 'cert_trusted_publishers.csv'
+if($null -ne $tpo -and $null -ne $tpn){
+    foreach($c in $tpn){ if($c.Thumbprint -notin @($tpo.Thumbprint)){ Add-Alert 'TRUST' "nuovo Trusted Publisher: $($c.Subject)" } }
+}
+$ho = Join-Path $Old 'hosts.txt'; $hn = Join-Path $New 'hosts.txt'
+if((Test-Path $ho) -and (Test-Path $hn)){
+    if((Get-FileHash $ho).Hash -ne (Get-FileHash $hn).Hash){
+        Add-Alert 'TRUST' 'file hosts MODIFICATO (possibile dirottamento DNS locale): confronta i due hosts.txt'
+    }
+}
+
+# 12. Nuove estensioni browser (per ogni account fotografato con -Scope User)
+Get-ChildItem (Join-Path $New 'utenti') -Filter '_browser_estensioni_*.csv' -ErrorAction SilentlyContinue | ForEach-Object {
+    $oldF = Join-Path (Join-Path $Old 'utenti') $_.Name
+    if(Test-Path $oldF){
+        $bo = @(Import-Csv $oldF); $bn = @(Import-Csv $_.FullName)
+        $keyO = @($bo | ForEach-Object { "$($_.Browser)|$($_.ProfiloBrowser)|$($_.Id)" })
+        foreach($e in $bn){
+            if("$($e.Browser)|$($e.ProfiloBrowser)|$($e.Id)" -notin $keyO){
+                Add-Alert 'BROWSER' "nuova estensione $($e.Browser): $($e.Nome) [$($e.Id)]"
+            }
+        }
+    }
+}
+
+# 13. Servizi con percorso non quotato comparsi dopo
 $qo = Load-Csv $Old 'servizi_percorsi_non_quotati.csv'; $qn = Load-Csv $New 'servizi_percorsi_non_quotati.csv'
 if($null -ne $qo -and $null -ne $qn){
     foreach($s in $qn){ if($s.Name -notin @($qo.Name)){ Add-Alert 'SERVIZI' "nuovo servizio con percorso non quotato: $($s.Name) -> $($s.PathName)" } }

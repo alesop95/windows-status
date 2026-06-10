@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: 2552033
+last-verified-commit: 74fb6c7
 status: implementata, collaudata, in attesa di commit
 ---
 
@@ -95,6 +95,29 @@ verificata; alert DEFENDER e FIREWALL verificati con test sintetico 3/3; 215 reg
 baseline; trovato che il logging PowerShell non è configurato → ✍️ candidato hardening).
 Nota: con AV di terze parti attivo, Defender è "Not running" e le sue esclusioni non sono
 leggibili localmente — le esclusioni reali vivono nella console dell'AV aziendale.
+
+## Feature attiva 6 — Catena di fiducia, export ripristinabili, ambiente esteso, integrità
+
+Cosa fa: sezione 8 + catena di fiducia (root CA macchina, Trusted Publishers, hosts, proxy
+WinHTTP/utente, DoH); nuova sezione 11 EXPORT RIPRISTINABILI (Wi-Fi senza chiavi, associazioni
+file via DISM, powercfg, impostazioni internazionali, XML delle task non Microsoft, oscurati);
+sezione 13 estesa (Windows Terminal, profili PowerShell, destinazioni cmdkey, estensioni
+browser Edge/Chrome in CSV per account); `Protect-Secrets` esteso (AWS, Slack, blocchi PEM);
+scansione anti-segreti finale su tutto l'output e `MANIFEST.sha256`. Compare: categorie TRUST
+(nuova root CA, nuovo publisher, hosts modificato) e BROWSER (nuove estensioni).
+
+Definition of done: tutto implementato e collaudato il 2026-06-10 su snapshot completo reale —
+76 root CA e 1 publisher in baseline, hosts 11 righe legittime, 21 XML task, 27 estensioni
+browser (notata estensione VPN/proxy NordVPN → ✍️), scansione finale PULITA, manifest prodotto.
+Rinumerate le sezioni: 11=export, 12=per-account, 13=ambiente dev.
+
+## Verdetto sulla task RiavvioSingoloNotturno (2026-06-10)
+
+Trigger letto dall'export elevato: TimeTrigger SINGOLO del 2025-11-30 alle 04:00, senza
+ripetizione, creato come SYSTEM ("riavvio alle 3:00 AM del giorno successivo"). È un residuo
+one-shot già scaduto: non riavvierà mai più il PC. Rimozione proposta (comando elevato
+`Unregister-ScheduledTask -TaskName RiavvioSingoloNotturno`), in attesa di conferma utente; da
+registrare nel changelog della mappa quando eseguita.
 
 ## Domande aperte
 
