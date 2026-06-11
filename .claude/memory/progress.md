@@ -16,9 +16,11 @@ salvare la chiave intera né la OEM (solo presenza/bool). Output `licenza_window
 `licenza_windows.csv`. Compare: categoria alert LICENZA su cambio di stato attivazione o canale.
 Collaudo + scansione: nessuna chiave intera trapelata (pattern 5x5 non trovato).
 EVIDENZA macchina: Win 11 Pro, canale RETAIL, ATTIVATO, chiave generica `*****-3V66T`, nessuna
-OEM in firmware → **licenza DIGITALE**. Gestione (in mappa, ✍️): verificare in Impostazioni >
-Attivazione se è collegata all'account Microsoft e, se no, collegarla (abilita riattivazione
-dopo reinstall/cambio hardware); non c'è chiave retail da custodire. Nota in docs/02 sul
+OEM in firmware → **licenza DIGITALE**. PRECISAZIONE dell'utente: la licenza digitale DERIVA da
+un product key (retail). Gestione (in mappa, ✍️): (1) custodire la chiave retail originale
+d'acquisto nel password manager (il sistema mostra solo la generica, non quella acquistata);
+(2) collegare la licenza digitale all'account Microsoft per la riattivazione dopo
+reinstall/cambio hardware. Aggiunta nota generica anche nell'output `licenza_windows.txt`. Nota in docs/02 sul
 comportamento della licenza dopo ripristino Veeam su hardware diverso (digitale/retail/OEM).
 
 ## 2026-06-11 — Inventario hardware nello snapshot + avvio standardizzato Avvia.ps1
