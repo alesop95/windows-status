@@ -79,6 +79,31 @@ Applica la **3-2-1**: oltre al NAS, tieni una **seconda copia** su disco USB est
     può invece trasferire su un altro PC (va custodita nel password manager). Una **chiave OEM**
     è legata alla scheda madre originale e **non** è trasferibile. Lo snapshot (`licenza_windows.txt`)
     dice quale dei tre casi è il tuo, così sai in anticipo come riattivare dopo un ripristino.
+
+## Migrazione della licenza Windows su hardware nuovo
+
+Una licenza **RETAIL** è trasferibile su un nuovo PC (la **OEM** no, resta legata alla scheda
+madre originale). Dopo un ripristino bare-metal su hardware diverso, o su un PC nuovo, Windows si
+disattiva (cambia l'hash hardware) e va riattivato. Due strade.
+
+**Strada A — chiave retail (se la chiave è disponibile, es. presso il fornitore/reseller).**
+1. Recupera la product key retail (dal fornitore se è lui a custodirla: è la prova di licenza).
+2. Sul vecchio PC, prima di dismetterlo, libera la licenza: da PowerShell admin `slmgr /upk`
+   (disinstalla la chiave) e `slmgr /cpky` (la rimuove dal registro). Evita conflitti di
+   "chiave già in uso".
+3. Sul nuovo hardware: *Impostazioni > Attivazione > Cambia codice Product Key*, inserisci la chiave.
+
+**Strada B — licenza digitale collegata a un account Microsoft (self-service).**
+1. *Prima* del cambio, finché è attivato: collega la licenza digitale a un account Microsoft
+   (Impostazioni > Account).
+2. Sul nuovo hardware: accedi con lo stesso account ed esegui la **Risoluzione problemi di
+   attivazione > "Ho cambiato hardware di recente"** > seleziona il dispositivo > Attiva.
+3. ⚠️ Su una macchina **di lavoro/gestita** il collegamento di un account Microsoft personale può
+   essere limitato dalle policy: verifica con l'IT. In quel caso la Strada A è la primaria.
+
+Nota: se il nuovo PC arriva con una **propria licenza OEM preinstallata**, spesso non serve
+trasferire nulla; la licenza retail resta una scorta. Mai tenere la stessa chiave attiva su due
+PC contemporaneamente.
 - **L'identità del dispositivo in Entra ID è legata all'hardware/TPM:** dopo un ripristino su un PC
   diverso il join può non corrispondere più. Probabile **ri-registrazione/ri-join** del dispositivo
   in Entra ID (e nuova conformità Intune). Pianificalo: non è un errore, è normale su hardware nuovo.
