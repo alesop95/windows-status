@@ -37,20 +37,26 @@ allinea un PC vergine o difforme alle best practice emerse, dry-run di default e
 guidata reversibile con conferma per passo. Raccordo con la checklist di remediation VA in
 `docs/06_RACCORDO_CHECKLIST_VA.md`; quickstart in `docs/05_QUICKSTART.md`.
 
-## Prossimi blocchi candidati (decisi il 2026-06-10, in ordine di valore)
+## Prossimi blocchi candidati (decisi il 2026-06-11, in ordine di valore)
 
-Catena di fiducia: inventario root CA macchina, Trusted Publishers, file hosts, proxy
-WinHTTP/utente, DoH, inventario `cmdkey` (solo nomi).
+Inventario hardware intelligente (sezione nuova dello snapshot, sola lettura): specifiche
+hardware (CPU/RAM/scheda madre/GPU), dischi connessi (modello, tipo SSD/HDD/NVMe, salute SMART,
+spazio), mappatura porte USB con velocità negoziata (USB 2.0/3.x, controller, dispositivi
+collegati), schede di rete e velocità link, monitor collegati. Con relativo alert nel Compare
+(es. nuovo dispositivo USB di massa = possibile esfiltrazione/ingresso).
 
-Export ripristinabili: XML delle attività pianificate non Microsoft, profili Wi-Fi senza
-chiavi, associazioni file, piano energetico, impostazioni internazionali.
+Avvio standardizzato / portabilità: un punto d'ingresso unico (es. `Avvia.ps1` o sezione
+quickstart) che, clonata la repo su una QUALSIASI macchina Windows 11, guidi l'operatore tra
+snapshot, confronto, allineamento al baseline e debloating in modo uniforme — chiedendo
+all'avvio se usare PowerShell mirato e/o gli strumenti esterni (Winhance/Winslop) e con quale
+ampiezza (vedi `docs/00` §7).
 
-Ambiente utente esteso: Windows Terminal e profili PowerShell, estensioni browser Edge/Chrome,
-font utente.
+Debloating a livello macchina (-AllUsers / provisioned MIRATO) come passo opzionale distinto dal
+per-utente, con le cautele del paletto 4 (mai de-provisioning massivo su macchina gestita).
 
-Integrità dello snapshot: manifest SHA256 dell'output, passata anti-segreti finale su tutti i
-file prodotti, pattern `Protect-Secrets` estesi (PEM, token Azure/AWS/Slack), output JSON
-strutturato accanto ai CSV.
+Catena di fiducia, export ripristinabili, ambiente utente esteso, integrità: GIA' IMPLEMENTATI
+il 2026-06-10 (vedi sezione Completati e work-log); restano eventuali estensioni (font utente,
+Module logging/Transcription PowerShell).
 
 ## Promemoria espliciti
 

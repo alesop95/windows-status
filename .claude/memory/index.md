@@ -35,8 +35,14 @@ script `scripts/Allinea-BestPractice.ps1` (applicatore del baseline, dry-run di 
 Hardening live in corso (paracadute Veeam confermato il 2026-06-11), una azione alla volta con
 spiegazione + approvazione + changelog. FATTO: ScriptBlock logging ON; debloating Gruppo A
 (5 componenti Xbox + DevHome rimossi, Media Player e Phone Link mantenuti); debloating Gruppo B
-(rimosso Spotify, mantenuto WhatsApp). RIMANDATI: firma SMB (due NAS legacy/EOL + backup Veeam su
-uno di essi) e Secure Boot (UEFI). BitLocker = PER ULTIMO (decisione utente). Prossimi possibili,
-a scelta utente e sempre spiegati prima: (1) AI-slop (Copilot/BingSearch); (2) snapshot ELEVATO
-di certificazione (completa anche auditpol, secedit, associazioni file); (3) BitLocker quando si
-decide; (4) firma SMB/Secure Boot quando le condizioni sono risolte. Roadmap residua: server MCP locale, job Veeam in mappa.
+(rimosso Spotify, mantenuto WhatsApp); AI/slop (rimosso Copilot; BingSearch non installata).
+RIMANDATI: firma SMB (due NAS legacy/EOL + backup Veeam su uno di essi) e Secure Boot (UEFI).
+BitLocker = PER ULTIMO (decisione utente). Snapshot ELEVATO di certificazione FATTO
+(`snapshot_20260611_111205`): hardening confermato; scoperto che Copilot/DevHome/Xbox sono via
+solo per l'utente corrente, persistono a livello -AllUsers. Prossimi possibili, a scelta utente e
+sempre spiegati prima: (1) BUILD inventario hardware intelligente nello snapshot (HW/dischi/SMART,
+porte USB+velocità, rete) — vedi roadmap; (2) BUILD avvio standardizzato/portabilità (entrypoint
+unico per qualsiasi Win11); (3) debloating a livello macchina (-AllUsers/provisioned MIRATO) se si
+vuole togliere Copilot/Xbox/DevHome anche dagli altri profili; (4) BitLocker (per ultimo, vedi
+memoria bitlocker-implementazione-safe); (5) opz. policy TurnOffWindowsCopilot; rimandati Secure
+Boot e firma SMB. Roadmap residua: server MCP locale, job Veeam in mappa.

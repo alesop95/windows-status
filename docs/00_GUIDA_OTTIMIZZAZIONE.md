@@ -128,3 +128,41 @@ Disable-ScheduledTask -TaskPath "\Microsoft\Windows\..." -TaskName "Nome"
 - App rimossa per errore > reinstalla da Store o `winget install <id>` (id dallo snapshot WinGet).
 
 > Il file `r/ItalyHardware – Risorse/Guide` è un buon hub generale, ma su una macchina **di lavoro e gestita** valgono prima i vincoli del §2.
+
+---
+
+## 7. Due modi di intervenire: PowerShell mirato vs strumenti esterni (separazione dei ruoli)
+
+Sul *come* applicare le modifiche esistono due strade, complementari, da scegliere caso per caso.
+
+**PowerShell mirato (nativo).** È la via predefinita del progetto. Si vede esattamente ogni
+comando e il suo rollback, è versionabile, e `Allinea-BestPractice.ps1` lo incapsula in controlli
+con `Test`/`Apply`/`Rollback`. Le rimozioni di app si fanno con `Remove-AppxPackage` (reversibile
+da Store), le impostazioni con chiavi di registro puntuali. È trasparente e chirurgico: agisce
+solo su ciò che dichiari. È la scelta giusta su una macchina di lavoro e per tutto ciò che deve
+restare riproducibile da un clone del repository.
+
+**Strumenti esterni (Winhance, Winslop).** Agiscono "a colpi più larghi": toccano in un passo
+molti servizi, attività, chiavi e App. Sono comodi per un debloating ampio su un PC personale,
+ma su una macchina gestita vanno trattati con cautela, perché un'azione massiva può confliggere
+con Intune/servicing o disattivare qualcosa che serve. Non sono versionabili: l'unico modo per
+sapere *cosa* hanno toccato è confrontare lo stato prima e dopo.
+
+**La regola di separazione.** I tool esterni *fanno* l'azione; `windows-status` fa da **rete di
+sicurezza e revisore**: fotografa, confronta, segnala. Quindi vanno sempre usati *tra due
+snapshot*. Procedura sicura, da seguire senza scorciatoie:
+
+1. Scaricarli SOLO da fonte ufficiale (sito/GitHub di Winhance, MajorGeeks per Winslop). Mai
+   mirror, mai "PC cleaner" commerciali.
+2. Snapshot "prima" con `Snapshot-Stato.ps1` (idealmente elevato).
+3. Usarli in modalità *inspect*, preferendo "disattiva" a "cancella", con il LORO punto di
+   ripristino/backup attivo, oltre al paracadute Veeam.
+4. Snapshot "dopo" + `Compare-Snapshot.ps1`: certifica esattamente cosa hanno toccato (servizi,
+   task, registro, AppX) e gli ALERT dicono se hanno cambiato qualcosa di critico.
+5. Tutto a changelog nella mappa (sezione 12), con il *come si annulla*.
+
+**Scelta all'avvio.** Quando si lancia il flusso di ottimizzazione su una macchina, la decisione
+"PowerShell mirato e/o strumenti esterni, e con quale ampiezza" va posta esplicitamente
+all'operatore, non assunta. Il debloating delle app consumer di base resta più trasparente e
+reversibile con `Remove-AppxPackage` nativo; i tool esterni si riservano ai casi in cui serve
+un'azione più ampia, sempre dentro la procedura a due snapshot qui sopra.
