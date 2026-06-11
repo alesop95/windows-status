@@ -6,6 +6,24 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Debloating a livello macchina (mirato) + suggerimenti proposti
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Eseguito (elevato, UAC) il
+debloating a livello macchina MIRATO sugli stessi target già approvati (5 Xbox + DevHome +
+Copilot): `Remove-AppxPackage -AllUsers` + tentativo `Remove-AppxProvisionedPackage`. Esito
+reale: account `Utente` pulito; le app NON erano provisioned (nuovi profili già puliti, obiettivo
+principale raggiunto); resta 1 copia residua nel profilo **Administrator** per ciascuna
+(`-AllUsers` non l'ha rimossa — si libera nel contesto di quell'account o è staged). Scelta:
+lasciata così (Administrator è break-glass, valore marginale; nessun de-provisioning massivo →
+paletto 4 ok). Reversibile. A changelog nella mappa. Metodo elevazione: solito script .ps1 +
+Start-Process RunAs (poi rimosso).
+Proposti all'utente nuovi suggerimenti (in attesa di scelta): (1) punto di ripristino automatico
+prima di ogni -Apply; (2) igiene account (Administrator abilitato, account `dev` mai loggato);
+(3) punteggio conformità baseline + mappatura ISO/CIS; (4) readiness nello snapshot (pending
+reboot, Windows Update, ultima scansione AV); (5) report HTML autoconsistente; (6) estensione
+baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico
+opt-in via scheduled task. Preferite: #1 e #2.
+
 ## 2026-06-11 — Software riproducibile e lista driver di terze parti per nuovo hardware
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Su richiesta utente (rimettere
