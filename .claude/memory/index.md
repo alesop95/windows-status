@@ -9,14 +9,15 @@
 ```
 Branch attivo:        main
 Commit di riferimento: 9407b27
-Data snapshot:        2026-06-10
+Data snapshot:        2026-06-11
 ```
 
 Working tree non pulito: tracciamento cache bitmap RDP nello snapshot, `docs/05_QUICKSTART.md` e
 `docs/06_RACCORDO_CHECKLIST_VA.md` nuovi, indice docs nel CLAUDE.md, piano debloating a secco in
 current-work; più due modifiche EFFETTIVE al sistema già applicate (rimozione task one-shot,
 disattivazione cache RDP). Il commit è manuale dell'utente. La mappa compilata è locale. Al
-commit successivo portare i `last-verified-commit` al nuovo HEAD.
+commit successivo portare i `last-verified-commit` al nuovo HEAD. Aggiunto inoltre il terzo
+script `scripts/Allinea-BestPractice.ps1` (applicatore del baseline, dry-run di default).
 
 ## Stato di verifica delle schede
 

@@ -32,6 +32,11 @@ finale, MANIFEST.sha256) (2026-06-10). Riepilogo strutturato `snapshot.json` con
 chiave e l'indice dei file (2026-06-10). La caratterizzazione di sicurezza decisa il 2026-06-10
 è con questo COMPLETA.
 
+Applicatore del baseline `scripts/Allinea-BestPractice.ps1` (2026-06-11): terza gamba del tool,
+allinea un PC vergine o difforme alle best practice emerse, dry-run di default e applicazione
+guidata reversibile con conferma per passo. Raccordo con la checklist di remediation VA in
+`docs/06_RACCORDO_CHECKLIST_VA.md`; quickstart in `docs/05_QUICKSTART.md`.
+
 ## Prossimi blocchi candidati (decisi il 2026-06-10, in ordine di valore)
 
 Catena di fiducia: inventario root CA macchina, Trusted Publishers, file hosts, proxy

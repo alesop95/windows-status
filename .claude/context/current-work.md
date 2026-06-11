@@ -27,6 +27,15 @@ Rimossa la task one-shot scaduta `RiavvioSingoloNotturno`. Disattivata in modo r
 bitmap persistente del client RDP (registro `DisablePersistentCache=1` + `Default.rdp` a 0 +
 cache svuotata): reversibile, a changelog nella mappa compilata.
 
+## Applicatore del baseline — Allinea-BestPractice.ps1 (2026-06-11)
+
+Terza gamba del tool: allinea un PC (vergine o difforme) al baseline di sicurezza. Dichiarativo,
+dry-run di default, `-Apply` guidato con conferma per passo e log reversibile. Baseline: RDP
+cache, firma SMB, SMBv1 off, ScriptBlock logging, LSA RunAsPPL; avvisi Secure Boot/BitLocker.
+Collaudato in report su questa macchina (3 conformi, 2 da allineare). Per estenderlo: aggiungere
+un elemento alla lista `$baseline` con `Test`/`Apply`/`Rollback`. Applicazione reale rinviata al
+via col paracadute Veeam.
+
 ## Feature attiva — Piano di debloating a micro-step (ANALISI A SECCO, nulla eseguito)
 
 Cosa fa: pulizia app consumer della macchina Windows 11 seguendo `docs/00`, una categoria alla

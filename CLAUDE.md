@@ -22,6 +22,9 @@ servono. Il materiale sotto `_notes/` si apre solo per verificare un requisito o
 
 ## Cosa puoi fare
 - Eseguire `scripts\Snapshot-Stato.ps1` (sola lettura) e `scripts\Compare-Snapshot.ps1`.
+- Eseguire `scripts\Allinea-BestPractice.ps1` SENZA `-Apply` (sola lettura: report del divario
+  rispetto al baseline). Con `-Apply` MODIFICA il sistema: vale il paletto 1 (proporre, conferma
+  per passo, paracadute, reversibilità, changelog).
 - Aggiornare le sezioni 🔄 di `docs\01_MAPPA_CONFIGURAZIONE.md` dai dati dello snapshot.
 - Tenere il changelog aggiornato a ogni intervento.
 - Migliorare gli script restando coerente con i paletti qui sotto.
@@ -73,8 +76,8 @@ servono. Il materiale sotto `_notes/` si apre solo per verificare un requisito o
 
 ## Struttura
 - `docs/`     guide e mappa (tracciate; le copie compilate `*.compilata.md` restano locali)
-- `scripts/`  Snapshot-Stato.ps1, Compare-Snapshot.ps1, Reinstall-Software.ps1
-              (devono stare qui: ricavano la radice del progetto dalla cartella genitore)
+- `scripts/`  Snapshot-Stato.ps1, Compare-Snapshot.ps1, Allinea-BestPractice.ps1,
+              Reinstall-Software.ps1 (devono stare qui: ricavano la radice dalla cartella genitore)
 - `snapshots/` output datato (ignorato da git)
 - `_notes/`   livello privato e verboso (ignorato da git)
 - `.claude/`  centro di controllo versionato (vedi indice sotto)

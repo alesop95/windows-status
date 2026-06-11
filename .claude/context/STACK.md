@@ -64,12 +64,22 @@ Se un CSV manca in uno dei due snapshot la categoria viene saltata senza errori.
 PowerShell 5.1 interpreta l'UTF-8 senza BOM come ANSI e i caratteri tipografici nelle stringhe
 spezzano il parsing.
 
+`scripts/Allinea-BestPractice.ps1` è l'unico script che MODIFICA il sistema, ed è la terza gamba
+accanto a fotografa/confronta: porta una macchina (vergine o difforme) al baseline di sicurezza
+emerso dall'analisi. È dichiarativo: una lista di controlli, ciascuno con `Test` (stato attuale +
+conformità), `Apply` e rollback. Di default gira in sola lettura e stampa solo il DIVARIO; con
+`-Apply` chiede conferma per ogni controllo non conforme, salta quelli che richiedono admin se
+non elevato, registra un log in `snapshots/allineamento_<stamp>.log`, e non tocca mai Windows
+Update, Defender, Office, Edge, OneDrive, Intune. I controlli non automatizzabili in sicurezza
+(Secure Boot, BitLocker) sono solo segnalati. Baseline attuale: cache bitmap RDP, firma SMB
+client/server, SMBv1 off, ScriptBlock logging, LSA RunAsPPL, più gli avvisi Secure Boot/BitLocker.
+
 `scripts/Reinstall-Software.ps1` chiude il cerchio della portabilità: reimporta su una macchina
 nuova il `software_winget.json` prodotto dallo snapshot, previa revisione manuale del JSON.
 
-Vincolo strutturale: tutti e tre gli script ricavano la radice del progetto come cartella
-genitore della propria (`Split-Path -Parent $base`), quindi devono vivere in `scripts/`, mai
-nella radice, altrimenti `snapshots/` finirebbe fuori dal repository.
+Vincolo strutturale: tutti gli script ricavano la radice del progetto come cartella genitore
+della propria (`Split-Path -Parent $base`), quindi devono vivere in `scripts/`, mai nella radice,
+altrimenti `snapshots/` finirebbe fuori dal repository.
 
 ## Riferimenti a snippet
 

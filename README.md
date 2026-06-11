@@ -50,6 +50,15 @@ confrontare snapshot presi con gli stessi privilegi, altrimenti il diff è rumor
 .\scripts\Compare-Snapshot.ps1 -Old <cartella> -New <cartella>
 ```
 
+**Allineamento al baseline di sicurezza** (porta un PC vergine o difforme alle best practice;
+il report è sola lettura e sicuro ovunque, l'applicazione modifica il sistema e va fatta dopo
+aver verificato il paracadute — immagine recente + punto di ripristino):
+
+```powershell
+.\scripts\Allinea-BestPractice.ps1           # REPORT del divario (non modifica nulla)
+.\scripts\Allinea-BestPractice.ps1 -Apply    # applicazione guidata, conferma per ogni passo (admin)
+```
+
 **Reinstallazione su un PC nuovo** (da amministratore, dopo aver rivisto il JSON):
 
 ```powershell
