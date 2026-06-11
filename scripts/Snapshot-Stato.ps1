@@ -250,9 +250,13 @@ if($doMachine){
   try {
       Get-Command winget -ErrorAction Stop | Out-Null
       winget list 2>$null | Out-File (Join-Path $outDir 'software_winget.txt') -Encoding UTF8
+      # software_winget.json = elenco riproducibile: 'winget import' lo reinstalla all'ULTIMA versione
       winget export -o (Join-Path $outDir 'software_winget.json') --accept-source-agreements 2>$null | Out-Null
-      Add-Sum 'WinGet: software_winget.txt + software_winget.json (riutilizzabile con: winget import).'
-  } catch { Add-Sum 'WinGet non disponibile (uso il registro).' }
+      # winget upgrade: cosa e' installato ma NON all'ultima versione (utile prima di una re-immagine)
+      winget upgrade 2>$null | Out-File (Join-Path $outDir 'software_winget_aggiornabili.txt') -Encoding UTF8
+      $nPkg = 0; try { $j = Get-Content (Join-Path $outDir 'software_winget.json') -Raw | ConvertFrom-Json; $nPkg = @($j.Sources.Packages).Count } catch {}
+      Add-Sum "WinGet: $nPkg pacchetti riproducibili in software_winget.json (reinstall all'ultima versione con scripts\Reinstall-Software.ps1 / 'winget import'); aggiornabili in software_winget_aggiornabili.txt."
+  } catch { Add-Sum 'WinGet non disponibile (uso il registro per l''inventario; reinstallazione manuale).' }
   try {
       Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
           Where-Object DisplayName | Select-Object DisplayName,DisplayVersion,Publisher,InstallDate | Sort-Object DisplayName |
@@ -658,6 +662,23 @@ if($doMachine){
       }
       Add-Sum "XML delle task non Microsoft esportati: $nx (task_xml\)"
   } catch { Add-Sum "Export XML task fallito: $_" }
+
+  # --- Driver di terze parti: la LISTA dei driver necessari per far rifunzionare l'hardware ---
+  #     (Windows base ha i Microsoft; questi -chipset, rete, GPU, audio, storage- vanno reinstallati)
+  try {
+      $drv = Get-CimInstance Win32_PnPSignedDriver -ErrorAction SilentlyContinue |
+          Where-Object { $_.DriverProviderName -and $_.DriverProviderName -notmatch '^Microsoft' -and $_.DeviceName } |
+          Select-Object @{n='Dispositivo';e={$_.DeviceName}}, @{n='Classe';e={$_.DeviceClass}},
+                        @{n='Produttore';e={$_.DriverProviderName}}, @{n='Versione';e={$_.DriverVersion}},
+                        @{n='Data';e={ if($_.DriverDate){ try{ $_.DriverDate.ToString('yyyy-MM-dd') }catch{''} } else {''} }}, @{n='Inf';e={$_.InfName}} |
+          Sort-Object Classe, Dispositivo -Unique
+      $drv | Export-Csv (Join-Path $outDir 'driver_terze_parti.csv') -NoTypeInformation -Encoding UTF8
+      $classiChiave = @($drv | Where-Object { $_.Classe -in 'Net','Display','System','HDC','SCSIAdapter','MEDIA','Bluetooth','USB' })
+      Add-Sum ''
+      Add-Sum "Driver di terze parti (per ripristino su nuovo hardware): $(@($drv).Count) (driver_terze_parti.csv), di cui $($classiChiave.Count) in classi critiche (rete/chipset/GPU/storage/audio)."
+      Add-Sum "  >> Per portarsi i FILE dei driver e re-iniettarli sul nuovo PC (serve admin):"
+      Add-Sum "  >>   Export-WindowsDriver -Online -Destination <cartella>   (poi sul nuovo PC: pnputil /add-driver *.inf /subdirs /install)"
+  } catch { Add-Sum "Inventario driver di terze parti non leggibile: $_" }
 }
 
 # ============================================================================

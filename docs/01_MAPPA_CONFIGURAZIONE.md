@@ -63,7 +63,10 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Microsoft 365 / Office            | `__________` | `__________`                            |
 | `__________`                      | `__________` | `__________`                            |
 
-> Reinstallazione su PC nuovo: `scripts\Reinstall-Software.ps1` (usa `software_winget.json`).
+> Reinstallazione su PC nuovo: `scripts\Reinstall-Software.ps1` (usa `software_winget.json`,
+> reinstalla all'ultima versione). Software non-WinGet: reinstallo manuale da `software_registro.csv`.
+> Driver di terze parti necessari su nuovo hardware: `driver_terze_parti.csv` (+ `Export-WindowsDriver`
+> per i file; vedi `docs/02`, "Software e driver per il nuovo hardware").
 
 ---
 
