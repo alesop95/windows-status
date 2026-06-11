@@ -34,9 +34,9 @@ script `scripts/Allinea-BestPractice.ps1` (applicatore del baseline, dry-run di 
 
 Hardening live in corso (paracadute Veeam confermato il 2026-06-11), una azione alla volta con
 spiegazione + approvazione + changelog. FATTO: ScriptBlock logging ON; debloating Gruppo A
-(5 componenti Xbox + DevHome rimossi, Media Player e Phone Link mantenuti). RIMANDATO: firma SMB
-(due NAS legacy/EOL + backup Veeam su uno di essi). Prossimi possibili, a scelta utente e
-sempre spiegati prima: (1) BitLocker (TPM pronto, decidere custodia chiave); (2) Secure Boot da
-UEFI; (3) firma SMB quando i NAS legacy sono verificati/dismessi; (4) Gruppo B / AI-slop nel
-debloating; (5) un nuovo snapshot ELEVATO per certificare lo stato post-modifiche (e completare
-auditpol, secedit, associazioni file). Roadmap residua: server MCP locale, job Veeam in mappa.
+(5 componenti Xbox + DevHome rimossi, Media Player e Phone Link mantenuti); debloating Gruppo B
+(rimosso Spotify, mantenuto WhatsApp). RIMANDATI: firma SMB (due NAS legacy/EOL + backup Veeam su
+uno di essi) e Secure Boot (UEFI). BitLocker = PER ULTIMO (decisione utente). Prossimi possibili,
+a scelta utente e sempre spiegati prima: (1) AI-slop (Copilot/BingSearch); (2) snapshot ELEVATO
+di certificazione (completa anche auditpol, secedit, associazioni file); (3) BitLocker quando si
+decide; (4) firma SMB/Secure Boot quando le condizioni sono risolte. Roadmap residua: server MCP locale, job Veeam in mappa.
