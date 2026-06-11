@@ -59,6 +59,9 @@ $files = @{
     'App Windows (Appx)'    = @{ file='app_appx_allusers.csv';       key='Name' }
     'Account locali'        = @{ file='account_locali.csv';          key='Name' }
     'Attivita pianificate'  = @{ file='attivita_pianificate.csv';    key='TaskName' }
+    'Dischi fisici (HW)'    = @{ file='hardware_dischi.csv';          key='Modello' }
+    'Dispositivi USB (HW)'  = @{ file='hardware_usb_dispositivi.csv'; key='FriendlyName' }
+    'Banchi RAM (HW)'       = @{ file='hardware_ram.csv';             key='Slot' }
 }
 
 foreach($label in $files.Keys){
@@ -240,7 +243,26 @@ Get-ChildItem (Join-Path $New 'utenti') -Filter '_browser_estensioni_*.csv' -Err
     }
 }
 
-# 13. Servizi con percorso non quotato comparsi dopo
+# 13. Hardware: salute dischi, nuovo disco USB di massa (esfiltrazione), cambi RAM
+$hdo = Load-Csv $Old 'hardware_dischi.csv'; $hdn = Load-Csv $New 'hardware_dischi.csv'
+if($null -ne $hdo -and $null -ne $hdn){
+    foreach($d in $hdn){
+        if($d.Salute -and $d.Salute -ne 'Healthy'){ Add-Alert 'HARDWARE' "disco con salute NON ottimale: $($d.Modello) -> $($d.Salute)/$($d.Stato)" }
+        $key = "$($d.Modello)|$($d.Numero)"
+        if($key -notin @($hdo | ForEach-Object { "$($_.Modello)|$($_.Numero)" })){
+            if($d.Bus -eq 'USB'){ Add-Alert 'HARDWARE' "NUOVO disco USB di massa collegato: $($d.Modello) $($d.CapacitaGB)GB (possibile vettore di esfiltrazione/ingresso dati)" }
+            else { Add-Alert 'HARDWARE' "nuovo disco: $($d.Modello) $($d.CapacitaGB)GB [$($d.Bus)]" }
+        }
+    }
+    $totO = ($hdo | Measure-Object).Count; $totN = ($hdn | Measure-Object).Count
+}
+$hro = Load-Csv $Old 'hardware_ram.csv'; $hrn = Load-Csv $New 'hardware_ram.csv'
+if($null -ne $hro -and $null -ne $hrn){
+    $sumO = ($hro | Measure-Object CapacitaGB -Sum).Sum; $sumN = ($hrn | Measure-Object CapacitaGB -Sum).Sum
+    if($sumO -ne $sumN){ Add-Alert 'HARDWARE' "RAM totale cambiata: $sumO GB -> $sumN GB" }
+}
+
+# 14. Servizi con percorso non quotato comparsi dopo
 $qo = Load-Csv $Old 'servizi_percorsi_non_quotati.csv'; $qn = Load-Csv $New 'servizi_percorsi_non_quotati.csv'
 if($null -ne $qo -and $null -ne $qn){
     foreach($s in $qn){ if($s.Name -notin @($qo.Name)){ Add-Alert 'SERVIZI' "nuovo servizio con percorso non quotato: $($s.Name) -> $($s.PathName)" } }

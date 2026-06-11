@@ -9,7 +9,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 
 ---
 
-## 1. 🔄 Identità macchina -  *da `SUMMARY.txt` / `join_dsregcmd.txt`*
+## 1. 🔄 Identità e hardware macchina -  *da `SUMMARY.txt`, `join_dsregcmd.txt`, `hardware_*.csv`*
 
 | Campo                    | Valore                                 |
 | ------------------------ | -------------------------------------- |
@@ -20,6 +20,12 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Stato join               | `Entra ID joined` (AzureAdJoined: YES) |
 | Tenant (nome / ID)       | `__________`                           |
 | Gestita da Intune/MDM    | `Sì / No` (riga MDMUrl in dsregcmd)    |
+| Scheda madre / BIOS      | `__________` (da `hardware_inventario.txt`) |
+| RAM (banchi / totale)    | `__________` (da `hardware_ram.csv`)   |
+| Dischi (tipo/bus/salute) | `__________` (da `hardware_dischi.csv`) |
+| USB (controller / dispositivi / dischi di massa) | `__________` (da `hardware_usb_*.csv`) |
+| Rete (adattatori / link) | `__________` (da `hardware_rete_adattatori.csv`) |
+| Monitor collegati        | `__________` (da `hardware_monitor.csv`) |
 
 ---
 

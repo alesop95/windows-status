@@ -39,10 +39,11 @@ spiegazione + approvazione + changelog. FATTO: ScriptBlock logging ON; debloatin
 RIMANDATI: firma SMB (due NAS legacy/EOL + backup Veeam su uno di essi) e Secure Boot (UEFI).
 BitLocker = PER ULTIMO (decisione utente). Snapshot ELEVATO di certificazione FATTO
 (`snapshot_20260611_111205`): hardening confermato; scoperto che Copilot/DevHome/Xbox sono via
-solo per l'utente corrente, persistono a livello -AllUsers. Prossimi possibili, a scelta utente e
-sempre spiegati prima: (1) BUILD inventario hardware intelligente nello snapshot (HW/dischi/SMART,
-porte USB+velocità, rete) — vedi roadmap; (2) BUILD avvio standardizzato/portabilità (entrypoint
-unico per qualsiasi Win11); (3) debloating a livello macchina (-AllUsers/provisioned MIRATO) se si
-vuole togliere Copilot/Xbox/DevHome anche dagli altri profili; (4) BitLocker (per ultimo, vedi
-memoria bitlocker-implementazione-safe); (5) opz. policy TurnOffWindowsCopilot; rimandati Secure
-Boot e firma SMB. Roadmap residua: server MCP locale, job Veeam in mappa.
+solo per l'utente corrente, persistono a livello -AllUsers. FATTI il 2026-06-11: inventario hardware
+nello snapshot (`hardware_*.csv`, sezione 1, con alert HARDWARE nel Compare) e avvio
+standardizzato `Avvia.ps1` (menu unico, `-Help` non interattivo). Prossimi possibili, a scelta
+utente e sempre spiegati prima: (1) debloating a livello macchina (-AllUsers/provisioned MIRATO)
+per togliere Copilot/Xbox/DevHome anche dagli altri profili; (2) BitLocker (PER ULTIMO, vedi
+memoria bitlocker-implementazione-safe); (3) opz. policy TurnOffWindowsCopilot; (4) rimandati
+Secure Boot e firma SMB (NAS legacy); (5) un nuovo snapshot ELEVATO sarà la prima baseline
+completa CON l'inventario hardware (i campi hardware nella mappa si compilano da lì). Roadmap residua: server MCP locale, job Veeam in mappa.

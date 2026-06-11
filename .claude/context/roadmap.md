@@ -37,19 +37,20 @@ allinea un PC vergine o difforme alle best practice emerse, dry-run di default e
 guidata reversibile con conferma per passo. Raccordo con la checklist di remediation VA in
 `docs/06_RACCORDO_CHECKLIST_VA.md`; quickstart in `docs/05_QUICKSTART.md`.
 
-## Prossimi blocchi candidati (decisi il 2026-06-11, in ordine di valore)
+## Completati il 2026-06-11
 
-Inventario hardware intelligente (sezione nuova dello snapshot, sola lettura): specifiche
-hardware (CPU/RAM/scheda madre/GPU), dischi connessi (modello, tipo SSD/HDD/NVMe, salute SMART,
-spazio), mappatura porte USB con velocità negoziata (USB 2.0/3.x, controller, dispositivi
-collegati), schede di rete e velocità link, monitor collegati. Con relativo alert nel Compare
-(es. nuovo dispositivo USB di massa = possibile esfiltrazione/ingresso).
+Inventario hardware intelligente nello snapshot (sezione 1: scheda madre/BIOS/GPU, banchi RAM,
+dischi con tipo/bus/salute SMART, volumi, controller e dispositivi USB con dischi di massa,
+adattatori di rete con link, monitor — `hardware_*.csv`), con categorie di diff e alert HARDWARE
+nel Compare (nuovo disco USB di massa, salute SMART, cambio RAM). Nota: la velocità USB negoziata
+per-dispositivo non è esposta in modo affidabile, si deduce la classe dal controller.
 
-Avvio standardizzato / portabilità: un punto d'ingresso unico (es. `Avvia.ps1` o sezione
-quickstart) che, clonata la repo su una QUALSIASI macchina Windows 11, guidi l'operatore tra
-snapshot, confronto, allineamento al baseline e debloating in modo uniforme — chiedendo
-all'avvio se usare PowerShell mirato e/o gli strumenti esterni (Winhance/Winslop) e con quale
-ampiezza (vedi `docs/00` §7).
+Avvio standardizzato `Avvia.ps1` in radice: menu unico (fotografa / confronta / report baseline /
+applica baseline / reinstalla), distingue sola-lettura da MODIFICA, chiede l'approccio
+(PowerShell mirato vs strumenti esterni, docs/00 §7), `-Help` non interattivo. Funziona identico
+clonando la repo su qualsiasi Windows 11.
+
+## Prossimi blocchi candidati (in ordine di valore)
 
 Debloating a livello macchina (-AllUsers / provisioned MIRATO) come passo opzionale distinto dal
 per-utente, con le cautele del paletto 4 (mai de-provisioning massivo su macchina gestita).

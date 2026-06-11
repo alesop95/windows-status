@@ -81,7 +81,7 @@ if($doMachine -and -not $isAdmin){ Add-Sum "ATTENZIONE: senza admin mancheranno 
 # ============================================================================
 if($doMachine){
 
-  Section '1. IDENTITA MACCHINA'
+  Section '1. IDENTITA E HARDWARE MACCHINA'
   try {
       $cs=Get-CimInstance Win32_ComputerSystem; $os=Get-CimInstance Win32_OperatingSystem
       $bios=Get-CimInstance Win32_BIOS; $cpu=(Get-CimInstance Win32_Processor|Select-Object -First 1).Name
@@ -101,6 +101,72 @@ if($doMachine){
           ForEach-Object { Add-Sum "  $($_.Line.Trim())" }
       Add-Sum '(dettaglio completo in join_dsregcmd.txt)'
   } catch { Add-Sum "dsregcmd non disponibile: $_" }
+
+  # --- Inventario hardware (dischi, RAM, USB, rete, monitor) — diffabile dal Compare ---
+  $hw = New-Object System.Collections.Generic.List[string]
+  function Add-Hw([string]$k,[string]$v){ $hw.Add(("{0,-24}: {1}" -f $k,$v)) }
+  $disks = @()
+  try {
+      $bb = Get-CimInstance Win32_BaseBoard -ErrorAction SilentlyContinue
+      if($bb){ Add-Hw 'Scheda madre' "$($bb.Manufacturer) $($bb.Product) (rev $($bb.Version))" }
+      $bi = Get-CimInstance Win32_BIOS -ErrorAction SilentlyContinue
+      if($bi){ Add-Hw 'BIOS/UEFI' "$($bi.Manufacturer) $($bi.SMBIOSBIOSVersion) del $($bi.ReleaseDate.ToString('yyyy-MM-dd'))" }
+      Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | ForEach-Object {
+          if($_.Name){ Add-Hw 'GPU' ("$($_.Name)  driver $($_.DriverVersion)" + $(if($_.AdapterRAM){"  ($([math]::Round($_.AdapterRAM/1GB,1)) GB)"})) } }
+  } catch {}
+  # RAM: banchi installati
+  try {
+      $ram = Get-CimInstance Win32_PhysicalMemory -ErrorAction SilentlyContinue |
+          Select-Object @{n='Slot';e={$_.DeviceLocator}}, @{n='CapacitaGB';e={[math]::Round($_.Capacity/1GB,0)}}, @{n='VelocitaMHz';e={$_.Speed}}, Manufacturer, PartNumber
+      $ram | Export-Csv (Join-Path $outDir 'hardware_ram.csv') -NoTypeInformation -Encoding UTF8
+      if($ram){ $tot=($ram | Measure-Object CapacitaGB -Sum).Sum; Add-Hw 'RAM' "$(@($ram).Count) banchi, $tot GB totali (hardware_ram.csv)" }
+  } catch {}
+  # Dischi fisici (modello, tipo, bus, salute SMART)
+  try {
+      $disks = @(Get-PhysicalDisk -ErrorAction SilentlyContinue | ForEach-Object {
+          [pscustomobject]@{ Numero=$_.DeviceId; Modello=$_.FriendlyName; Tipo=$_.MediaType; Bus=$_.BusType
+                             CapacitaGB=[math]::Round($_.Size/1GB,0); Salute=$_.HealthStatus; Stato=$_.OperationalStatus } })
+      $disks | Export-Csv (Join-Path $outDir 'hardware_dischi.csv') -NoTypeInformation -Encoding UTF8
+      if($disks){ Add-Hw 'Dischi fisici' (($disks | ForEach-Object { "$($_.Modello) $($_.CapacitaGB)GB $($_.Tipo)/$($_.Bus) [$($_.Salute)]" }) -join ' | ') }
+  } catch {}
+  # Volumi
+  try {
+      Get-Volume -ErrorAction SilentlyContinue | Where-Object DriveLetter |
+          Select-Object DriveLetter, FileSystemType, @{n='GB';e={[math]::Round($_.Size/1GB,1)}}, @{n='LiberiGB';e={[math]::Round($_.SizeRemaining/1GB,1)}}, HealthStatus |
+          Export-Csv (Join-Path $outDir 'hardware_volumi.csv') -NoTypeInformation -Encoding UTF8
+  } catch {}
+  # USB: controller (la versione nel nome indica la classe di velocita) + dispositivi presenti
+  try {
+      Get-CimInstance Win32_USBController -ErrorAction SilentlyContinue | Select-Object Name, Manufacturer |
+          Export-Csv (Join-Path $outDir 'hardware_usb_controller.csv') -NoTypeInformation -Encoding UTF8
+      $usbDev = @(Get-PnpDevice -PresentOnly -Class USB -ErrorAction SilentlyContinue | Select-Object FriendlyName, Status, InstanceId)
+      $usbDev | Export-Csv (Join-Path $outDir 'hardware_usb_dispositivi.csv') -NoTypeInformation -Encoding UTF8
+      $usbMass = @($disks | Where-Object Bus -eq 'USB')
+      Add-Hw 'USB' "$(@($usbDev).Count) dispositivi presenti, $(@(Get-CimInstance Win32_USBController -ErrorAction SilentlyContinue).Count) controller; dischi USB di massa: $($usbMass.Count) (hardware_usb_*.csv)"
+      Add-Hw 'USB (nota velocita)' 'la velocita negoziata per-dispositivo non e esposta in modo affidabile; la classe (USB 2.0/3.x) si deduce dal nome del controller'
+  } catch {}
+  # Rete: adattatori e velocita di link
+  try {
+      Get-NetAdapter -ErrorAction SilentlyContinue | Select-Object Name, InterfaceDescription, Status, LinkSpeed, MacAddress |
+          Export-Csv (Join-Path $outDir 'hardware_rete_adattatori.csv') -NoTypeInformation -Encoding UTF8
+      $up = @(Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object Status -eq 'Up')
+      if($up){ Add-Hw 'Rete (link attivi)' (($up | ForEach-Object { "$($_.Name) $($_.LinkSpeed)" }) -join ' | ') }
+  } catch {}
+  # Monitor collegati (EDID)
+  try {
+      $mon = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID -ErrorAction Stop | ForEach-Object {
+          $man = -join ($_.ManufacturerName | Where-Object {$_ -gt 0} | ForEach-Object {[char]$_})
+          $nm  = -join ($_.UserFriendlyName | Where-Object {$_ -gt 0} | ForEach-Object {[char]$_})
+          [pscustomobject]@{ Produttore=$man; Modello=$nm }
+      }
+      $mon | Export-Csv (Join-Path $outDir 'hardware_monitor.csv') -NoTypeInformation -Encoding UTF8
+      if($mon){ Add-Hw 'Monitor' (($mon | ForEach-Object { "$($_.Produttore) $($_.Modello)" }) -join ' | ') }
+  } catch { Add-Hw 'Monitor' 'non leggibili' }
+
+  Save 'hardware_inventario.txt' ($hw -join "`r`n")
+  Add-Sum ''
+  Add-Sum 'Inventario hardware (hardware_inventario.txt + hardware_*.csv):'
+  $hw | ForEach-Object { Add-Sum "  $_" }
 
   Section '2. ACCOUNT E SESSIONI'
   try {

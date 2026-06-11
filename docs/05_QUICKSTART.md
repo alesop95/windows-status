@@ -10,6 +10,20 @@ fiducia), configurazioni per ogni account (Claude multi-profilo, git, SSH, brows
 serve a **ricostruire la macchina altrove**. Ogni dato sensibile è oscurato alla fonte; ogni
 snapshot si chiude con una scansione anti-segreti e un manifest SHA256.
 
+## Avvio rapido: un comando solo
+
+Clonata la repo su una qualsiasi macchina Windows 11, il punto d'ingresso unico è `Avvia.ps1`
+in radice: un menu che guida tra fotografia, confronto, report/applicazione del baseline di
+sicurezza e reinstallazione, distinguendo le voci di sola lettura da quelle che modificano il
+sistema. Per il dettaglio dei singoli script vedi sotto.
+
+```powershell
+cd <cartella del progetto>
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\Avvia.ps1            # menu interattivo (consigliato da PowerShell amministratore)
+.\Avvia.ps1 -Help      # elenca le voci senza entrare nel menu
+```
+
 ## Il ciclo operativo
 
 ```
