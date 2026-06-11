@@ -33,8 +33,10 @@ Una azione alla volta, spiegata e approvata. (1) PS-LOG: ScriptBlock logging abi
 Firma SMB: RIMANDATA — due NAS legacy/EOL in rete e backup Veeam su uno di essi; rischio rottura.
 (3) Debloating Gruppo A "solo superflue": rimossi 5 componenti Xbox + DevHome per l'utente;
 mantenuti Media Player e Phone Link; XboxGameCallableUI non rimovibile (stub di sistema).
-Tutto a changelog nella mappa compilata. Restano: BitLocker, Secure Boot, firma SMB (quando i
-NAS legacy sono risolti), eventuale Gruppo B/AI-slop.
+(4) Debloating Gruppo B "solo Spotify": rimosso Spotify, mantenuto WhatsApp (possibile uso
+lavorativo). Tutto a changelog nella mappa compilata.
+Restano: BitLocker (per ultimo, decisione utente), Secure Boot (rimandato, UEFI), firma SMB
+(rimandata, NAS legacy), eventuale AI-slop (Copilot/BingSearch), snapshot elevato di certificazione.
 
 ## Applicatore del baseline — Allinea-BestPractice.ps1 (2026-06-11)
 

@@ -6,6 +6,16 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Hardening live (3): debloating Gruppo B (solo Spotify); Secure Boot rimandato
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Secure Boot: messo in
+RIMANDATO come la firma SMB (richiede UEFI, non automatizzabile). BitLocker: confermato per
+ULTIMO. Debloating Gruppo B (scelta utente "solo Spotify"): del Gruppo B erano presenti solo
+Spotify e WhatsApp (StickyNotes/Todos/Maps assenti); rimosso `SpotifyAB.SpotifyMusic` per
+l'utente, mantenuto WhatsApp Desktop (possibile uso lavorativo). Reversibile da Store. A
+changelog. Prossimo a scelta utente: AI-slop (Copilot/BingSearch) o nuovo snapshot elevato di
+certificazione; restano rimandati Secure Boot e firma SMB; BitLocker per ultimo.
+
 ## 2026-06-11 — Hardening live (2): firma SMB RIMANDATA, debloating Gruppo A applicato
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Azione 2 (firma SMB):
