@@ -44,7 +44,10 @@ Trusted Publishers, hosts, proxy e DoH), rilevamento Veeam (9), superficie d'att
 persistenza (10): porte TCP/UDP in ascolto con processo proprietario, autoruns profondi
 (Run/RunOnce per hive, Winlogon, IFEO con Debugger, SilentProcessExit), sottoscrizioni WMI in
 `root\subscription`, azioni e trigger delle attività pianificate non Microsoft, firme dei
-driver con estrazione dei non firmati, servizi con percorso non quotato; e gli export
+driver con estrazione dei non firmati, servizi con percorso non quotato, e l'audit ACL delle
+cartelle sensibili e delle directory nel PATH (segnala dove gruppi ampi — Users/Authenticated
+Users/Everyone — hanno scrittura; marca GRAVE Modify/FullControl o qualsiasi scrittura nel PATH,
+vettore di privilege escalation); e gli export
 ripristinabili (11): profili Wi-Fi senza chiavi, associazioni file, piano energetico,
 impostazioni internazionali, XML delle task non Microsoft, e la lista dei driver di terze parti
 (`driver_terze_parti.csv`) necessari a far rifunzionare l'hardware su un nuovo PC (con la nota su
@@ -71,7 +74,8 @@ inbound nuove, root CA e Trusted Publishers nuovi, hosts modificato, estensioni 
 servizi con percorso non quotato comparsi, e variazioni hardware (nuovo disco — con allerta
 specifica se è un disco USB di massa, salute SMART non ottimale, cambio di RAM totale, dischi e
 dispositivi USB aggiunti/rimossi), e cambi di licenza/attivazione Windows (categoria LICENZA:
-stato attivazione o canale cambiati). Avvisa se i due snapshot hanno privilegi diversi.
+stato attivazione o canale cambiati), e nuove ACL deboli gravi su cartelle sensibili o nel PATH
+(categoria ACL). Avvisa se i due snapshot hanno privilegi diversi.
 Se un CSV manca in uno dei due snapshot la categoria viene saltata senza errori. Vincolo di codifica: gli script vanno salvati in UTF-8 con BOM, perché Windows
 PowerShell 5.1 interpreta l'UTF-8 senza BOM come ANSI e i caratteri tipografici nelle stringhe
 spezzano il parsing.

@@ -50,6 +50,13 @@ applica baseline / reinstalla), distingue sola-lettura da MODIFICA, chiede l'app
 (PowerShell mirato vs strumenti esterni, docs/00 §7), `-Help` non interattivo. Funziona identico
 clonando la repo su qualsiasi Windows 11.
 
+## Completati il 2026-06-11 (seconda tornata)
+
+Restore point automatico prima di ogni `-Apply` (#1); igiene account ADMIN-BUILTIN +
+ACCOUNT-DORMANTI generici (#2, applicazione rifiutata = rischio accettato per Administrator/dev);
+audit ACL delle cartelle sensibili e directory nel PATH (#8: `acl_cartelle_sensibili.csv`, alert
+ACL nel Compare, marca GRAVE Modify/FullControl o scrittura nel PATH; collaudo: 0 gravi).
+
 ## Prossimi blocchi candidati (in ordine di valore)
 
 Meccanismo di "eccezioni / rischio accettato" in `Allinea-BestPractice.ps1`: un file di eccezioni
