@@ -52,6 +52,16 @@ clonando la repo su qualsiasi Windows 11.
 
 ## Prossimi blocchi candidati (in ordine di valore)
 
+Audit ACL delle cartelle sensibili (read-only): controllare i permessi NTFS di un elenco curato
+di percorsi (`C:\`, `C:\Windows`, `System32`, `Windows\Temp`, `Program Files`, `ProgramData`,
+cartelle StartUp, radici profili) e segnalare dove `Users`/`Authenticated Users`/`Everyone` hanno
+Write/Modify/FullControl (violazione del minimo privilegio = vettore di privilege escalation).
+Includere i due casi ad alto impatto: directory scrivibili presenti nel PATH di sistema, e
+cartelle dei binari dei servizi scrivibili da utenti (si aggancia ai "percorsi non quotati" già
+rilevati). Output `acl_cartelle_sensibili.csv` diffabile + alert ACL nel Compare su nuova ACL
+debole. Principio: cartelle di sistema/programmi scrivibili solo da SYSTEM/Administrators/
+TrustedInstaller, utenti in sola lettura+esecuzione.
+
 Debloating a livello macchina (-AllUsers / provisioned MIRATO) come passo opzionale distinto dal
 per-utente, con le cautele del paletto 4 (mai de-provisioning massivo su macchina gestita).
 

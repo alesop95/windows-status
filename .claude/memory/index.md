@@ -53,7 +53,10 @@ spiegati prima — SUGGERIMENTI PROPOSTI in attesa di scelta: (1) restore point 
 ogni -Apply; (2) igiene account (Administrator abilitato, account `dev` mai loggato); (3)
 punteggio conformità baseline + mappatura ISO/CIS; (4) readiness nello snapshot (pending reboot,
 Windows Update, ultima scansione AV); (5) report HTML; (6) estensione baseline (Module
-logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico opt-in.
+logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico opt-in;
+(8) audit ACL delle cartelle sensibili (permessi NTFS: flag su Users/Everyone con scrittura su
+percorsi di sistema; + directory scrivibili nel PATH e binari dei servizi — privilege escalation;
+read-only, vedi roadmap).
 In sospeso comunque: BitLocker (PER ULTIMO, vedi memoria bitlocker-implementazione-safe),
 rimandati Secure Boot e firma SMB (NAS legacy), opz. policy TurnOffWindowsCopilot, nuovo
 snapshot ELEVATO come baseline completa con hardware/licenza. Roadmap residua: server MCP locale, job Veeam in mappa.
