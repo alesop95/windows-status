@@ -27,6 +27,15 @@ Rimossa la task one-shot scaduta `RiavvioSingoloNotturno`. Disattivata in modo r
 bitmap persistente del client RDP (registro `DisablePersistentCache=1` + `Default.rdp` a 0 +
 cache svuotata): reversibile, a changelog nella mappa compilata.
 
+## Hardening live applicato (2026-06-11, paracadute Veeam confermato)
+
+Una azione alla volta, spiegata e approvata. (1) PS-LOG: ScriptBlock logging abilitato. (2)
+Firma SMB: RIMANDATA — due NAS legacy/EOL in rete e backup Veeam su uno di essi; rischio rottura.
+(3) Debloating Gruppo A "solo superflue": rimossi 5 componenti Xbox + DevHome per l'utente;
+mantenuti Media Player e Phone Link; XboxGameCallableUI non rimovibile (stub di sistema).
+Tutto a changelog nella mappa compilata. Restano: BitLocker, Secure Boot, firma SMB (quando i
+NAS legacy sono risolti), eventuale Gruppo B/AI-slop.
+
 ## Applicatore del baseline — Allinea-BestPractice.ps1 (2026-06-11)
 
 Terza gamba del tool: allinea un PC (vergine o difforme) al baseline di sicurezza. Dichiarativo,

@@ -6,6 +6,35 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Hardening live (2): firma SMB RIMANDATA, debloating Gruppo A applicato
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Azione 2 (firma SMB):
+RIMANDATA su decisione informata — i NAS connessi sono 4, due EOL (modelli legacy) e il
+backup Veeam punta a uno dei due vecchi; la firma SMB obbligatoria rischiava di tagliarli fuori. Da
+riprendere quando i NAS legacy sono verificati/dismessi (sono già nella lista di remediation del
+VA). Annotato in mappa.
+Debloating Gruppo A (scelta utente "solo le superflue"): rimosse per l'account corrente, via
+`Remove-AppxPackage` (per-utente, nessun UAC), XboxGamingOverlay, XboxGameOverlay,
+XboxSpeechToTextOverlay, XboxIdentityProvider, Windows.DevHome. `XboxGameCallableUI` non
+rimovibile (stub di sistema protetto, HRESULT 0x80073CFA — atteso). Mantenuti di proposito
+Windows Media Player (ZuneMusic) e Phone Link (YourPhone). Reversibile da Store. A changelog.
+Molte altre app del Gruppo A (BingNews/Weather, GamingApp, Clipchamp, FeedbackHub, ZuneVideo)
+erano già assenti per l'utente. Prossimo: a scelta utente; restano BitLocker, Secure Boot, e la
+firma SMB rimandata.
+
+## 2026-06-11 — Hardening live (paracadute Veeam confermato): azione 1 ScriptBlock logging
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Avviata la fase di
+applicazione del baseline su macchina reale, dopo che l'utente ha lanciato il backup immagine
+Veeam sul NAS. Flusso concordato: spiegare ogni azione -> approvazione utente -> applicare ->
+tracciare (changelog mappa + doc) -> snapshot -> azione successiva. UNA azione alla volta.
+Azione 1 APPLICATA: PowerShell Script Block Logging abilitato (EnableScriptBlockLogging=1) via
+processo elevato (UAC approvato), verificato col report Allinea-BestPractice (PS-LOG=CONFORME).
+A changelog nella mappa compilata. Nota operativa: l'elevazione con one-liner e virgolette
+annidate non faceva comparire l'UAC; affidabile invece scrivere uno script .ps1 temporaneo e
+lanciarlo con `Start-Process -Verb RunAs -File` (poi rimosso). Prossima: azione 2 firma SMB
+(rischio medio per i NAS), da spiegare e approvare prima.
+
 ## 2026-06-11 — Nuovo strumento: Allinea-BestPractice.ps1 (applicatore reversibile del baseline)
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente da fare).

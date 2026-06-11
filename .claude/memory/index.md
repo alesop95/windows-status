@@ -32,10 +32,11 @@ script `scripts/Allinea-BestPractice.ps1` (applicatore del baseline, dry-run di 
 
 ## Punto di ripresa
 
-Dopo il commit manuale: (1) DEBLOATING — eseguibile solo dopo che l'utente conferma il
-paracadute (immagine Veeam recente + punto di ripristino); piano a micro-step pronto in
-`current-work.md`, si parte dal Gruppo A (app consumer); nulla è ancora eseguito; (2) decisioni
-✍️ dalla mappa compilata — BitLocker OFF, Secure Boot disattivo con TPM pronto, logging
-PowerShell non configurato, residuo Lenovo, estensione VPN/proxy nel browser; (3) un nuovo
-snapshot ELEVATO come baseline pulita post-modifiche (RDP, task) che completa anche auditpol,
-secedit, associazioni file; (4) roadmap residua: server MCP locale, job Veeam in mappa (sez. 11).
+Hardening live in corso (paracadute Veeam confermato il 2026-06-11), una azione alla volta con
+spiegazione + approvazione + changelog. FATTO: ScriptBlock logging ON; debloating Gruppo A
+(5 componenti Xbox + DevHome rimossi, Media Player e Phone Link mantenuti). RIMANDATO: firma SMB
+(due NAS legacy/EOL + backup Veeam su uno di essi). Prossimi possibili, a scelta utente e
+sempre spiegati prima: (1) BitLocker (TPM pronto, decidere custodia chiave); (2) Secure Boot da
+UEFI; (3) firma SMB quando i NAS legacy sono verificati/dismessi; (4) Gruppo B / AI-slop nel
+debloating; (5) un nuovo snapshot ELEVATO per certificare lo stato post-modifiche (e completare
+auditpol, secedit, associazioni file). Roadmap residua: server MCP locale, job Veeam in mappa.
