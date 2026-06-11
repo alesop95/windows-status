@@ -46,9 +46,14 @@ nello snapshot (`hardware_*.csv`, sezione 1, con alert HARDWARE nel Compare); av
 Pro RETAIL attivato via licenza DIGITALE (chiave dal fornitore; migrazione HW in docs/02);
 software riproducibile all'ultima versione (winget export + winget upgrade) e lista driver di
 terze parti `driver_terze_parti.csv` (+ Export-WindowsDriver/pnputil) per il ripristino su nuovo
-hardware. Prossimi possibili, a scelta
-utente e sempre spiegati prima: (1) debloating a livello macchina (-AllUsers/provisioned MIRATO)
-per togliere Copilot/Xbox/DevHome anche dagli altri profili; (2) BitLocker (PER ULTIMO, vedi
-memoria bitlocker-implementazione-safe); (3) opz. policy TurnOffWindowsCopilot; (4) rimandati
-Secure Boot e firma SMB (NAS legacy); (5) un nuovo snapshot ELEVATO sarà la prima baseline
-completa CON l'inventario hardware (i campi hardware nella mappa si compilano da lì). Roadmap residua: server MCP locale, job Veeam in mappa.
+hardware. Debloating a livello macchina FATTO il
+2026-06-11 (mirato, elevato): account di lavoro e nuovi profili puliti; resta 1 copia residua nel
+profilo Administrator (lasciata, break-glass). Prossimi possibili, a scelta utente e sempre
+spiegati prima — SUGGERIMENTI PROPOSTI in attesa di scelta: (1) restore point automatico prima di
+ogni -Apply; (2) igiene account (Administrator abilitato, account `dev` mai loggato); (3)
+punteggio conformità baseline + mappatura ISO/CIS; (4) readiness nello snapshot (pending reboot,
+Windows Update, ultima scansione AV); (5) report HTML; (6) estensione baseline (Module
+logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico opt-in.
+In sospeso comunque: BitLocker (PER ULTIMO, vedi memoria bitlocker-implementazione-safe),
+rimandati Secure Boot e firma SMB (NAS legacy), opz. policy TurnOffWindowsCopilot, nuovo
+snapshot ELEVATO come baseline completa con hardware/licenza. Roadmap residua: server MCP locale, job Veeam in mappa.
