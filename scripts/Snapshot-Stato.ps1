@@ -618,6 +618,53 @@ if($doMachine){
       Add-Sum "Servizi con percorso non quotato e spazi: $(@($svcBad).Count) (servizi_percorsi_non_quotati.csv)"
   } catch { Add-Sum "Controllo percorsi servizi fallito: $_" }
 
+  # --- Audit ACL delle cartelle sensibili + directory scrivibili nel PATH (privilege escalation) ---
+  #     Principio: cartelle di sistema/programmi scrivibili solo da SYSTEM/Administrators/TrustedInstaller.
+  #     Si segnala dove gruppi AMPI (Users/Authenticated Users/Everyone/Guests) hanno diritti di scrittura.
+  try {
+      $broad = 'S-1-1-0','S-1-5-11','S-1-5-32-545','S-1-5-32-546','S-1-5-7'  # Everyone, AuthUsers, Users, Guests, Anonymous
+      function Get-AclDeboli([string]$pth){
+          if(-not (Test-Path $pth)){ return @() }
+          try { $acl = Get-Acl -LiteralPath $pth -ErrorAction Stop } catch { return @() }
+          $res = @()
+          foreach($ace in $acl.Access){
+              if($ace.AccessControlType -ne 'Allow'){ continue }
+              $sid = $null
+              try { $sid = $ace.IdentityReference.Translate([System.Security.Principal.SecurityIdentifier]).Value } catch { $sid = [string]$ace.IdentityReference.Value }
+              if($sid -notin $broad){ continue }
+              $r = [string]$ace.FileSystemRights
+              if($r -notmatch 'FullControl|Modify|Write|CreateFiles|CreateDirectories|Delete|TakeOwnership|ChangePermissions'){ continue }
+              $res += [pscustomobject]@{ Identita=[string]$ace.IdentityReference.Value; Diritti=$r; Grave=[bool]($r -match 'FullControl|Modify') }
+          }
+          ,$res
+      }
+      $aclRows = New-Object System.Collections.Generic.List[object]
+      # A) cartelle di sistema/programmi sensibili
+      $sensibili = @($env:SystemDrive + '\'), $env:SystemRoot, "$env:SystemRoot\System32", "$env:SystemRoot\Temp",
+                   "$env:SystemRoot\Tasks", "$env:SystemRoot\System32\drivers", 'C:\Program Files', 'C:\Program Files (x86)',
+                   $env:ProgramData, "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"
+      foreach($p in ($sensibili | Sort-Object -Unique)){
+          foreach($w in (Get-AclDeboli $p)){
+              $aclRows.Add([pscustomobject]@{ Categoria='Cartella'; Percorso=$p; Identita=$w.Identita; Diritti=$w.Diritti; Grave=$w.Grave })
+          }
+      }
+      # B) directory presenti nel PATH di sistema scrivibili da gruppi ampi (DLL/exe planting)
+      $pathSys = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name Path -ErrorAction SilentlyContinue).Path
+      $pathDirs = @(($pathSys -split ';') + ($env:Path -split ';') | Where-Object { $_ -and (Test-Path $_) } | Sort-Object -Unique)
+      foreach($p in $pathDirs){
+          foreach($w in (Get-AclDeboli $p)){
+              # nel PATH qualsiasi scrittura e' rilevante (anche solo CreateFiles)
+              $aclRows.Add([pscustomobject]@{ Categoria='PATH'; Percorso=$p; Identita=$w.Identita; Diritti=$w.Diritti; Grave=$true })
+          }
+      }
+      $aclRows | Export-Csv (Join-Path $outDir 'acl_cartelle_sensibili.csv') -NoTypeInformation -Encoding UTF8
+      $gravi = @($aclRows | Where-Object Grave).Count
+      Add-Sum ''
+      Add-Sum "Audit ACL cartelle sensibili: $($aclRows.Count) voci con scrittura per gruppi ampi (acl_cartelle_sensibili.csv), di cui $gravi GRAVI (Modify/FullControl o dir nel PATH)."
+      if($gravi -gt 0){ @($aclRows | Where-Object Grave) | ForEach-Object { Add-Sum "  ! $($_.Categoria): $($_.Percorso) -> $($_.Identita) [$($_.Diritti)]" } }
+      else { Add-Sum '  Nessuna ACL debole grave sulle cartelle sensibili ne nel PATH.' }
+  } catch { Add-Sum "Audit ACL non riuscito: $_" }
+
   Section '11. EXPORT RIPRISTINABILI (per ricostruire altrove)'
 
   # --- Profili Wi-Fi (SENZA chiavi) ---

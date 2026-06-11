@@ -6,6 +6,21 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — #8 Audit ACL cartelle sensibili + directory scrivibili nel PATH
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Implementato l'audit ACL
+(read-only) nella sezione 10 dello snapshot: per un elenco curato di cartelle sensibili
+(C:\, Windows, System32, Temp, Tasks, drivers, Program Files (x86/64), ProgramData, StartUp
+all-users) e per ogni directory del PATH di sistema, segnala dove gruppi AMPI (Everyone S-1-1-0,
+Authenticated Users S-1-5-11, Users S-1-5-32-545, Guests, Anonymous) hanno diritti di scrittura.
+Logica per SID (locale-independent). Marca GRAVE = Modify/FullControl, oppure QUALSIASI scrittura
+se la dir è nel PATH (DLL/exe planting). Output `acl_cartelle_sensibili.csv`; Add-Sum elenca i
+gravi. Compare: categoria alert ACL su nuova ACL debole grave. Collaudo: 2 voci (ProgramData
+Users, Tasks Authenticated Users) = default benigni di Windows, marcate non gravi → 0 alert;
+nessuna dir scrivibile nel PATH. Doc: STACK, mappa sez. 1/9, roadmap (completati). Sequenza
+suggerimenti #1→#2→#8 COMPLETATA. Restano: meccanismo eccezioni risk-accepted (in coda),
+BitLocker (per ultimo), rimandati Secure Boot e firma SMB.
+
 ## 2026-06-11 — Baseline esteso: restore point automatico (#1) + igiene account (#2)
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Sequenza suggerimenti #1→#2→#8.

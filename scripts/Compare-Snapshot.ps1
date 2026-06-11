@@ -262,6 +262,17 @@ if($null -ne $hro -and $null -ne $hrn){
     if($sumO -ne $sumN){ Add-Alert 'HARDWARE' "RAM totale cambiata: $sumO GB -> $sumN GB" }
 }
 
+# 13a. Audit ACL: nuova ACL debole GRAVE su cartella sensibile o directory nel PATH (privilege escalation)
+$aco = Load-Csv $Old 'acl_cartelle_sensibili.csv'; $acn = Load-Csv $New 'acl_cartelle_sensibili.csv'
+if($null -ne $aco -and $null -ne $acn){
+    $keyO = @($aco | ForEach-Object { "$($_.Categoria)|$($_.Percorso)|$($_.Identita)|$($_.Diritti)" })
+    foreach($r in $acn){
+        if($r.Grave -eq 'True' -and ("$($r.Categoria)|$($r.Percorso)|$($r.Identita)|$($r.Diritti)" -notin $keyO)){
+            Add-Alert 'ACL' "nuova ACL debole [$($r.Categoria)]: $($r.Percorso) scrivibile da $($r.Identita) [$($r.Diritti)]"
+        }
+    }
+}
+
 # 13b. Licenza Windows: cambio di stato attivazione (es. da Licenziato a grazia/non attivato)
 $lwo = Load-Csv $Old 'licenza_windows.csv'; $lwn = Load-Csv $New 'licenza_windows.csv'
 if($null -ne $lwo -and $null -ne $lwn){
