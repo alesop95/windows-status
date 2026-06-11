@@ -17,6 +17,8 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Marca / Modello / Serial | `__________`                           |
 | CPU / RAM                | `__________`                           |
 | Edizione / Build Windows | `__________`                           |
+| Licenza Windows          | `edizione / canale (Retail/OEM/Volume) / stato / tipo` (da `licenza_windows.txt`) |
+| Licenza - dove/come gestita | `__________` ✍️ (digitale legata ad account MS? chiave retail nel password manager? OEM in firmware?) |
 | Stato join               | `Entra ID joined` (AzureAdJoined: YES) |
 | Tenant (nome / ID)       | `__________`                           |
 | Gestita da Intune/MDM    | `Sì / No` (riga MDMUrl in dsregcmd)    |

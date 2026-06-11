@@ -72,6 +72,13 @@ Applica la **3-2-1**: oltre al NAS, tieni una **seconda copia** su disco USB est
 ### Dopo il primo avvio — **specifico per Entra ID joined**
 - Verifica i driver mancanti in **Gestione dispositivi**.
 - Riattiva **Windows** e **Office/M365** se richiesto (hardware diverso può richiederlo).
+  - **Licenza Windows e ripristino:** una **licenza digitale** (digital entitlement) si riattiva
+    da sola se reinstalli/ripristini sullo **stesso hardware**; dopo un **cambio hardware
+    importante** serve la **risoluzione problemi di attivazione** con la licenza **collegata a un
+    account Microsoft** (per questo conviene collegarla *prima*). Una **chiave retail** tipata si
+    può invece trasferire su un altro PC (va custodita nel password manager). Una **chiave OEM**
+    è legata alla scheda madre originale e **non** è trasferibile. Lo snapshot (`licenza_windows.txt`)
+    dice quale dei tre casi è il tuo, così sai in anticipo come riattivare dopo un ripristino.
 - **L'identità del dispositivo in Entra ID è legata all'hardware/TPM:** dopo un ripristino su un PC
   diverso il join può non corrispondere più. Probabile **ri-registrazione/ri-join** del dispositivo
   in Entra ID (e nuova conformità Intune). Pianificalo: non è un errore, è normale su hardware nuovo.
