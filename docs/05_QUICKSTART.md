@@ -40,6 +40,15 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\scripts\Reinstall-Software.ps1             # su un PC nuovo, dopo aver rivisto il JSON winget
 ```
 
+**Allineare un PC al baseline di sicurezza** (su PC vergine o difforme; report sicuro ovunque,
+applicazione solo dopo paracadute Veeam + punto di ripristino):
+
+```powershell
+.\scripts\Allinea-BestPractice.ps1           # REPORT del divario (sola lettura)
+.\scripts\Allinea-BestPractice.ps1 -Apply    # applicazione guidata, conferma per ogni passo (admin)
+.\scripts\Allinea-BestPractice.ps1 -Apply -Solo RDP-CACHE,PS-LOG   # solo alcuni controlli
+```
+
 ## Le tre regole d'oro
 1. **Sempre da amministratore** (Win+X -> Terminale Admin). Senza, mancano BitLocker, Secure
    Boot, TPM, Defender, secedit e gli altri account; il riepilogo lo segnala in testa.

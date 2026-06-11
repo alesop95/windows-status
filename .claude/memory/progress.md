@@ -6,6 +6,21 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Nuovo strumento: Allinea-BestPractice.ps1 (applicatore reversibile del baseline)
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `scripts/Allinea-BestPractice.ps1` (NUOVO — terza gamba del tool: allinea un PC
+vergine o difforme al baseline di sicurezza emerso dall'analisi), più documentazione (`STACK.md`,
+`README.md`, `docs/05_QUICKSTART.md`, `CLAUDE.md` cosa-puoi-fare e struttura).
+Design: dichiarativo (lista di controlli con Test/Apply/rollback), DRY-RUN di default (stampa
+solo il divario, sola lettura), `-Apply` chiede conferma per ogni controllo non conforme, salta
+quelli che richiedono admin se non elevato, logga in `snapshots/allineamento_<stamp>.log`, non
+tocca Windows Update/Defender/Office/Edge/OneDrive/Intune, e segnala (senza forzare) Secure Boot
+e BitLocker. Baseline: RDP-CACHE, SMB-SIGN (client+server), SMB1-OFF, PS-LOG (ScriptBlock
+logging), LSA-PPL, + avvisi SECUREBOOT/BITLOCKER. Collaudato in modalità report su questa
+macchina (non elevato): 3 conformi, 2 da allineare (firma SMB, ScriptBlock logging), 2 da
+valutare. Nessuna applicazione eseguita: il paracadute Veeam si lancia all'avvio del lavoro.
+
 ## 2026-06-10 — Cache RDP disattivata, raccordo checklist VA, quickstart, piano debloating a secco
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente da fare).
