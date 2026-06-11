@@ -6,6 +6,21 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Controllo licenza/attivazione Windows nello snapshot
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Aggiunto alla sezione 3 il
+controllo licenza Windows: edizione, canale (Retail/OEM/Volume via regex su Description), stato
+attivazione (LicenseStatus mappato), ultimi 5 della product key, presenza chiave generica
+(indizio licenza digitale), presenza chiave OEM in firmware ACPI MSDM — il tutto SENZA mai
+salvare la chiave intera né la OEM (solo presenza/bool). Output `licenza_windows.txt` +
+`licenza_windows.csv`. Compare: categoria alert LICENZA su cambio di stato attivazione o canale.
+Collaudo + scansione: nessuna chiave intera trapelata (pattern 5x5 non trovato).
+EVIDENZA macchina: Win 11 Pro, canale RETAIL, ATTIVATO, chiave generica `*****-3V66T`, nessuna
+OEM in firmware → **licenza DIGITALE**. Gestione (in mappa, ✍️): verificare in Impostazioni >
+Attivazione se è collegata all'account Microsoft e, se no, collegarla (abilita riattivazione
+dopo reinstall/cambio hardware); non c'è chiave retail da custodire. Nota in docs/02 sul
+comportamento della licenza dopo ripristino Veeam su hardware diverso (digitale/retail/OEM).
+
 ## 2026-06-11 — Inventario hardware nello snapshot + avvio standardizzato Avvia.ps1
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Due build richiesti.

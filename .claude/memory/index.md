@@ -40,8 +40,10 @@ RIMANDATI: firma SMB (due NAS legacy/EOL + backup Veeam su uno di essi) e Secure
 BitLocker = PER ULTIMO (decisione utente). Snapshot ELEVATO di certificazione FATTO
 (`snapshot_20260611_111205`): hardening confermato; scoperto che Copilot/DevHome/Xbox sono via
 solo per l'utente corrente, persistono a livello -AllUsers. FATTI il 2026-06-11: inventario hardware
-nello snapshot (`hardware_*.csv`, sezione 1, con alert HARDWARE nel Compare) e avvio
-standardizzato `Avvia.ps1` (menu unico, `-Help` non interattivo). Prossimi possibili, a scelta
+nello snapshot (`hardware_*.csv`, sezione 1, con alert HARDWARE nel Compare); avvio standardizzato
+`Avvia.ps1` (menu unico, `-Help` non interattivo); controllo licenza/attivazione Windows (sezione
+3, `licenza_windows.txt/.csv`, alert LICENZA nel Compare, mai la chiave intera) — evidenza: Win 11
+Pro RETAIL attivato via licenza DIGITALE, ✍️ verificare collegamento ad account Microsoft. Prossimi possibili, a scelta
 utente e sempre spiegati prima: (1) debloating a livello macchina (-AllUsers/provisioned MIRATO)
 per togliere Copilot/Xbox/DevHome anche dagli altri profili; (2) BitLocker (PER ULTIMO, vedi
 memoria bitlocker-implementazione-safe); (3) opz. policy TurnOffWindowsCopilot; (4) rimandati

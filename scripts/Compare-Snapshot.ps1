@@ -262,6 +262,15 @@ if($null -ne $hro -and $null -ne $hrn){
     if($sumO -ne $sumN){ Add-Alert 'HARDWARE' "RAM totale cambiata: $sumO GB -> $sumN GB" }
 }
 
+# 13b. Licenza Windows: cambio di stato attivazione (es. da Licenziato a grazia/non attivato)
+$lwo = Load-Csv $Old 'licenza_windows.csv'; $lwn = Load-Csv $New 'licenza_windows.csv'
+if($null -ne $lwo -and $null -ne $lwn){
+    $so = ($lwo | Select-Object -First 1).Stato; $sn = ($lwn | Select-Object -First 1).Stato
+    if($so -and $sn -and $so -ne $sn){ Add-Alert 'LICENZA' "stato attivazione Windows cambiato: '$so' -> '$sn'" }
+    $co = ($lwo | Select-Object -First 1).Canale; $cn = ($lwn | Select-Object -First 1).Canale
+    if($co -and $cn -and $co -ne $cn){ Add-Alert 'LICENZA' "canale licenza cambiato: '$co' -> '$cn'" }
+}
+
 # 14. Servizi con percorso non quotato comparsi dopo
 $qo = Load-Csv $Old 'servizi_percorsi_non_quotati.csv'; $qn = Load-Csv $New 'servizi_percorsi_non_quotati.csv'
 if($null -ne $qo -and $null -ne $qn){

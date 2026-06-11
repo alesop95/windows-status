@@ -34,7 +34,9 @@ fotografia di sola lettura, organizzata in tre parti governate dal parametro `-S
 hardware (sezione 1: scheda madre, BIOS/UEFI, GPU, banchi RAM, dischi fisici con tipo/bus/salute
 SMART, volumi, controller e dispositivi USB con i dischi di massa, adattatori di rete con
 velocità di link, monitor — tutto in `hardware_*.csv` diffabili),
-account, sessioni e membri di Administrators (2), configurazioni di macchina (3), software da
+account, sessioni e membri di Administrators (2), configurazioni macchina inclusa la licenza /
+attivazione Windows (3: edizione, canale Retail/OEM/Volume, stato, tipo licenza — `licenza_windows.txt/.csv`
+— senza mai salvare la chiave intera né quella OEM di firmware), configurazioni di macchina (3), software da
 winget, registro e Appx (4), servizi (5), avvio e attività pianificate (6), rete e firewall (7),
 sicurezza (8: Defender e AV registrati, BitLocker, postura hardware/OS, esclusioni e ASR,
 auditpol, logging PowerShell, secedit, regole firewall inbound, catena di fiducia con root CA,
@@ -66,7 +68,8 @@ postura hardware/OS cambiata, esclusioni Defender nuove e ASR indebolite, regole
 inbound nuove, root CA e Trusted Publishers nuovi, hosts modificato, estensioni browser nuove,
 servizi con percorso non quotato comparsi, e variazioni hardware (nuovo disco — con allerta
 specifica se è un disco USB di massa, salute SMART non ottimale, cambio di RAM totale, dischi e
-dispositivi USB aggiunti/rimossi). Avvisa se i due snapshot hanno privilegi diversi.
+dispositivi USB aggiunti/rimossi), e cambi di licenza/attivazione Windows (categoria LICENZA:
+stato attivazione o canale cambiati). Avvisa se i due snapshot hanno privilegi diversi.
 Se un CSV manca in uno dei due snapshot la categoria viene saltata senza errori. Vincolo di codifica: gli script vanno salvati in UTF-8 con BOM, perché Windows
 PowerShell 5.1 interpreta l'UTF-8 senza BOM come ANSI e i caratteri tipografici nelle stringhe
 spezzano il parsing.

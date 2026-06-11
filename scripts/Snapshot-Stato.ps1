@@ -204,6 +204,45 @@ if($doMachine){
           Export-Csv (Join-Path $outDir 'stampanti.csv') -NoTypeInformation -Encoding UTF8
   } catch {}
 
+  # --- Licenza / attivazione Windows (MAI la chiave intera: solo ultimi 5 e presenza) ---
+  try {
+      $statusMap = @{ 0='Non licenziato'; 1='Licenziato'; 2='Periodo di grazia iniziale'; 3='Periodo di grazia aggiuntivo'; 4='Periodo di grazia non genuino'; 5='Notifica (non attivato)'; 6='Periodo di grazia esteso' }
+      $genericKeys = @('3V66T','TX9XD','YTMG3','T83GX') # suffissi chiavi generiche/predefinite Win 11 Pro/Home -> indizio di licenza digitale
+      $lic = Get-CimInstance SoftwareLicensingProduct -ErrorAction Stop |
+          Where-Object { $_.ApplicationID -eq '55c92734-d682-4d71-983e-d6ec3f16059f' -and $_.PartialProductKey }
+      $sls = Get-CimInstance SoftwareLicensingService -ErrorAction SilentlyContinue
+      $oemFw = $false; try { $oemFw = [bool]$sls.OA3xOriginalProductKey } catch {}   # presenza chiave OEM in ACPI MSDM (valore NON salvato)
+      $rows = foreach($p in $lic){
+          $canale = if($p.Description -match '(RETAIL|OEM[_A-Z0-9]*|VOLUME_KMSCLIENT|VOLUME_MAK|EVAL|TIMEBASED)'){ $Matches[1] } else { 'n/d' }
+          $st = $statusMap[[int]$p.LicenseStatus]; if(-not $st){ $st = "stato $($p.LicenseStatus)" }
+          [pscustomobject]@{
+              Prodotto=$p.Name; Canale=$canale; Stato=$st
+              ChiaveGenerica=($p.PartialProductKey -in $genericKeys)
+              Ultimi5=$p.PartialProductKey
+              GiorniGrazia=$(if($p.LicenseStatus -ne 1 -and $p.GracePeriodRemaining){ [math]::Round($p.GracePeriodRemaining/1440,1) } else { '' })
+          }
+      }
+      $rows | Export-Csv (Join-Path $outDir 'licenza_windows.csv') -NoTypeInformation -Encoding UTF8
+      $primary = $rows | Select-Object -First 1
+      $tipo = if($oemFw){ 'OEM (chiave in firmware ACPI MSDM)' }
+              elseif($primary.Canale -eq 'RETAIL' -and $primary.ChiaveGenerica -and $primary.Stato -eq 'Licenziato'){ 'licenza DIGITALE probabile (canale retail, chiave generica installata)' }
+              elseif($primary.Canale -like 'VOLUME*'){ 'licenza VOLUME (KMS/MAK)' }
+              else { 'da verificare in Impostazioni > Attivazione' }
+      $lines = @("# Licenza / attivazione Windows - $(Get-Date)","",
+                 "Edizione        : $((Get-CimInstance Win32_OperatingSystem).Caption)",
+                 "Canale          : $($primary.Canale)",
+                 "Stato           : $($primary.Stato)",
+                 "Product key     : *****-$($primary.Ultimi5)  (solo ultimi 5; chiave intera mai salvata)",
+                 "Chiave generica : $($primary.ChiaveGenerica)  (true = chiave predefinita -> indizio di licenza digitale)",
+                 "OEM in firmware : $oemFw",
+                 "Tipo licenza    : $tipo","",
+                 ">> La chiave intera e la chiave OEM NON vengono salvate. Nella mappa si annota solo",
+                 ">> il tipo di licenza e DOVE/come e gestita (account Microsoft, password manager).")
+      Save 'licenza_windows.txt' (Protect-Secrets ($lines -join "`r`n"))
+      Add-Sum ''
+      Add-Sum "Licenza Windows: $($primary.Stato) - canale $($primary.Canale) - tipo: $tipo (licenza_windows.txt/.csv)"
+  } catch { Add-Sum "Stato licenza non leggibile: $_" }
+
   Section '4. SOFTWARE INSTALLATO'
   try {
       Get-Command winget -ErrorAction Stop | Out-Null
