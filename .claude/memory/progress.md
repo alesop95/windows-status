@@ -6,6 +6,28 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Inventario hardware nello snapshot + avvio standardizzato Avvia.ps1
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Due build richiesti.
+(1) INVENTARIO HARDWARE: nuovo blocco nella sezione 1 dello snapshot (rinominata "IDENTITA E
+HARDWARE", nessuna rinumerazione delle altre). Cattura scheda madre, BIOS/UEFI, GPU, banchi RAM
+(`hardware_ram.csv`), dischi fisici con tipo/bus/salute SMART (`hardware_dischi.csv`), volumi,
+controller e dispositivi USB con conteggio dischi di massa (`hardware_usb_*.csv`), adattatori di
+rete con LinkSpeed (`hardware_rete_adattatori.csv`), monitor EDID (`hardware_monitor.csv`), più
+`hardware_inventario.txt` di sintesi. Compare esteso: dischi/USB/RAM nel diff per-chiave +
+categoria alert HARDWARE (nuovo disco USB di massa = esfiltrazione, salute SMART non ottimale,
+cambio RAM totale). Collaudato: 4 dischi (SATA/USB/NVMe) Healthy, 128 GB in 4 banchi, Ethernet
+2.5 Gbps, 3 monitor; Compare gestisce senza errori il caso snapshot vecchio senza HW (skip
+graceful). Limite noto e documentato: velocità USB per-dispositivo non esposta in modo
+affidabile. NB: i valori hardware sono machine-identifying → vivono solo negli snapshot e nella
+mappa compilata (entrambi gitignored), mai nei file tracciati.
+(2) AVVIA.PS1 in radice: punto d'ingresso unico/menu che orchestra gli script di scripts\,
+distingue sola-lettura da MODIFICA (conferma + paracadute), chiede l'approccio ottimizzazione
+(docs/00 §7), ha `-Help` non interattivo per smoke test/CI. Rende l'uso standardizzato clonando
+la repo su qualsiasi Windows 11. Doc aggiornata (STACK, mappa sez.1, quickstart, CLAUDE.md,
+roadmap). Prossimo: debloating a livello macchina (opz.), BitLocker (per ultimo), rimandati
+Secure Boot e firma SMB.
+
 ## 2026-06-11 — Snapshot elevato di CERTIFICAZIONE + separazione ruoli tool + nuove direzioni
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Eseguito snapshot ELEVATO di

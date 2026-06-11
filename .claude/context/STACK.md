@@ -13,8 +13,10 @@ last-verified-commit: 9407b27
 
 ## Stack e runtime
 
-Il progetto è interamente in Windows PowerShell 5.1, senza dipendenze esterne: tre script
-autosufficienti sotto `scripts/`, pensati per Windows 11 in lingua italiana. Lo snapshot
+Il progetto è interamente in Windows PowerShell 5.1, senza dipendenze esterne: quattro script
+sotto `scripts/` più il launcher `Avvia.ps1` in radice, pensati per Windows 11 in lingua
+italiana. `Avvia.ps1` è il punto d'ingresso standardizzato (menu) che orchestra gli script e
+funziona identico clonando la repo su qualsiasi macchina; non ha logica propria. Lo snapshot
 completo richiede una shell elevata (amministratore) per leggere i profili altrui, BitLocker e
 Defender; l'inventario software usa `winget` quando presente e ripiega sul registro quando
 manca. Non c'è build, non c'è gestore di pacchetti: si clona e si esegue.
@@ -28,7 +30,10 @@ quando una scelta del genere emerge.
 
 `scripts/Snapshot-Stato.ps1` è il cuore: produce in `snapshots/snapshot_<timestamp>/` una
 fotografia di sola lettura, organizzata in tre parti governate dal parametro `-Scope`
-(`All`, `Machine`, `User`). La parte macchina copre identità e join Entra ID (sezione 1),
+(`All`, `Machine`, `User`). La parte macchina copre identità, join Entra ID e inventario
+hardware (sezione 1: scheda madre, BIOS/UEFI, GPU, banchi RAM, dischi fisici con tipo/bus/salute
+SMART, volumi, controller e dispositivi USB con i dischi di massa, adattatori di rete con
+velocità di link, monitor — tutto in `hardware_*.csv` diffabili),
 account, sessioni e membri di Administrators (2), configurazioni di macchina (3), software da
 winget, registro e Appx (4), servizi (5), avvio e attività pianificate (6), rete e firewall (7),
 sicurezza (8: Defender e AV registrati, BitLocker, postura hardware/OS, esclusioni e ASR,
@@ -59,7 +64,9 @@ registro), task nuove o con azione cambiata, porte in ascolto nuove (escluse le 
 servizi nuovi o con StartMode/account di esecuzione cambiati, driver non firmati comparsi,
 postura hardware/OS cambiata, esclusioni Defender nuove e ASR indebolite, regole firewall
 inbound nuove, root CA e Trusted Publishers nuovi, hosts modificato, estensioni browser nuove,
-servizi con percorso non quotato comparsi. Avvisa se i due snapshot hanno privilegi diversi.
+servizi con percorso non quotato comparsi, e variazioni hardware (nuovo disco — con allerta
+specifica se è un disco USB di massa, salute SMART non ottimale, cambio di RAM totale, dischi e
+dispositivi USB aggiunti/rimossi). Avvisa se i due snapshot hanno privilegi diversi.
 Se un CSV manca in uno dei due snapshot la categoria viene saltata senza errori. Vincolo di codifica: gli script vanno salvati in UTF-8 con BOM, perché Windows
 PowerShell 5.1 interpreta l'UTF-8 senza BOM come ANSI e i caratteri tipografici nelle stringhe
 spezzano il parsing.
