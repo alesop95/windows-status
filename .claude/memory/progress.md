@@ -6,6 +6,31 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Snapshot elevato di CERTIFICAZIONE + separazione ruoli tool + nuove direzioni
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Eseguito snapshot ELEVATO di
+certificazione (`snapshot_20260611_111205`) e Compare vs l'elevato del 2026-06-10 (`..._151411`).
+Confermati: ScriptBlock logging=1, cache bitmap RDP disattivata, task `RiavvioSingoloNotturno`
+rimossa, Spotify rimosso. SCOPERTA: Copilot/DevHome/Xbox sono rimossi solo per l'utente corrente
+ma persistono a livello `-AllUsers`/provisioned (altri profili + nuovi profili) → ✍️ decidere se
+estendere a livello macchina (rimozione mirata, mai de-provisioning massivo: paletto 4). I 3
+alert del Compare sono il normale auto-update di OneDrive (26.088→26.095): legittimi.
+Documentazione: aggiunta `docs/00` §7 "PowerShell mirato vs Winhance/Winslop" — separazione dei
+ruoli, procedura sicura a due snapshot (fonte ufficiale, inspect/disattiva, prima/dopo, changelog),
+e la regola di CHIEDERE all'avvio quale via usare. Roadmap aggiornata con: inventario hardware
+intelligente (specifiche, dischi/SMART, porte USB+velocità, rete), avvio standardizzato/portabilità
+(entrypoint unico per qualsiasi Win11 clonando la repo), debloating a livello macchina opzionale.
+Salvata memoria [[bitlocker-implementazione-safe]] per l'ultimo intervento.
+
+## 2026-06-11 — Hardening live (4): AI/slop, rimosso Copilot (BingSearch assente)
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Categoria AI/slop: rimossa
+l'app `Microsoft.Copilot` per l'utente (per-utente, no UAC), reversibile da Store.
+`Microsoft.BingSearch` non era installata per l'account, nulla da fare. Nota: Copilot può
+ricomparire dopo aggiornamenti Windows; per bloccarla in modo persistente esiste la policy
+`TurnOffWindowsCopilot` (HKCU, non applicata ora — eventuale follow-up). A changelog. Restano:
+snapshot elevato di certificazione; rimandati Secure Boot e firma SMB; BitLocker per ultimo.
+
 ## 2026-06-11 — Hardening live (3): debloating Gruppo B (solo Spotify); Secure Boot rimandato
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Secure Boot: messo in
