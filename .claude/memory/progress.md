@@ -6,6 +6,20 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Software riproducibile e lista driver di terze parti per nuovo hardware
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Su richiesta utente (rimettere
+in piedi Windows su hardware nuovo). Sezione 4: chiarito che `software_winget.json` reinstalla
+all'ULTIMA versione (via Reinstall-Software.ps1/winget import), aggiunto `winget upgrade` ->
+`software_winget_aggiornabili.txt` e conteggio pacchetti. Sezione 11 (export ripristinabili):
+nuovo `driver_terze_parti.csv` = LISTA dei driver non-Microsoft (chipset/rete/GPU/audio/storage)
+con dispositivo/classe/produttore/versione/inf, più nota su `Export-WindowsDriver -Online` +
+`pnputil /add-driver` per portarsi e re-iniettare i file .inf sul nuovo PC. Collaudo: 59
+pacchetti winget riproducibili, 34 driver terze parti (22 in classi critiche); scansione segreti
+pulita. Doc: `docs/02` nuova sezione "Software e driver per il nuovo hardware"; mappa sez. 3/4
+aggiornata; STACK aggiornato. Prossimo (a scelta utente): debloating a livello macchina; BitLocker
+per ultimo; rimandati Secure Boot e firma SMB.
+
 ## 2026-06-11 — Licenza: procedura di migrazione su hardware nuovo
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Precisazione utente: la chiave

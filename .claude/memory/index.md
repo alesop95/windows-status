@@ -43,7 +43,10 @@ solo per l'utente corrente, persistono a livello -AllUsers. FATTI il 2026-06-11:
 nello snapshot (`hardware_*.csv`, sezione 1, con alert HARDWARE nel Compare); avvio standardizzato
 `Avvia.ps1` (menu unico, `-Help` non interattivo); controllo licenza/attivazione Windows (sezione
 3, `licenza_windows.txt/.csv`, alert LICENZA nel Compare, mai la chiave intera) — evidenza: Win 11
-Pro RETAIL attivato via licenza DIGITALE, ✍️ verificare collegamento ad account Microsoft. Prossimi possibili, a scelta
+Pro RETAIL attivato via licenza DIGITALE (chiave dal fornitore; migrazione HW in docs/02);
+software riproducibile all'ultima versione (winget export + winget upgrade) e lista driver di
+terze parti `driver_terze_parti.csv` (+ Export-WindowsDriver/pnputil) per il ripristino su nuovo
+hardware. Prossimi possibili, a scelta
 utente e sempre spiegati prima: (1) debloating a livello macchina (-AllUsers/provisioned MIRATO)
 per togliere Copilot/Xbox/DevHome anche dagli altri profili; (2) BitLocker (PER ULTIMO, vedi
 memoria bitlocker-implementazione-safe); (3) opz. policy TurnOffWindowsCopilot; (4) rimandati

@@ -37,7 +37,7 @@ velocità di link, monitor — tutto in `hardware_*.csv` diffabili),
 account, sessioni e membri di Administrators (2), configurazioni macchina inclusa la licenza /
 attivazione Windows (3: edizione, canale Retail/OEM/Volume, stato, tipo licenza — `licenza_windows.txt/.csv`
 — senza mai salvare la chiave intera né quella OEM di firmware), configurazioni di macchina (3), software da
-winget, registro e Appx (4), servizi (5), avvio e attività pianificate (6), rete e firewall (7),
+winget (con export riproducibile all'ultima versione, lista aggiornabili), registro e Appx (4), servizi (5), avvio e attività pianificate (6), rete e firewall (7),
 sicurezza (8: Defender e AV registrati, BitLocker, postura hardware/OS, esclusioni e ASR,
 auditpol, logging PowerShell, secedit, regole firewall inbound, catena di fiducia con root CA,
 Trusted Publishers, hosts, proxy e DoH), rilevamento Veeam (9), superficie d'attacco e
@@ -46,7 +46,9 @@ persistenza (10): porte TCP/UDP in ascolto con processo proprietario, autoruns p
 `root\subscription`, azioni e trigger delle attività pianificate non Microsoft, firme dei
 driver con estrazione dei non firmati, servizi con percorso non quotato; e gli export
 ripristinabili (11): profili Wi-Fi senza chiavi, associazioni file, piano energetico,
-impostazioni internazionali, XML delle task non Microsoft. La parte per-account (12) legge da
+impostazioni internazionali, XML delle task non Microsoft, e la lista dei driver di terze parti
+(`driver_terze_parti.csv`) necessari a far rifunzionare l'hardware su un nuovo PC (con la nota su
+`Export-WindowsDriver`/`pnputil` per portarsi e re-iniettare i file `.inf`). La parte per-account (12) legge da
 disco, per ogni profilo in `C:\Users` (esclusi i profili di servizio TEMP*/UMFD-*), le
 configurazioni di Claude — tutti i profili `.claude*`, inclusi i multi-account selezionati via
 `CLAUDE_CONFIG_DIR`, con inventario limitato alle prime 200 voci e `settings.json`/`CLAUDE.md`/

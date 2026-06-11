@@ -104,6 +104,34 @@ disattiva (cambia l'hash hardware) e va riattivato. Due strade.
 Nota: se il nuovo PC arriva con una **propria licenza OEM preinstallata**, spesso non serve
 trasferire nulla; la licenza retail resta una scorta. Mai tenere la stessa chiave attiva su due
 PC contemporaneamente.
+
+## Software e driver per il nuovo hardware
+
+Oltre all'immagine Veeam (che ripristina tutto), lo snapshot fornisce i due elenchi che servono
+a ricostruire l'ambiente anche da zero su hardware diverso.
+
+**Software, riottenibile all'ultima versione.** `software_winget.json` è l'elenco riproducibile
+dei programmi installati via WinGet: `scripts\Reinstall-Software.ps1` (o `winget import`) li
+reinstalla tutti **all'ultima versione aggiornata**. `software_winget_aggiornabili.txt` mostra
+cosa è installato ma non aggiornato. `software_registro.csv` è l'inventario completo (anche dei
+programmi non WinGet, che vanno reinstallati a mano dal loro installer). `app_appx_*.csv` copre
+le app del Microsoft Store.
+
+**Driver, per far rifunzionare l'hardware.** Windows 11 di base porta solo i driver Microsoft;
+quelli di terze parti (chipset, rete, GPU, audio, storage) vanno reinstallati. `driver_terze_parti.csv`
+è **la lista** di quei driver con dispositivo, classe, produttore, versione e file `.inf`. Per
+portarsi i **file** dei driver e re-iniettarli sul nuovo PC (da PowerShell admin):
+
+```powershell
+# Sul PC attuale: esporta tutti i driver di terze parti in una cartella
+Export-WindowsDriver -Online -Destination D:\driver_backup
+# Sul nuovo PC (o dopo un ripristino): re-inietta e installa
+pnputil /add-driver D:\driver_backup\*.inf /subdirs /install
+```
+
+Su hardware molto diverso conviene comunque scaricare i driver chiave (chipset, rete) dal sito
+del produttore della nuova scheda madre, e usare `driver_terze_parti.csv` come checklist di
+"cosa c'era e va ripristinato".
 - **L'identità del dispositivo in Entra ID è legata all'hardware/TPM:** dopo un ripristino su un PC
   diverso il join può non corrispondere più. Probabile **ri-registrazione/ri-join** del dispositivo
   in Entra ID (e nuova conformità Intune). Pianificalo: non è un errore, è normale su hardware nuovo.
