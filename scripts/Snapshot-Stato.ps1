@@ -237,7 +237,10 @@ if($doMachine){
                  "OEM in firmware : $oemFw",
                  "Tipo licenza    : $tipo","",
                  ">> La chiave intera e la chiave OEM NON vengono salvate. Nella mappa si annota solo",
-                 ">> il tipo di licenza e DOVE/come e gestita (account Microsoft, password manager).")
+                 ">> il tipo di licenza e DOVE/come e gestita (account Microsoft, password manager).",
+                 ">> NB: una licenza digitale puo derivare da una chiave RETAIL acquistata; se esiste,",
+                 ">> custodirla nel password manager come prova d'acquisto (la chiave mostrata dal",
+                 ">> sistema e quella generica, NON quella acquistata) e collegare la licenza all'account MS.")
       Save 'licenza_windows.txt' (Protect-Secrets ($lines -join "`r`n"))
       Add-Sum ''
       Add-Sum "Licenza Windows: $($primary.Stato) - canale $($primary.Canale) - tipo: $tipo (licenza_windows.txt/.csv)"
