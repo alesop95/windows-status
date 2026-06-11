@@ -26,10 +26,12 @@
    .\Allinea-BestPractice.ps1 -Apply -Solo RDP-CACHE,PS-LOG
 
  PARACADUTE
-   Prima di -Apply: assicurati di avere un'immagine Veeam recente e un punto di
-   ripristino. Dopo ogni categoria applicata: riavvia se richiesto e verifica
-   Outlook/Teams/OneDrive/VPN/SSO prima di proseguire. Per il debloating delle app
-   consumer vedi il piano in docs/00 e context/current-work.md (operazione a parte).
+   Prima di -Apply: assicurati di avere un'immagine Veeam recente. Lo script crea AUTOMATICAMENTE
+   un punto di ripristino del sistema prima delle modifiche (se la Protezione sistema e attiva e
+   si e elevati; altrimenti avvisa e chiede se proseguire affidandosi a Veeam). Dopo ogni
+   categoria applicata: riavvia se richiesto e verifica Outlook/Teams/OneDrive/VPN/SSO prima di
+   proseguire. Per il debloating delle app consumer vedi il piano in docs/00 e
+   context/current-work.md (operazione a parte).
 ================================================================================
 #>
 param(
@@ -47,6 +49,24 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $logFile = Join-Path $logDir ("allineamento_" + (Get-Date -Format 'yyyyMMdd_HHmmss') + ".log")
 $log = New-Object System.Collections.Generic.List[string]
 function Write-Log([string]$m){ $log.Add("$(Get-Date -Format s)  $m") }
+
+# Helper igiene account
+function Get-AdminIntegrato { Get-LocalUser -ErrorAction SilentlyContinue | Where-Object { $_.SID.Value -match '-500$' } | Select-Object -First 1 }
+function Test-AltroAdminAttivo {
+    # True solo se esiste almeno un ALTRO membro abilitato di Administrators oltre all'integrato -500.
+    # In caso di dubbio ritorna False (cosi la disabilitazione viene rifiutata: scelta prudente).
+    try {
+        $members = Get-LocalGroupMember -SID 'S-1-5-32-544' -ErrorAction Stop
+        $localEnabled = @{}; Get-LocalUser -ErrorAction SilentlyContinue | ForEach-Object { $localEnabled[$_.SID.Value] = $_.Enabled }
+        foreach($m in $members){
+            $sid = [string]$m.SID.Value
+            if($sid -match '-500$'){ continue }
+            if(-not $localEnabled.ContainsKey($sid)){ return $true }  # admin di dominio/Entra (non locale)
+            if($localEnabled[$sid] -eq $true){ return $true }
+        }
+        return $false
+    } catch { return $false }
+}
 
 # Helper per leggere lo stato della cache bitmap RDP (utente)
 function Get-RdpCacheState {
@@ -107,6 +127,29 @@ $baseline = @(
     Note='Medio: effettivo dopo il riavvio; in rari casi blocca SSP/driver non firmati. Protegge contro il furto di credenziali (es. mimikatz).'
   },
   @{
+    Id='ADMIN-BUILTIN'; Categoria='Account'; Admin=$true; Rischio='Medio'
+    Titolo='Disabilitare l''account Administrator integrato (se esiste un altro admin)'
+    Test={ $a=Get-AdminIntegrato; if(-not $a){ @{ Conforme=$true; Stato='nessun account integrato -500' } } else { @{ Conforme = (-not $a.Enabled); Stato = "$($a.Name) Enabled=$($a.Enabled)" } } }
+    Apply={ $a=Get-AdminIntegrato
+            if($a -and $a.Enabled){
+                if(Test-AltroAdminAttivo){ Disable-LocalUser -SID $a.SID -ErrorAction Stop }
+                else { throw 'Rifiutato: e l''unico amministratore attivo (disabilitarlo bloccherebbe l''accesso admin)' } } }
+    Rollback='Enable-LocalUser -SID <SID dell''Administrator integrato> per riabilitarlo'
+    Note='Best practice: tenere l''Administrator integrato DISABILITATO quando c''e un altro account admin. Lo script rifiuta se sarebbe l''unico admin attivo.'
+  },
+  @{
+    Id='ACCOUNT-DORMANTI'; Categoria='Account'; Admin=$false; Rischio='-'; Avviso=$true
+    Titolo='Account locali abilitati anomali: mai usati o senza profilo (da rivedere)'
+    Test={ $me=$env:USERNAME
+           $cand=@(Get-LocalUser -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -and $_.SID.Value -notmatch '-50[01]$' -and $_.Name -ne $me -and $_.Name -notin 'DefaultAccount','WDAGUtilityAccount','Guest' })
+           $flag=foreach($u in $cand){
+               $mai = -not $u.LastLogon; $noprof = -not (Test-Path "C:\Users\$($u.Name)")
+               if($mai){ "$($u.Name) (mai loggato)" } elseif($noprof){ "$($u.Name) (abilitato, senza profilo)" }
+           }
+           @{ Conforme = (@($flag).Count -eq 0); Stato = $(if(@($flag).Count){ ($flag -join '; ') } else { 'nessuno' }) } }
+    Note='Account abilitati mai usati o senza profilo: valutare se disabilitarli (Disable-LocalUser) o rimuoverli. Non auto-applicato: decisione per-account.'
+  },
+  @{
     Id='SECUREBOOT'; Categoria='Avvio'; Admin=$false; Rischio='-'; Avviso=$true
     Titolo='Secure Boot attivo (UEFI)'
     Test={ $on=$null; try { $on=Confirm-SecureBootUEFI } catch {}; @{ Conforme = ($on -eq $true); Stato = $(if($null -ne $on){"SecureBoot=$on"}else{'non leggibile'}) } }
@@ -140,6 +183,36 @@ if($Apply -and -not $SenzaConferma){
     Write-Host "  $logFile"
     $go = Read-Host 'Procedo con la sessione guidata? (s/N)'
     if($go -notmatch '^[sS]'){ Write-Host 'Annullato. Nessuna modifica.' -ForegroundColor Green; return }
+}
+
+# Punto di ripristino automatico PRIMA di qualsiasi modifica (rete di sicurezza locale, oltre a Veeam)
+if($Apply){
+    Write-Host ''
+    Write-Host 'Creazione di un punto di ripristino del sistema prima delle modifiche...' -ForegroundColor Cyan
+    if(-not $isAdmin){
+        Write-Host '  Saltato: serve PowerShell amministratore per creare un punto di ripristino.' -ForegroundColor Yellow
+        Write-Log 'RESTORE-POINT saltato: non elevato'
+    } else {
+        try {
+            # Aggira il limite di default (1 ogni 24h) solo per questa creazione, poi ripristina il valore
+            $freqKey='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRestore'
+            $freqOld=(Get-ItemProperty $freqKey -Name 'SystemRestorePointCreationFrequency' -ErrorAction SilentlyContinue).SystemRestorePointCreationFrequency
+            New-ItemProperty -Path $freqKey -Name 'SystemRestorePointCreationFrequency' -Value 0 -PropertyType DWord -Force -ErrorAction SilentlyContinue | Out-Null
+            Checkpoint-Computer -Description "windows-status Allinea-BestPractice $(Get-Date -Format 'yyyy-MM-dd HH:mm')" -RestorePointType 'MODIFY_SETTINGS' -ErrorAction Stop
+            if($null -ne $freqOld){ Set-ItemProperty -Path $freqKey -Name 'SystemRestorePointCreationFrequency' -Value $freqOld -ErrorAction SilentlyContinue } else { Remove-ItemProperty -Path $freqKey -Name 'SystemRestorePointCreationFrequency' -ErrorAction SilentlyContinue }
+            Write-Host '  Punto di ripristino creato.' -ForegroundColor Green
+            Write-Log 'RESTORE-POINT creato prima delle modifiche'
+        } catch {
+            Write-Host "  Punto di ripristino NON creato: $($_.Exception.Message)" -ForegroundColor Yellow
+            Write-Host '  Probabile causa: Protezione sistema disattivata su questo volume.' -ForegroundColor Yellow
+            Write-Host "  Attivala con:  Enable-ComputerRestore -Drive '$env:SystemDrive\'   (poi rilancia)" -ForegroundColor Yellow
+            Write-Log "RESTORE-POINT fallito: $($_.Exception.Message)"
+            if(-not $SenzaConferma){
+                $cont = Read-Host '  Continuo comunque affidandomi al backup Veeam? (s/N)'
+                if($cont -notmatch '^[sS]'){ Write-Host 'Annullato. Nessuna modifica.' -ForegroundColor Green; return }
+            }
+        }
+    }
 }
 
 $items = $baseline | Where-Object { -not $Solo -or $_.Id -in $Solo -or $_.Categoria -in $Solo }

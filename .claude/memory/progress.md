@@ -6,6 +6,26 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Baseline esteso: restore point automatico (#1) + igiene account (#2)
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Sequenza suggerimenti #1→#2→#8.
+#1 FATTO: `Allinea-BestPractice.ps1 -Apply` ora crea AUTOMATICAMENTE un punto di ripristino prima
+delle modifiche (Checkpoint-Computer; aggira temporaneamente la frequenza 24h e ripristina il
+valore; se Protezione sistema off o non elevato, avvisa e chiede se proseguire con Veeam). Solo
+codice, nessuna modifica live ora; report invariato.
+#2 FATTO (costruzione): due nuovi controlli baseline, generici/portabili (per SID ed euristiche,
+nessun nome hardcoded): ADMIN-BUILTIN (Administrator integrato -500 va disabilitato; Apply rifiuta
+se è l'unico admin attivo — Test-AltroAdminAttivo) e ACCOUNT-DORMANTI (avviso: account abilitati
+mai loggati o senza profilo). Collaudo report su questa macchina: ADMIN-BUILTIN=DA ALLINEARE
+(Administrator abilitato), ACCOUNT-DORMANTI segnala un account locale (abilitato, senza profilo:
+ha un LastLogon ma nessuna cartella in C:\Users). L'APPLICAZIONE (disabilitare Administrator) è una
+modifica al sistema: proposta e RIFIUTATA dall'utente — RISCHIO ACCETTATO: Administrator usato
+dall'utente, `dev` serve per accesso a una cartella di rete di sviluppo (per questo è senza
+profilo: fa accessi alla share, non sessioni interattive). NON disabilitarli. Registrato in mappa
+(sez. 2 + changelog). Aggiunta idea in roadmap: meccanismo di eccezioni/risk-accepted in
+Allinea-BestPractice così il report mostra "ACCETTATO" invece di "DA ALLINEARE". #8 (audit ACL)
+ancora da fare.
+
 ## 2026-06-11 — Debloating a livello macchina (mirato) + suggerimenti proposti
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Eseguito (elevato, UAC) il
@@ -18,7 +38,7 @@ lasciata così (Administrator è break-glass, valore marginale; nessun de-provis
 paletto 4 ok). Reversibile. A changelog nella mappa. Metodo elevazione: solito script .ps1 +
 Start-Process RunAs (poi rimosso).
 Proposti all'utente nuovi suggerimenti (in attesa di scelta): (1) punto di ripristino automatico
-prima di ogni -Apply; (2) igiene account (Administrator abilitato, account `dev` mai loggato);
+prima di ogni -Apply; (2) igiene account (Administrator abilitato, account locale dormante);
 (3) punteggio conformità baseline + mappatura ISO/CIS; (4) readiness nello snapshot (pending
 reboot, Windows Update, ultima scansione AV); (5) report HTML autoconsistente; (6) estensione
 baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico

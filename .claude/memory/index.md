@@ -49,8 +49,13 @@ terze parti `driver_terze_parti.csv` (+ Export-WindowsDriver/pnputil) per il rip
 hardware. Debloating a livello macchina FATTO il
 2026-06-11 (mirato, elevato): account di lavoro e nuovi profili puliti; resta 1 copia residua nel
 profilo Administrator (lasciata, break-glass). Prossimi possibili, a scelta utente e sempre
-spiegati prima — SUGGERIMENTI PROPOSTI in attesa di scelta: (1) restore point automatico prima di
-ogni -Apply; (2) igiene account (Administrator abilitato, account `dev` mai loggato); (3)
+spiegati prima — Sequenza scelta #1->#2->#8. FATTI (codice): #1 restore point
+automatico in Allinea -Apply; #2 igiene account (controlli ADMIN-BUILTIN e ACCOUNT-DORMANTI,
+generici per SID/euristiche). DECISO 2026-06-11: NON disabilitare
+Administrator né l'altro account locale (rischio accettato — Administrator usato dall'utente,
+l'altro serve per una cartella di rete di sviluppo). Il report ADMIN-BUILTIN resterà "da
+allineare" come eccezione documentata (vedi mappa); idea in roadmap: meccanismo di eccezioni
+risk-accepted in Allinea-BestPractice. DA FARE: #8 audit ACL cartelle sensibili. Altri suggerimenti: (3)
 punteggio conformità baseline + mappatura ISO/CIS; (4) readiness nello snapshot (pending reboot,
 Windows Update, ultima scansione AV); (5) report HTML; (6) estensione baseline (Module
 logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico opt-in;

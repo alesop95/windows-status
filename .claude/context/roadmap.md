@@ -52,6 +52,13 @@ clonando la repo su qualsiasi Windows 11.
 
 ## Prossimi blocchi candidati (in ordine di valore)
 
+Meccanismo di "eccezioni / rischio accettato" in `Allinea-BestPractice.ps1`: un file di eccezioni
+(es. `.claude` o radice, ignorato se contiene dati macchina) in cui marcare i controlli
+deliberatamente non allineati con motivazione e data, così il report li mostra come "ACCETTATO"
+invece di "DA ALLINEARE". Si aggancia alla logica risk-accepted della checklist VA (docs/06).
+Caso reale: ADMIN-BUILTIN (Administrator e `dev` tenuti abilitati per scelta) resta "da allineare"
+finché non esiste questo meccanismo.
+
 Audit ACL delle cartelle sensibili (read-only): controllare i permessi NTFS di un elenco curato
 di percorsi (`C:\`, `C:\Windows`, `System32`, `Windows\Temp`, `Program Files`, `ProgramData`,
 cartelle StartUp, radici profili) e segnalare dove `Users`/`Authenticated Users`/`Everyone` hanno

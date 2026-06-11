@@ -84,7 +84,11 @@ conformità), `Apply` e rollback. Di default gira in sola lettura e stampa solo 
 non elevato, registra un log in `snapshots/allineamento_<stamp>.log`, e non tocca mai Windows
 Update, Defender, Office, Edge, OneDrive, Intune. I controlli non automatizzabili in sicurezza
 (Secure Boot, BitLocker) sono solo segnalati. Baseline attuale: cache bitmap RDP, firma SMB
-client/server, SMBv1 off, ScriptBlock logging, LSA RunAsPPL, più gli avvisi Secure Boot/BitLocker.
+client/server, SMBv1 off, ScriptBlock logging, LSA RunAsPPL, igiene account (Administrator
+integrato disabilitato — con rifiuto se è l'unico admin — e segnalazione account abilitati
+anomali, mai usati o senza profilo), più gli avvisi Secure Boot/BitLocker. Prima di ogni `-Apply`
+crea automaticamente un punto di ripristino del sistema (se la Protezione sistema è attiva e si è
+elevati), come rete di sicurezza locale oltre a Veeam.
 
 `scripts/Reinstall-Software.ps1` chiude il cerchio della portabilità: reimporta su una macchina
 nuova il `software_winget.json` prodotto dallo snapshot, previa revisione manuale del JSON.
