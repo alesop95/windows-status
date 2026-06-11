@@ -6,6 +6,19 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-11 — Licenza: procedura di migrazione su hardware nuovo
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Precisazione utente: la chiave
+retail NON è custodita da lui, la detiene il FORNITORE. Documentata la procedura di migrazione
+della licenza su hardware nuovo in `docs/02` ("Migrazione della licenza Windows su hardware
+nuovo"): essendo RETAIL è trasferibile (la OEM no). Strada A (primaria nel suo caso): farsi dare
+la chiave dal fornitore, liberare la vecchia con `slmgr /upk` + `/cpky`, inserirla sul nuovo PC.
+Strada B (self-service): collegare la licenza digitale a un account Microsoft e riattivare con la
+Risoluzione problemi di attivazione — con caveat che su PC di lavoro il collegamento di un MS
+account personale può essere limitato da policy. Dopo ripristino Veeam su HW diverso: Windows si
+disattiva, riattivare con A o B. Aggiornata la riga licenza-gestione nella mappa compilata (chiave
+dal fornitore + le due strade). Nessuna modifica agli script in questo passo.
+
 ## 2026-06-11 — Controllo licenza/attivazione Windows nello snapshot
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Aggiunto alla sezione 3 il
