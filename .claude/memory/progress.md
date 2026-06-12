@@ -6,6 +6,18 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-12 — Meccanismo eccezioni / rischio accettato in Allinea-BestPractice
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Aggiunto il meccanismo di
+eccezioni: `Allinea-BestPractice.ps1` legge `baseline-eccezioni.json` (radice, locale/ignorato da
+git) e marca i controlli elencati come ACCETTATO (con motivo+data), escludendoli dalle proposte
+di `-Apply`. Creato il file reale (gitignored) con ADMIN-BUILTIN accettato (account tenuti per
+scelta dell'utente; motivo nel file locale) e il template tracciato `baseline-eccezioni.esempio.json`; aggiunta la regola
+in `.gitignore`. Collaudo report: ADMIN-BUILTIN ora ACCETTATO (Conformi 4 / Da allineare 1 /
+Accettati 1 / Da valutare 3); check-ignore conferma json ignorato ed esempio tracciato. Stessa
+logica risk-accepted della checklist VA (docs/06). Doc: STACK, roadmap (completati 2026-06-12).
+Resta come ultimo intervento di rilievo BitLocker; suggerimenti #3-#7 ancora aperti.
+
 ## 2026-06-11 — #8 Audit ACL cartelle sensibili + directory scrivibili nel PATH
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Implementato l'audit ACL

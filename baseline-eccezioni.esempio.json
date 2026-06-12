@@ -1,0 +1,7 @@
+{
+  "_descrizione": "Eccezioni / rischio accettato per Allinea-BestPractice.ps1. COPIA questo file in 'baseline-eccezioni.json' (stessa cartella, ignorato da git) e adattalo. Ogni chiave e l'Id di un controllo del baseline (RDP-CACHE, SMB-SIGN, SMB1-OFF, PS-LOG, LSA-PPL, ADMIN-BUILTIN, ...). I controlli elencati appaiono come ACCETTATO nel report e non vengono proposti in -Apply.",
+  "ESEMPIO-ID-CONTROLLO": {
+    "motivo": "spiega perche e accettato (chi ha approvato, mitigazione alternativa)",
+    "data": "AAAA-MM-GG"
+  }
+}
