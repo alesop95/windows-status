@@ -246,6 +246,35 @@ if($doMachine){
       Add-Sum "Licenza Windows: $($primary.Stato) - canale $($primary.Canale) - tipo: $tipo (licenza_windows.txt/.csv)"
   } catch { Add-Sum "Stato licenza non leggibile: $_" }
 
+  # --- Readiness operativa: riavvio in sospeso, ultimo update, ultima scansione AV, uptime ---
+  try {
+      $rd = New-Object System.Collections.Generic.List[string]
+      function Add-Rd([string]$k,[string]$v){ $rd.Add(("{0,-26}: {1}" -f $k,$v)) }
+      $pending = $false; $motivi = @()
+      if(Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending'){ $pending=$true; $motivi+='CBS' }
+      if(Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired'){ $pending=$true; $motivi+='WindowsUpdate' }
+      if((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager' -Name PendingFileRenameOperations -ErrorAction SilentlyContinue).PendingFileRenameOperations){ $pending=$true; $motivi+='PendingFileRename' }
+      $actName=(Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ActiveComputerName' -Name ComputerName -ErrorAction SilentlyContinue).ComputerName
+      $cfgName=(Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName' -Name ComputerName -ErrorAction SilentlyContinue).ComputerName
+      if($actName -and $cfgName -and $actName -ne $cfgName){ $pending=$true; $motivi+='RinominaPC' }
+      Add-Rd 'Riavvio in sospeso' ($(if($pending){"SI ($($motivi -join ', '))"}else{'no'}))
+      try { $osr=Get-CimInstance Win32_OperatingSystem -ErrorAction Stop; $boot=$osr.LastBootUpTime; $up=(Get-Date)-$boot
+            Add-Rd 'Ultimo avvio (uptime)' ("{0:yyyy-MM-dd HH:mm}  (uptime {1}g {2}h)" -f $boot,$up.Days,$up.Hours) } catch {}
+      $wu=(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\Results\Install' -Name LastSuccessTime -ErrorAction SilentlyContinue).LastSuccessTime
+      Add-Rd 'Ultimo update installato' ($(if($wu){$wu}else{'n/d (vedi hotfix.csv)'}))
+      try {
+          $mp=Get-MpComputerStatus -ErrorAction Stop
+          Add-Rd 'Defender modalita' ([string]$mp.AMRunningMode)
+          Add-Rd 'Defender ultima quick scan' ([string]$mp.QuickScanEndTime)
+          Add-Rd 'Defender ultima full scan'  ([string]$mp.FullScanEndTime)
+          Add-Rd 'Firme AV aggiornate al' ([string]$mp.AntivirusSignatureLastUpdated)
+      } catch { Add-Rd 'Defender/AV' 'scansioni non leggibili (serve admin, o AV di terze parti gestisce le scansioni nella propria console)' }
+      Save 'readiness.txt' ($rd -join "`r`n")
+      Add-Sum ''
+      Add-Sum 'Readiness operativa (readiness.txt):'
+      $rd | ForEach-Object { Add-Sum "  $_" }
+  } catch { Add-Sum "Readiness non leggibile: $_" }
+
   Section '4. SOFTWARE INSTALLATO'
   try {
       Get-Command winget -ErrorAction Stop | Out-Null

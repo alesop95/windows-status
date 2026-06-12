@@ -34,9 +34,11 @@ fotografia di sola lettura, organizzata in tre parti governate dal parametro `-S
 hardware (sezione 1: scheda madre, BIOS/UEFI, GPU, banchi RAM, dischi fisici con tipo/bus/salute
 SMART, volumi, controller e dispositivi USB con i dischi di massa, adattatori di rete con
 velocità di link, monitor — tutto in `hardware_*.csv` diffabili),
-account, sessioni e membri di Administrators (2), configurazioni macchina inclusa la licenza /
-attivazione Windows (3: edizione, canale Retail/OEM/Volume, stato, tipo licenza — `licenza_windows.txt/.csv`
-— senza mai salvare la chiave intera né quella OEM di firmware), configurazioni di macchina (3), software da
+account, sessioni e membri di Administrators (2), configurazioni macchina (3) inclusa la licenza /
+attivazione Windows (edizione, canale Retail/OEM/Volume, stato, tipo licenza — `licenza_windows.txt/.csv`
+— senza mai salvare la chiave intera né quella OEM di firmware) e la readiness operativa
+(`readiness.txt`: riavvio in sospeso, uptime/ultimo avvio, ultimo update installato, modalità
+Defender e ultime scansioni/firme AV — con alert READINESS nel Compare al comparire di un riavvio in sospeso), configurazioni di macchina (3), software da
 winget (con export riproducibile all'ultima versione, lista aggiornabili), registro e Appx (4), servizi (5), avvio e attività pianificate (6), rete e firewall (7),
 sicurezza (8: Defender e AV registrati, BitLocker, postura hardware/OS, esclusioni e ASR,
 auditpol, logging PowerShell, secedit, regole firewall inbound, catena di fiducia con root CA,
