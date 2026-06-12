@@ -58,8 +58,11 @@ allineare" come eccezione documentata (vedi mappa); idea in roadmap: meccanismo 
 risk-accepted in Allinea-BestPractice. #8 audit ACL cartelle sensibili + PATH FATTO
 (read-only, `acl_cartelle_sensibili.csv`, alert ACL; collaudo: 0 gravi sulla macchina). Sequenza
 #1->#2->#8 completata. FATTO 2026-06-12: meccanismo eccezioni/risk-accepted in Allinea
-(`baseline-eccezioni.json` locale + template tracciato; ADMIN-BUILTIN ora ACCETTATO). Restano:
-BitLocker (PER ULTIMO, vedi memoria bitlocker-implementazione-safe) e i suggerimenti aperti: (3)
+(`baseline-eccezioni.json` locale + template tracciato; ADMIN-BUILTIN ora ACCETTATO). 2026-06-12: verificata share di sviluppo `D` (accesso del client .74 via account `dev` INTATTO,
+nulla da ripristinare); decisione ✍️ aperta se restringere anche per IP (firewall SMB) o per NTFS
+— vedi mappa compilata sez. 8. Password `dev` esposta in chat → consigliata rotazione (mai nel
+repo). Restano: BitLocker (PER ULTIMO, vedi memoria bitlocker-implementazione-safe) e i
+suggerimenti aperti: (3)
 punteggio conformità baseline + mappatura ISO/CIS; (4) readiness nello snapshot (pending reboot,
 Windows Update, ultima scansione AV); (5) report HTML; (6) estensione baseline (Module
 logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico opt-in;
