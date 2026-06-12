@@ -51,6 +51,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\scripts\Compare-Snapshot.ps1               # diff + sezione ALERT DI SICUREZZA
 .\scripts\Compare-Snapshot.ps1 -Old <cartella> -New <cartella>
 
+.\scripts\Genera-Report.ps1                  # report.html leggibile dell'ultimo snapshot (locale)
+
 .\scripts\Reinstall-Software.ps1             # su un PC nuovo, dopo aver rivisto il JSON winget
 ```
 
