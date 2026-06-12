@@ -53,35 +53,30 @@ clonando la repo su qualsiasi Windows 11.
 ## Completati il 2026-06-11 (seconda tornata)
 
 Restore point automatico prima di ogni `-Apply` (#1); igiene account ADMIN-BUILTIN +
-ACCOUNT-DORMANTI generici (#2, applicazione rifiutata = rischio accettato per Administrator/dev);
+ACCOUNT-DORMANTI generici (#2, applicazione rifiutata = rischio accettato per i due account tenuti);
 audit ACL delle cartelle sensibili e directory nel PATH (#8: `acl_cartelle_sensibili.csv`, alert
 ACL nel Compare, marca GRAVE Modify/FullControl o scrittura nel PATH; collaudo: 0 gravi).
 
+## Completati il 2026-06-12
+
+Meccanismo "eccezioni / rischio accettato" in `Allinea-BestPractice.ps1`: file locale
+`baseline-eccezioni.json` (ignorato da git; template `baseline-eccezioni.esempio.json` tracciato);
+i controlli elencati appaiono ACCETTATO con motivo/data e non vengono proposti in `-Apply`.
+ADMIN-BUILTIN ora risulta ACCETTATO (account tenuti per scelta dell'utente; dettaglio nella mappa locale).
+
 ## Prossimi blocchi candidati (in ordine di valore)
 
-Meccanismo di "eccezioni / rischio accettato" in `Allinea-BestPractice.ps1`: un file di eccezioni
-(es. `.claude` o radice, ignorato se contiene dati macchina) in cui marcare i controlli
-deliberatamente non allineati con motivazione e data, così il report li mostra come "ACCETTATO"
-invece di "DA ALLINEARE". Si aggancia alla logica risk-accepted della checklist VA (docs/06).
-Caso reale: ADMIN-BUILTIN (Administrator e `dev` tenuti abilitati per scelta) resta "da allineare"
-finché non esiste questo meccanismo.
+BitLocker (PER ULTIMO, su decisione utente): attivazione guidata della cifratura, un volume alla
+volta, con custodia della chiave di ripristino prima del riavvio — vedi memoria
+`bitlocker-implementazione-safe`. Resta solo segnalato (avviso) in Allinea-BestPractice.
 
-Audit ACL delle cartelle sensibili (read-only): controllare i permessi NTFS di un elenco curato
-di percorsi (`C:\`, `C:\Windows`, `System32`, `Windows\Temp`, `Program Files`, `ProgramData`,
-cartelle StartUp, radici profili) e segnalare dove `Users`/`Authenticated Users`/`Everyone` hanno
-Write/Modify/FullControl (violazione del minimo privilegio = vettore di privilege escalation).
-Includere i due casi ad alto impatto: directory scrivibili presenti nel PATH di sistema, e
-cartelle dei binari dei servizi scrivibili da utenti (si aggancia ai "percorsi non quotati" già
-rilevati). Output `acl_cartelle_sensibili.csv` diffabile + alert ACL nel Compare su nuova ACL
-debole. Principio: cartelle di sistema/programmi scrivibili solo da SYSTEM/Administrators/
-TrustedInstaller, utenti in sola lettura+esecuzione.
+Suggerimenti #3-#7 ancora aperti: (3) punteggio conformità baseline + mappatura ISO/CIS;
+(4) readiness nello snapshot (pending reboot, Windows Update, ultima scansione AV); (5) report
+HTML autoconsistente; (6) estensione baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS,
+macro Office); (7) snapshot periodico opt-in via scheduled task.
 
-Debloating a livello macchina (-AllUsers / provisioned MIRATO) come passo opzionale distinto dal
-per-utente, con le cautele del paletto 4 (mai de-provisioning massivo su macchina gestita).
-
-Catena di fiducia, export ripristinabili, ambiente utente esteso, integrità: GIA' IMPLEMENTATI
-il 2026-06-10 (vedi sezione Completati e work-log); restano eventuali estensioni (font utente,
-Module logging/Transcription PowerShell).
+Estensioni minori: font utente nello snapshot; firma SMB e Secure Boot (RIMANDATI: NAS legacy /
+UEFI); debloating a livello macchina già fatto in modo mirato (residuo solo nel profilo Administrator).
 
 ## Promemoria espliciti
 

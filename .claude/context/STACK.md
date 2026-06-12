@@ -92,7 +92,10 @@ client/server, SMBv1 off, ScriptBlock logging, LSA RunAsPPL, igiene account (Adm
 integrato disabilitato — con rifiuto se è l'unico admin — e segnalazione account abilitati
 anomali, mai usati o senza profilo), più gli avvisi Secure Boot/BitLocker. Prima di ogni `-Apply`
 crea automaticamente un punto di ripristino del sistema (se la Protezione sistema è attiva e si è
-elevati), come rete di sicurezza locale oltre a Veeam.
+elevati), come rete di sicurezza locale oltre a Veeam. Supporta un meccanismo di eccezioni /
+rischio accettato: i controlli elencati in `baseline-eccezioni.json` (radice, locale/ignorato da
+git; template tracciato `baseline-eccezioni.esempio.json`) appaiono come ACCETTATO nel report con
+motivo e data, e non vengono proposti in `-Apply` — stessa logica risk-accepted della checklist VA.
 
 `scripts/Reinstall-Software.ps1` chiude il cerchio della portabilità: reimporta su una macchina
 nuova il `software_winget.json` prodotto dallo snapshot, previa revisione manuale del JSON.

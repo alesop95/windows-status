@@ -17,6 +17,13 @@
    - Cio che non e automatizzabile in sicurezza (Secure Boot, BitLocker) e SOLO
      segnalato come avviso, mai forzato.
 
+ ECCEZIONI / RISCHIO ACCETTATO
+   I controlli deliberatamente non allineati si elencano in 'baseline-eccezioni.json' (radice
+   progetto, locale/ignorato da git) nel formato:
+     { "ADMIN-BUILTIN": { "motivo": "...", "data": "AAAA-MM-GG" } }
+   Quei controlli appaiono come ACCETTATO nel report e NON vengono proposti in -Apply.
+   Template di esempio: baseline-eccezioni.esempio.json.
+
  USO
    # 1) REPORT del divario (sola lettura, sicuro ovunque):
    .\Allinea-BestPractice.ps1
@@ -49,6 +56,16 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $logFile = Join-Path $logDir ("allineamento_" + (Get-Date -Format 'yyyyMMdd_HHmmss') + ".log")
 $log = New-Object System.Collections.Generic.List[string]
 function Write-Log([string]$m){ $log.Add("$(Get-Date -Format s)  $m") }
+
+# Eccezioni / rischio accettato: controlli deliberatamente NON allineati, con motivo e data.
+# File locale (machine-specific, ignorato da git): baseline-eccezioni.json in radice progetto.
+# Formato: { "ADMIN-BUILTIN": { "motivo": "...", "data": "2026-06-11" }, ... }
+$ecc = @{}
+$eccPath = Join-Path $proj 'baseline-eccezioni.json'
+if(Test-Path $eccPath){
+    try { (Get-Content $eccPath -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $ecc[$_.Name] = $_.Value } }
+    catch { Write-Host "Avviso: baseline-eccezioni.json non leggibile ($($_.Exception.Message))" -ForegroundColor Yellow }
+}
 
 # Helper igiene account
 function Get-AdminIntegrato { Get-LocalUser -ErrorAction SilentlyContinue | Where-Object { $_.SID.Value -match '-500$' } | Select-Object -First 1 }
@@ -220,9 +237,21 @@ $report = New-Object System.Collections.Generic.List[object]
 
 foreach($c in $items){
     $res = & $c.Test
-    $stato = if($res.Conforme){ 'CONFORME' } elseif($c.Avviso){ 'DA VALUTARE (avviso)' } else { 'DA ALLINEARE' }
-    $report.Add([pscustomobject]@{ Id=$c.Id; Categoria=$c.Categoria; Stato=$stato; Dettaglio=$res.Stato; Admin=$c.Admin; Rischio=$c.Rischio })
+    $exc = if($ecc.ContainsKey($c.Id)){ $ecc[$c.Id] } else { $null }
+    $stato = if($res.Conforme){ 'CONFORME' }
+             elseif($exc){ 'ACCETTATO' }
+             elseif($c.Avviso){ 'DA VALUTARE (avviso)' }
+             else { 'DA ALLINEARE' }
+    $dett = if($exc -and -not $res.Conforme){ "$($res.Stato)  [rischio accettato: $($exc.motivo) - $($exc.data)]" } else { $res.Stato }
+    $report.Add([pscustomobject]@{ Id=$c.Id; Categoria=$c.Categoria; Stato=$stato; Dettaglio=$dett; Admin=$c.Admin; Rischio=$c.Rischio })
 
+    if($Apply -and -not $res.Conforme -and $exc){
+        Write-Host ''
+        Write-Host "--- [$($c.Id)] $($c.Titolo)" -ForegroundColor White
+        Write-Host "    ACCETTATO (rischio accettato): $($exc.motivo) [$($exc.data)] - non applico." -ForegroundColor DarkYellow
+        Write-Log "ACCETTATO $($c.Id): $($exc.motivo)"
+        continue
+    }
     if($Apply -and -not $res.Conforme -and -not $c.Avviso){
         Write-Host ''
         Write-Host "--- [$($c.Id)] $($c.Titolo)" -ForegroundColor White
@@ -248,7 +277,9 @@ Write-Host '=== DIVARIO RISPETTO AL BASELINE ===' -ForegroundColor Cyan
 $report | Format-Table Id,Categoria,Stato,Dettaglio,Admin,Rischio -AutoSize | Out-String | Write-Host
 $daAllineare = @($report | Where-Object Stato -eq 'DA ALLINEARE').Count
 $daValutare  = @($report | Where-Object Stato -eq 'DA VALUTARE (avviso)').Count
-Write-Host "Conformi: $(@($report | Where-Object Stato -eq 'CONFORME').Count)  |  Da allineare: $daAllineare  |  Da valutare (manuale): $daValutare"
+$accettati   = @($report | Where-Object Stato -eq 'ACCETTATO').Count
+Write-Host "Conformi: $(@($report | Where-Object Stato -eq 'CONFORME').Count)  |  Da allineare: $daAllineare  |  Accettati: $accettati  |  Da valutare (manuale): $daValutare"
+if($accettati -gt 0){ Write-Host "($accettati controlli marcati come rischio accettato in $eccPath)" -ForegroundColor DarkYellow }
 
 if(-not $Apply){
     Write-Host ''

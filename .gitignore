@@ -27,6 +27,9 @@ secrets*
 # Copie "compilate" dei documenti con dati reali della macchina (mai nel repo pubblico)
 docs/*.compilata.md
 
+# Eccezioni baseline reali (decisioni machine-specific): solo l'esempio e tracciato
+baseline-eccezioni.json
+
 # Sistema
 Thumbs.db
 desktop.ini

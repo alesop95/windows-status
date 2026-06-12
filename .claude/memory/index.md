@@ -57,7 +57,9 @@ l'altro serve per una cartella di rete di sviluppo). Il report ADMIN-BUILTIN res
 allineare" come eccezione documentata (vedi mappa); idea in roadmap: meccanismo di eccezioni
 risk-accepted in Allinea-BestPractice. #8 audit ACL cartelle sensibili + PATH FATTO
 (read-only, `acl_cartelle_sensibili.csv`, alert ACL; collaudo: 0 gravi sulla macchina). Sequenza
-#1->#2->#8 completata. Altri suggerimenti: (3)
+#1->#2->#8 completata. FATTO 2026-06-12: meccanismo eccezioni/risk-accepted in Allinea
+(`baseline-eccezioni.json` locale + template tracciato; ADMIN-BUILTIN ora ACCETTATO). Restano:
+BitLocker (PER ULTIMO, vedi memoria bitlocker-implementazione-safe) e i suggerimenti aperti: (3)
 punteggio conformità baseline + mappatura ISO/CIS; (4) readiness nello snapshot (pending reboot,
 Windows Update, ultima scansione AV); (5) report HTML; (6) estensione baseline (Module
 logging/Transcription, ASR, LLMNR/NetBIOS, macro Office); (7) snapshot periodico opt-in;
