@@ -63,6 +63,9 @@ ACL nel Compare, marca GRAVE Modify/FullControl o scrittura nel PATH; collaudo: 
 scansioni/firme AV; alert READINESS). #3 punteggio conformità baseline + mappatura ISO/CIS in
 Allinea-BestPractice (riferimenti normativi per controllo). #5 report HTML autoconsistente
 (`scripts/Genera-Report.ps1` → `report.html` da SUMMARY, sezioni navigabili, voce nel menu Avvia).
+#6 estensione baseline: +6 controlli in Allinea-BestPractice (PS Module logging, LLMNR off, blocco
+macro Office da Internet applicabili; PS Transcription, ASR Defender, NetBIOS over TCP/IP come
+avvisi report-only), tutti con Rif ISO/CIS.
 
 Meccanismo "eccezioni / rischio accettato" in `Allinea-BestPractice.ps1`: file locale
 `baseline-eccezioni.json` (ignorato da git; template `baseline-eccezioni.esempio.json` tracciato);

@@ -167,6 +167,50 @@ $baseline = @(
     Note='Account abilitati mai usati o senza profilo: valutare se disabilitarli (Disable-LocalUser) o rimuoverli. Non auto-applicato: decisione per-account.'
   },
   @{
+    Id='PS-MODULE-LOG'; Categoria='Logging'; Admin=$true; Rischio='Basso'
+    Titolo='Abilitare il PowerShell Module Logging (tutti i moduli)'
+    Test={ $v=(Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging' -Name 'EnableModuleLogging' -ErrorAction SilentlyContinue).EnableModuleLogging; @{ Conforme=($v -eq 1); Stato=$(if($null -ne $v){"EnableModuleLogging=$v"}else{'non configurato'}) } }
+    Apply={ $k='HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ModuleLogging'; New-Item $k -Force | Out-Null; New-ItemProperty $k -Name 'EnableModuleLogging' -Value 1 -PropertyType DWord -Force | Out-Null; New-Item "$k\ModuleNames" -Force | Out-Null; New-ItemProperty "$k\ModuleNames" -Name '*' -Value '*' -PropertyType String -Force | Out-Null }
+    Rollback='Impostare EnableModuleLogging a 0 o eliminare la chiave ModuleLogging'
+  },
+  @{
+    Id='PS-TRANSCRIPT'; Categoria='Logging'; Admin=$true; Rischio='-'; Avviso=$true
+    Titolo='PowerShell Transcription (trascrizione completa)'
+    Test={ $v=(Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription' -Name 'EnableTranscripting' -ErrorAction SilentlyContinue).EnableTranscripting; @{ Conforme=($v -eq 1); Stato=$(if($null -ne $v){"EnableTranscripting=$v"}else{'non configurato'}) } }
+    Note='Trascrive tutto l''output PowerShell: utile ma puo riempire il disco e catturare dati sensibili; va abilitata con una OutputDirectory protetta dedicata (decisione). Non auto-applicato.'
+  },
+  @{
+    Id='LLMNR-OFF'; Categoria='Rete'; Admin=$true; Rischio='Basso'
+    Titolo='Disattivare LLMNR (vettore di spoofing/Responder)'
+    Test={ $v=(Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient' -Name 'EnableMulticast' -ErrorAction SilentlyContinue).EnableMulticast; @{ Conforme=($v -eq 0); Stato=$(if($null -ne $v){"EnableMulticast=$v"}else{'non configurato (LLMNR attivo)'}) } }
+    Apply={ $k='HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient'; New-Item $k -Force | Out-Null; New-ItemProperty $k -Name 'EnableMulticast' -Value 0 -PropertyType DWord -Force | Out-Null }
+    Rollback='Impostare EnableMulticast a 1 o eliminare il valore (riabilita LLMNR)'
+    Note='Basso impatto su reti con DNS funzionante; lo share di sviluppo e raggiunto per IP, non per nome.'
+  },
+  @{
+    Id='OFFICE-MACRO'; Categoria='Office'; Admin=$false; Rischio='Basso'
+    Titolo='Bloccare le macro Office provenienti da Internet'
+    Test={ $b='HKCU:\Software\Policies\Microsoft\Office\16.0'
+           if(-not (Test-Path 'HKLM:\SOFTWARE\Microsoft\Office\ClickToRun') -and -not (Test-Path $b)){ return @{ Conforme=$true; Stato='Office non rilevato' } }
+           $manca=foreach($a in 'word','excel','powerpoint'){ $v=(Get-ItemProperty "$b\$a\security" -Name 'blockcontentexecutionfrominternet' -ErrorAction SilentlyContinue).blockcontentexecutionfrominternet; if($v -ne 1){ $a } }
+           @{ Conforme=(@($manca).Count -eq 0); Stato=$(if(@($manca).Count){'da bloccare: '+($manca -join ',')}else{'macro da Internet bloccate (Word/Excel/PowerPoint)'}) } }
+    Apply={ $b='HKCU:\Software\Policies\Microsoft\Office\16.0'; foreach($a in 'word','excel','powerpoint','access','publisher','outlook','visio'){ $k="$b\$a\security"; New-Item $k -Force | Out-Null; New-ItemProperty $k -Name 'blockcontentexecutionfrominternet' -Value 1 -PropertyType DWord -Force | Out-Null } }
+    Rollback='Eliminare blockcontentexecutionfrominternet (o 0) sotto HKCU\...\Office\16.0\<app>\security'
+    Note='Blocca le macro nei file Office con Mark-of-the-Web (scaricati da Internet). Raccomandato; raramente impatta flussi legittimi. Chiave utente (no admin).'
+  },
+  @{
+    Id='ASR'; Categoria='Defender'; Admin=$true; Rischio='-'; Avviso=$true
+    Titolo='Regole ASR (Attack Surface Reduction) di Defender'
+    Test={ try { $p=Get-MpPreference -ErrorAction Stop; $n=@($p.AttackSurfaceReductionRules_Ids).Count; $mode=(Get-MpComputerStatus -ErrorAction SilentlyContinue).AMRunningMode; @{ Conforme=($n -gt 0); Stato="regole ASR configurate=$n; Defender=$mode" } } catch { @{ Conforme=$false; Stato='Get-MpPreference non leggibile (serve admin)' } } }
+    Note='Le regole ASR hardenizzano vettori comuni (macro, LOLBins). Con un AV di terze parti ATTIVO, Defender e in passivo e le regole ASR potrebbero non essere applicate: gestirle nella console dell''AV. Non auto-applicato.'
+  },
+  @{
+    Id='NETBIOS'; Categoria='Rete'; Admin=$true; Rischio='-'; Avviso=$true
+    Titolo='NetBIOS over TCP/IP (legacy, vettore di spoofing)'
+    Test={ $ad=@(Get-CimInstance Win32_NetworkAdapterConfiguration -ErrorAction SilentlyContinue | Where-Object { $_.IPEnabled }); $on=@($ad | Where-Object { $_.TcpipNetbiosOptions -ne 2 }); @{ Conforme=(@($on).Count -eq 0); Stato=$(if(@($on).Count){"attivo su $(@($on).Count) interfacce IP"}else{'disattivo su tutte le interfacce'}) } }
+    Note='Disattivare NetBIOS over TCP/IP (137/139) e per-interfaccia e puo impattare dispositivi legacy (es. NAS vecchi che lo usano). Valutare manualmente. Non auto-applicato.'
+  },
+  @{
     Id='SECUREBOOT'; Categoria='Avvio'; Admin=$false; Rischio='-'; Avviso=$true
     Titolo='Secure Boot attivo (UEFI)'
     Test={ $on=$null; try { $on=Confirm-SecureBootUEFI } catch {}; @{ Conforme = ($on -eq $true); Stato = $(if($null -ne $on){"SecureBoot=$on"}else{'non leggibile'}) } }
@@ -188,7 +232,13 @@ $rifMap = @{
   'RDP-CACHE'        = 'ISO A.8.9/A.8.12; CIS Win - Remote Desktop'
   'SMB-SIGN'         = 'ISO A.8.20/A.5.14; CIS Win - SMB signing'
   'SMB1-OFF'         = 'ISO A.8.20/A.8.8; CIS Win - Disable SMBv1'
-  'PS-LOG'           = 'ISO A.8.15/A.8.16; CIS Win - PowerShell logging'
+  'PS-LOG'           = 'ISO A.8.15/A.8.16; CIS Win - PowerShell ScriptBlock logging'
+  'PS-MODULE-LOG'    = 'ISO A.8.15/A.8.16; CIS Win - PowerShell Module logging'
+  'PS-TRANSCRIPT'    = 'ISO A.8.15; CIS Win - PowerShell Transcription'
+  'LLMNR-OFF'        = 'ISO A.8.20/A.8.21; CIS Win - Disable LLMNR'
+  'OFFICE-MACRO'     = 'ISO A.8.7/A.8.19; CIS Office - Block macros from Internet'
+  'ASR'              = 'ISO A.8.7/A.8.1; CIS Win - Defender ASR rules'
+  'NETBIOS'          = 'ISO A.8.20; CIS Win - Disable NetBIOS over TCP/IP'
   'LSA-PPL'          = 'ISO A.8.5/A.8.2; CIS Win - LSA Protection (RunAsPPL)'
   'ADMIN-BUILTIN'    = 'ISO A.8.2/A.5.16; CIS Win - Built-in Administrator disabled'
   'ACCOUNT-DORMANTI' = 'ISO A.5.16/A.5.18; CIS Win - Dormant accounts review'

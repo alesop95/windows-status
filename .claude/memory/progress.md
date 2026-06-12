@@ -6,6 +6,18 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-12 — #6 Estensione del baseline (6 nuovi controlli)
+
+Commit: 9407b27. #6 FATTO in `Allinea-BestPractice.ps1`: aggiunti 6 controlli (con Rif ISO/CIS).
+Applicabili (auto-apply, reversibili): PS-MODULE-LOG (Module logging tutti i moduli), LLMNR-OFF
+(EnableMulticast=0 — share dev raggiunto per IP, non per nome), OFFICE-MACRO (block macro da
+Internet, chiave HKCU, no admin). Solo-AVVISO (non auto-applicati per rischio/inefficacia):
+PS-TRANSCRIPT (riempie disco/dati sensibili, serve OutputDirectory dedicata), ASR (Defender
+passivo con AV terze parti -> ASR potrebbe non applicarsi), NETBIOS (per-interfaccia, impatta NAS
+legacy). Report-only finché non si fa -Apply. Collaudo: punteggio ricalibrato a 50% (4/8
+auto-valutabili); i nuovi appaiono DA ALLINEARE / DA VALUTARE correttamente. Doc: STACK, roadmap.
+Prossimo: #7 snapshot periodico opt-in; poi BitLocker per ultimo.
+
 ## 2026-06-12 — #5 Report HTML autoconsistente (Genera-Report.ps1)
 
 Commit: 9407b27. #5 FATTO: nuovo `scripts/Genera-Report.ps1` (5° script) che genera `report.html`
