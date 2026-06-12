@@ -6,6 +6,19 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-12 — #4 Readiness operativa nello snapshot
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Sequenza suggerimenti minori
+#4->#3->#5->#6->#7. #4 FATTO: blocco readiness in sezione 3 dello snapshot (`readiness.txt`):
+riavvio in sospeso (CBS, WindowsUpdate RebootRequired, PendingFileRenameOperations, rinomina PC),
+uptime/ultimo avvio, ultimo update installato (registro WU Results\Install LastSuccessTime),
+modalità Defender + ultime quick/full scan + data firme. Compare: alert READINESS quando il
+riavvio in sospeso passa da no a SI. Read-only, nessuna modifica al sistema. Collaudo: trovato
+**riavvio in sospeso = SI** (CBS/WindowsUpdate/PendingFileRename) con uptime 9g → consigliato
+all'utente di riavviare (rende effettivo anche LSA RunAsPPL); Defender "Not running" (AV di terze
+parti attivo, scansioni nella sua console). Doc: STACK, mappa (sez. 1/9). Prossimo: #3 punteggio
+conformità + mappatura ISO/CIS.
+
 ## 2026-06-12 — Verifica share di sviluppo D (accesso intatto) + nota password esposta
 
 Commit: 9407b27. L'utente ha chiesto di ripristinare, se rimosso, l'accesso del client di
@@ -15,7 +28,7 @@ dell'account `dev` IN CHIARO. AZIONE DI SICUREZZA: password NON salvata da nessu
 read-only: l'accesso era INTATTO — share `D` (D:\, "Condivisione per sviluppo interno"), permessi
 share `dev`=Full, NTFS `dev`=FullControl, account abilitato; nulla da ripristinare. La share
 corretta è `D` (non "developing"). Restrizione attuale per CREDENZIALE (solo dev/Utente), NON per
-IP: per limitare a solo .74 servirebbe scoping firewall SMB (vale per tutto l'SMB del PC) o
+IP: per limitare al solo client servirebbe scoping firewall SMB (vale per tutto l'SMB del PC) o
 restringere l'NTFS di D:\ a solo dev — proposte 3 opzioni all'utente, in attesa di scelta.
 Disegno share documentato in mappa compilata (sez. 8), senza password.
 SEGUITO (stesso giorno): l'utente ha scelto l'opzione 2 (restrizione per IP) dopo aver confermato

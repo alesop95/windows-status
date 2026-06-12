@@ -273,6 +273,17 @@ if($null -ne $aco -and $null -ne $acn){
     }
 }
 
+# 13a-bis. Readiness: riavvio in sospeso comparso (no -> SI)
+function Get-PendingReboot([string]$dir){
+    $p = Join-Path $dir 'readiness.txt'
+    if(-not (Test-Path $p)){ return $null }
+    $l = Get-Content $p | Where-Object { $_ -match '^Riavvio in sospeso' }
+    if($l){ return ($l -match ':\s*SI') }
+    $null
+}
+$prO = Get-PendingReboot $Old; $prN = Get-PendingReboot $New
+if($prN -eq $true -and $prO -eq $false){ Add-Alert 'READINESS' 'riavvio in sospeso comparso (il PC ha modifiche che richiedono riavvio)' }
+
 # 13b. Licenza Windows: cambio di stato attivazione (es. da Licenziato a grazia/non attivato)
 $lwo = Load-Csv $Old 'licenza_windows.csv'; $lwn = Load-Csv $New 'licenza_windows.csv'
 if($null -ne $lwo -and $null -ne $lwn){

@@ -151,6 +151,8 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | RDP (+NLA) / WinRM                         | `__________`                                           |
 | RDP cache bitmap persistente (client)      | `Attiva / Disattivata` (sicuro se disattivata; da `sicurezza_postura.txt`) |
 | Build completa / ultimo hotfix             | `__________`                                           |
+| Readiness (riavvio in sospeso / uptime)    | `__________` (da `readiness.txt`)                      |
+| Ultimo update / ultima scansione AV        | `__________` (da `readiness.txt`)                      |
 | Esclusioni AV / regole ASR                 | `__________` (da `defender_esclusioni.csv` / `defender_asr.csv`) |
 | Logging PowerShell / audit policy          | `__________` (ScriptBlock logging consigliato ON; da `powershell_logging.txt` / `auditpol.txt`) |
 | Regole firewall inbound consentite         | `___` regole (da `firewall_regole_inbound_allow.csv`)  |
