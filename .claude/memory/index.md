@@ -48,8 +48,9 @@ Rischi accettati (NON modificare): Administrator e secondo account locale tenuti
 Suggerimenti minori in corso, ordine #4→#3→#5→#6→#7. **#4 readiness FATTO** (`readiness.txt`);
 **#3 punteggio conformità + ISO/CIS FATTO** in Allinea (collaudo 80%, riferimenti normativi per
 controllo); **#5 report HTML FATTO** (`scripts/Genera-Report.ps1` → `report.html`, voce 2b in
-Avvia). Prossimo: **#6 estensione baseline** (Module logging/Transcription, ASR, LLMNR/NetBIOS,
-macro Office). Poi
+Avvia); **#6 estensione baseline FATTO** (+6 controlli: Module logging/LLMNR/macro Office
+applicabili, Transcription/ASR/NetBIOS avvisi; punteggio ora 50% su 8 auto-valutabili).
+Prossimo: **#7 snapshot periodico opt-in**. Poi
 estensione baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office), #7 snapshot
 periodico opt-in. **BitLocker = PER ULTIMO** (vedi memoria `bitlocker-implementazione-safe`).
 Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job
