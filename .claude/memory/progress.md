@@ -8,8 +8,8 @@
 
 ## 2026-06-12 — Verifica share di sviluppo D (accesso intatto) + nota password esposta
 
-Commit: 9407b27. L'utente ha chiesto di ripristinare, se rimosso, l'accesso del client
-192.168.10.74 alla share di sviluppo su questo PC, e ha incollato in chat la password
+Commit: 9407b27. L'utente ha chiesto di ripristinare, se rimosso, l'accesso del client di
+sviluppo (un host della LAN) alla share di sviluppo su questo PC, e ha incollato in chat la password
 dell'account `dev` IN CHIARO. AZIONE DI SICUREZZA: password NON salvata da nessuna parte
 (paletto 5); consigliata rotazione (registrato in mappa compilata, gitignored). Verifica
 read-only: l'accesso era INTATTO — share `D` (D:\, "Condivisione per sviluppo interno"), permessi
@@ -17,8 +17,15 @@ share `dev`=Full, NTFS `dev`=FullControl, account abilitato; nulla da ripristina
 corretta è `D` (non "developing"). Restrizione attuale per CREDENZIALE (solo dev/Utente), NON per
 IP: per limitare a solo .74 servirebbe scoping firewall SMB (vale per tutto l'SMB del PC) o
 restringere l'NTFS di D:\ a solo dev — proposte 3 opzioni all'utente, in attesa di scelta.
-NESSUNA modifica al sistema applicata in questo passo. Disegno share documentato in mappa
-compilata (sez. 8), senza password.
+Disegno share documentato in mappa compilata (sez. 8), senza password.
+SEGUITO (stesso giorno): l'utente ha scelto l'opzione 2 (restrizione per IP) dopo aver confermato
+che lo scanner/stampante condivisi NON sono usati da altri host. Applicato (elevato, UAC):
+`Set-NetFirewallRule -RemoteAddress <IP-client>` sulle 3 regole SMB inbound (FPS-SMB-In-TCP da
+LocalSubnet, FPS-SMB-In-TCP-V2 da Any, FPS-NB_Session-In-TCP da LocalSubnet; IP reale nella mappa
+locale). Solo il client di sviluppo raggiunge l'SMB in ingresso; uscita verso NAS/stampanti
+intatta. Rollback esatto registrato in changelog
+mappa. Chiarito all'utente: la restrizione è solo inbound, l'outbound (client verso NAS/stampanti)
+non è toccato.
 
 ## 2026-06-12 — Meccanismo eccezioni / rischio accettato in Allinea-BestPractice
 
