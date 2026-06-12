@@ -98,6 +98,14 @@ elevati), come rete di sicurezza locale oltre a Veeam. Supporta un meccanismo di
 rischio accettato: i controlli elencati in `baseline-eccezioni.json` (radice, locale/ignorato da
 git; template tracciato `baseline-eccezioni.esempio.json`) appaiono come ACCETTATO nel report con
 motivo e data, e non vengono proposti in `-Apply` — stessa logica risk-accepted della checklist VA.
+Il report calcola anche un PUNTEGGIO DI CONFORMITA (conformi sui controlli auto-valutabili,
+esclusi avvisi e accettati) e stampa per ogni controllo i RIFERIMENTI NORMATIVI (ISO/IEC
+27001:2022 Annex A + CIS), per alimentare governance e checklist VA.
+
+`scripts/Genera-Report.ps1` trasforma uno snapshot (SUMMARY.txt) in un singolo `report.html`
+autoconsistente (CSS inline, sezioni navigabili, righe d'attenzione evidenziate); read-only,
+scrive solo dentro la cartella snapshot (ignorata da git). Avvertenza di codifica/PS: NON
+chiamare una funzione `H` (collide con l'alias `h`=Get-History); qui si usa `Esc` per l'HTML-encode.
 
 `scripts/Reinstall-Software.ps1` chiude il cerchio della portabilità: reimporta su una macchina
 nuova il `software_winget.json` prodotto dallo snapshot, previa revisione manuale del JSON.

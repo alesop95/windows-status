@@ -6,6 +6,25 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-12 — #5 Report HTML autoconsistente (Genera-Report.ps1)
+
+Commit: 9407b27. #5 FATTO: nuovo `scripts/Genera-Report.ps1` (5° script) che genera `report.html`
+autoconsistente (CSS inline) dallo SUMMARY dell'ultimo snapshot, sezioni navigabili con
+evidenziazione delle righe d'attenzione; read-only, scrive solo nella cartella snapshot
+(gitignored). Aggiunta voce "2b" nel menu `Avvia.ps1`. Bug risolto in fase di build: la funzione
+si chiamava `H` e collideva con l'alias `h`=Get-History (i `pre` uscivano vuoti) → rinominata
+`Esc`. Collaudo: report 10KB, 13 sezioni tutte con contenuto, 3 evidenziate. Doc: STACK, quickstart,
+CLAUDE.md, roadmap. Prossimo: #6 estensione baseline (Module logging/Transcription, ASR,
+LLMNR/NetBIOS, macro Office); poi #7 snapshot periodico; BitLocker per ultimo.
+
+## 2026-06-12 — #3 Punteggio conformità baseline + mappatura ISO/CIS
+
+Commit: 9407b27. #3 FATTO in `Allinea-BestPractice.ps1` (read-only): aggiunto `$rifMap` (ISO/IEC
+27001:2022 Annex A + CIS per ogni controllo), colonna Rif nel report, PUNTEGGIO DI CONFORMITA
+(conformi / controlli auto-valutabili, esclusi avvisi e accettati) e sezione "RIFERIMENTI
+NORMATIVI". Collaudo: 80% (4/5), ADMIN-BUILTIN escluso perché accettato. Aggancia la logica alla
+checklist VA (docs/06). Prossimo: #5 report HTML autoconsistente.
+
 ## 2026-06-12 — #4 Readiness operativa nello snapshot
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Sequenza suggerimenti minori

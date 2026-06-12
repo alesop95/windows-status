@@ -59,6 +59,11 @@ ACL nel Compare, marca GRAVE Modify/FullControl o scrittura nel PATH; collaudo: 
 
 ## Completati il 2026-06-12
 
+#4 readiness operativa nello snapshot (`readiness.txt`: riavvio in sospeso, uptime, ultimo update,
+scansioni/firme AV; alert READINESS). #3 punteggio conformità baseline + mappatura ISO/CIS in
+Allinea-BestPractice (riferimenti normativi per controllo). #5 report HTML autoconsistente
+(`scripts/Genera-Report.ps1` → `report.html` da SUMMARY, sezioni navigabili, voce nel menu Avvia).
+
 Meccanismo "eccezioni / rischio accettato" in `Allinea-BestPractice.ps1`: file locale
 `baseline-eccezioni.json` (ignorato da git; template `baseline-eccezioni.esempio.json` tracciato);
 i controlli elencati appaiono ACCETTATO con motivo/data e non vengono proposti in `-Apply`.

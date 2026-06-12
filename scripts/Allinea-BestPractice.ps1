@@ -182,6 +182,20 @@ $baseline = @(
   }
 )
 
+# Riferimenti normativi per controllo (ISO/IEC 27001:2022 Annex A + CIS), per il punteggio di
+# conformità e l'aggancio alla checklist di remediation VA (docs/06). Mappatura indicativa.
+$rifMap = @{
+  'RDP-CACHE'        = 'ISO A.8.9/A.8.12; CIS Win - Remote Desktop'
+  'SMB-SIGN'         = 'ISO A.8.20/A.5.14; CIS Win - SMB signing'
+  'SMB1-OFF'         = 'ISO A.8.20/A.8.8; CIS Win - Disable SMBv1'
+  'PS-LOG'           = 'ISO A.8.15/A.8.16; CIS Win - PowerShell logging'
+  'LSA-PPL'          = 'ISO A.8.5/A.8.2; CIS Win - LSA Protection (RunAsPPL)'
+  'ADMIN-BUILTIN'    = 'ISO A.8.2/A.5.16; CIS Win - Built-in Administrator disabled'
+  'ACCOUNT-DORMANTI' = 'ISO A.5.16/A.5.18; CIS Win - Dormant accounts review'
+  'SECUREBOOT'       = 'ISO A.8.9/A.8.1; CIS Win - Secure Boot'
+  'BITLOCKER'        = 'ISO A.8.24/A.5.33; CIS Win - Disk encryption (BitLocker)'
+}
+
 # ============================================================================
 #  ESECUZIONE
 # ============================================================================
@@ -243,7 +257,7 @@ foreach($c in $items){
              elseif($c.Avviso){ 'DA VALUTARE (avviso)' }
              else { 'DA ALLINEARE' }
     $dett = if($exc -and -not $res.Conforme){ "$($res.Stato)  [rischio accettato: $($exc.motivo) - $($exc.data)]" } else { $res.Stato }
-    $report.Add([pscustomobject]@{ Id=$c.Id; Categoria=$c.Categoria; Stato=$stato; Dettaglio=$dett; Admin=$c.Admin; Rischio=$c.Rischio })
+    $report.Add([pscustomobject]@{ Id=$c.Id; Categoria=$c.Categoria; Stato=$stato; Dettaglio=$dett; Admin=$c.Admin; Rischio=$c.Rischio; Rif=$rifMap[$c.Id] })
 
     if($Apply -and -not $res.Conforme -and $exc){
         Write-Host ''
@@ -275,11 +289,19 @@ foreach($c in $items){
 Write-Host ''
 Write-Host '=== DIVARIO RISPETTO AL BASELINE ===' -ForegroundColor Cyan
 $report | Format-Table Id,Categoria,Stato,Dettaglio,Admin,Rischio -AutoSize | Out-String | Write-Host
+$conformi    = @($report | Where-Object Stato -eq 'CONFORME').Count
 $daAllineare = @($report | Where-Object Stato -eq 'DA ALLINEARE').Count
 $daValutare  = @($report | Where-Object Stato -eq 'DA VALUTARE (avviso)').Count
 $accettati   = @($report | Where-Object Stato -eq 'ACCETTATO').Count
-Write-Host "Conformi: $(@($report | Where-Object Stato -eq 'CONFORME').Count)  |  Da allineare: $daAllineare  |  Accettati: $accettati  |  Da valutare (manuale): $daValutare"
+# Punteggio di conformità: sui controlli auto-valutabili (conforme + da allineare), esclusi avvisi e accettati
+$applicabili = $conformi + $daAllineare
+$pct = if($applicabili -gt 0){ [math]::Round($conformi / $applicabili * 100) } else { 100 }
+Write-Host "Conformi: $conformi  |  Da allineare: $daAllineare  |  Accettati: $accettati  |  Da valutare (manuale): $daValutare"
+Write-Host ("PUNTEGGIO CONFORMITA BASELINE: {0}% ({1}/{2} controlli auto-valutabili)" -f $pct, $conformi, $applicabili) -ForegroundColor $(if($pct -ge 80){'Green'}elseif($pct -ge 50){'Yellow'}else{'Red'})
 if($accettati -gt 0){ Write-Host "($accettati controlli marcati come rischio accettato in $eccPath)" -ForegroundColor DarkYellow }
+Write-Host ''
+Write-Host '=== RIFERIMENTI NORMATIVI (per la checklist di remediation / governance) ===' -ForegroundColor Cyan
+$report | ForEach-Object { Write-Host ("  {0,-16} [{1}]  {2}" -f $_.Id, $_.Stato, $_.Rif) }
 
 if(-not $Apply){
     Write-Host ''
