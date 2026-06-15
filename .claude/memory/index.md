@@ -56,7 +56,9 @@ applicabili, Transcription/ASR/NetBIOS avvisi; punteggio ora 50% su 8 auto-valut
 installato = opt-in). Sequenza #4-#7 COMPLETA. I 3 controlli baseline pronti sono stati APPLICATI
 il 2026-06-15 (Module logging/LLMNR/macro Office, 100%). Poi
 estensione baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office), #7 snapshot
-periodico opt-in. **BitLocker = PER ULTIMO** (vedi memoria `bitlocker-implementazione-safe`).
+periodico opt-in. **BitLocker = PER ULTIMO** (vedi memoria `bitlocker-implementazione-safe`). STRATEGIA CHIAVE
+DECISA il 2026-06-15: password manager (primario) + USB offline in cassaforte; volumi decisi al
+momento. Manca solo l'attivazione vera e propria, col paracadute, quando l'utente è pronto.
 Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job
 Veeam in mappa, policy TurnOffWindowsCopilot opzionale.
 
