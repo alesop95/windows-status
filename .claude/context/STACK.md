@@ -95,7 +95,10 @@ Update, Defender, Office, Edge, OneDrive, Intune. I controlli non automatizzabil
 client/server, SMBv1 off, ScriptBlock logging, Module logging, LSA RunAsPPL, igiene account
 (Administrator integrato disabilitato — con rifiuto se è l'unico admin — e segnalazione account
 anomali), LLMNR off, blocco macro Office da Internet; più gli avvisi (report-only) Transcription
-PowerShell, regole ASR Defender, NetBIOS over TCP/IP, Secure Boot, BitLocker. Prima di ogni `-Apply`
+PowerShell (decisione: tenuta disattivata, rischio segreti in chiaro), NetBIOS over TCP/IP,
+Secure Boot, BitLocker. Il controllo ASR è context-aware: conforme quando un AV di terze parti è
+attivo (Defender passivo → ASR gestito dall'AV), altrimenti su PC Defender-only è applicabile e
+`-Apply` abilita un set curato di regole ASR in Block. Prima di ogni `-Apply`
 crea automaticamente un punto di ripristino del sistema (se la Protezione sistema è attiva e si è
 elevati), come rete di sicurezza locale oltre a Veeam. Supporta un meccanismo di eccezioni /
 rischio accettato: i controlli elencati in `baseline-eccezioni.json` (radice, locale/ignorato da

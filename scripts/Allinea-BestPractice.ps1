@@ -177,7 +177,7 @@ $baseline = @(
     Id='PS-TRANSCRIPT'; Categoria='Logging'; Admin=$true; Rischio='-'; Avviso=$true
     Titolo='PowerShell Transcription (trascrizione completa)'
     Test={ $v=(Get-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription' -Name 'EnableTranscripting' -ErrorAction SilentlyContinue).EnableTranscripting; @{ Conforme=($v -eq 1); Stato=$(if($null -ne $v){"EnableTranscripting=$v"}else{'non configurato'}) } }
-    Note='Trascrive tutto l''output PowerShell: utile ma puo riempire il disco e catturare dati sensibili; va abilitata con una OutputDirectory protetta dedicata (decisione). Non auto-applicato.'
+    Note='DECISIONE 2026-06-15: tenere DISATTIVATA. Trascrive tutto l''output PowerShell e i segreti stampati a video finirebbero in chiaro nei file di trascrizione; lo ScriptBlock+Module logging gia attivi coprono la visibilita necessaria senza questo rischio. Non abilitare.'
   },
   @{
     Id='LLMNR-OFF'; Categoria='Rete'; Admin=$true; Rischio='Basso'
@@ -199,10 +199,20 @@ $baseline = @(
     Note='Blocca le macro nei file Office con Mark-of-the-Web (scaricati da Internet). Raccomandato; raramente impatta flussi legittimi. Chiave utente (no admin).'
   },
   @{
-    Id='ASR'; Categoria='Defender'; Admin=$true; Rischio='-'; Avviso=$true
-    Titolo='Regole ASR (Attack Surface Reduction) di Defender'
-    Test={ try { $p=Get-MpPreference -ErrorAction Stop; $n=@($p.AttackSurfaceReductionRules_Ids).Count; $mode=(Get-MpComputerStatus -ErrorAction SilentlyContinue).AMRunningMode; @{ Conforme=($n -gt 0); Stato="regole ASR configurate=$n; Defender=$mode" } } catch { @{ Conforme=$false; Stato='Get-MpPreference non leggibile (serve admin)' } } }
-    Note='Le regole ASR hardenizzano vettori comuni (macro, LOLBins). Con un AV di terze parti ATTIVO, Defender e in passivo e le regole ASR potrebbero non essere applicate: gestirle nella console dell''AV. Non auto-applicato.'
+    Id='ASR'; Categoria='Defender'; Admin=$true; Rischio='Medio'
+    Titolo='Regole ASR di Defender (attive solo se Defender e l''AV in uso)'
+    Test={ $mode=(Get-MpComputerStatus -ErrorAction SilentlyContinue).AMRunningMode
+           if(-not $mode){ return @{ Conforme=$false; Stato='stato Defender non leggibile (serve admin)' } }
+           if($mode -notmatch 'Normal'){ return @{ Conforme=$true; Stato="Defender in modalita '$mode' (AV di terze parti attivo): ASR gestito dall''AV, non serve azione su Windows" } }
+           $p=Get-MpPreference -ErrorAction SilentlyContinue; $ids=@($p.AttackSurfaceReductionRules_Ids); $acts=@($p.AttackSurfaceReductionRules_Actions)
+           $block=0; for($i=0;$i -lt $ids.Count;$i++){ if($acts[$i] -eq 1){ $block++ } }
+           @{ Conforme=($block -ge 1); Stato="Defender ATTIVO; regole ASR in Block=$block" } }
+    Apply={ $mode=(Get-MpComputerStatus -ErrorAction SilentlyContinue).AMRunningMode
+            if($mode -notmatch 'Normal'){ throw "Defender non e l'AV attivo (modalita '$mode'): le regole ASR non si applicano; configurarle nell'AV di terze parti" }
+            $rules='3B576869-A4EC-4529-8536-B80A7769E899','D4F940AB-401B-4EFC-AADC-AD5F3C50688A','BE9BA2D9-53EA-4CDC-84E5-9B1EEEE46550','5BEB7EFE-FD9A-4556-801D-275E5FFC04CC','75668C1F-73B5-4CF0-BB93-3ECF5CB7CC84','9E6C4E1F-7D60-472F-BA1A-A39EF669E4B2'
+            foreach($g in $rules){ Add-MpPreference -AttackSurfaceReductionRules_Ids $g -AttackSurfaceReductionRules_Actions Enabled -ErrorAction SilentlyContinue } }
+    Rollback='Per ogni regola: Add-MpPreference -AttackSurfaceReductionRules_Ids <GUID> -AttackSurfaceReductionRules_Actions Disabled'
+    Note='Le regole ASR proteggono SOLO se Defender e l''AV attivo. Con un AV di terze parti attivo (Defender passivo) il controllo risulta conforme perche la protezione equivalente e gestita dall''AV. Su una macchina Defender-only, -Apply abilita in Block un set curato a basso falso-positivo (Office child/exec/inject, script offuscati, contenuti da email); valutare prima in Audit se temi falsi positivi.'
   },
   @{
     Id='NETBIOS'; Categoria='Rete'; Admin=$true; Rischio='-'; Avviso=$true

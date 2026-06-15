@@ -6,6 +6,18 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-15 — Avvisi rivisti: ASR context-aware, Transcription tenuta off
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Decisioni utente sui 3 avvisi:
+(1) PS-TRANSCRIPT: tenere DISATTIVATA (i segreti a video finirebbero in chiaro nei trascritti;
+ScriptBlock+Module bastano) — annotato nel Note del controllo e in mappa; è già off, nulla da
+applicare. (2) ASR: reso CONTEXT-AWARE — se Defender è l'AV attivo (AMRunningMode Normal) e non
+ci sono regole in Block → DA ALLINEARE con Apply che abilita un set curato in Block (6 GUID a
+basso falso-positivo); se un AV di terze parti è attivo (Defender passivo/Not running) → CONFORME
+con nota "gestito dall'AV". Su questa macchina (AV di terze parti attivo) ora risulta CONFORME. Rollback per
+regola: Action Disabled. (3) NETBIOS: lasciato avviso come richiesto. Solo codice/doc, nessuna
+modifica al sistema. Resta solo BitLocker.
+
 ## 2026-06-15 — Applicati i 3 controlli baseline pronti + fix tabella -Apply
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Applicati (paracadute Veeam,
