@@ -6,7 +6,21 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
-## 2026-06-15 — Strategia di custodia chiave BitLocker DECISA (pre-attivazione)
+## 2026-06-15 — Strategia chiave BitLocker AGGIORNATA: escrow gestito NinjaOne RMM + USB offline
+
+Commit: 9407b27. Verificato dallo snapshot che la macchina è gestita da **NinjaOne RMM**
+(`NinjaRMMAgent` installato/in esecuzione, + NinjaRemote). Questo fornisce l'escrow gestito che
+mancava (PC non Entra-joined). DECISIONE DEFINITIVA dell'utente (sostituisce quella sotto):
+escrow **PRIMARIO in NinjaOne** (auto-escrow, RBAC/MFA/audit, recuperabile dal MSP) + **ridondanza
+USB offline in cassaforte** come break-glass indipendente dall'RMM (password manager opzionale).
+**Abilitazione di BitLocker DELEGATA a NinjaOne via il MSP/IT** (policy) per garantire l'auto-escrow:
+windows-status NON esegue `Enable-BitLocker`; il suo ruolo è coordinare col MSP, tenere il
+paracadute (Veeam + restore point) e VERIFICARE dopo (snapshot ProtectionStatus=On + chiave in
+console + copia USB). File toccati: memoria [[bitlocker-implementazione-safe]], mappa compilata
+(sez. 1 nuova riga "Gestita da RMM" + sez. 9 chiave), `.claude/memory/index.md`. Nessuna modifica
+al sistema. Volumi: decisi al momento (probabile prima C:; D: = share di sviluppo, valutare impatto).
+
+## 2026-06-15 — Strategia di custodia chiave BitLocker DECISA (pre-attivazione) [SUPERATA dalla voce sopra]
 
 Commit: 9407b27. L'utente ha voluto fissare PRIMA la strategia per non rischiare un disastro
 (PC non Entra-joined = nessun escrow automatico). DECISIONE: chiave di ripristino → primario nel
