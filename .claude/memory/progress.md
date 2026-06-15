@@ -6,6 +6,19 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-15 — Strategia di custodia chiave BitLocker DECISA (pre-attivazione)
+
+Commit: 9407b27. L'utente ha voluto fissare PRIMA la strategia per non rischiare un disastro
+(PC non Entra-joined = nessun escrow automatico). DECISIONE: chiave di ripristino → primario nel
+**password manager** + ridondanza su **USB offline in cassaforte** (no copia cartacea; no escrow
+su account Microsoft perché PC di lavoro; Entra/AD non disponibili). Volumi da cifrare: si decide
+al momento dell'attivazione (probabile prima solo C:). Regole: ≥2 copie di cui 1 offline,
+accessibili da altro dispositivo, etichettate PC/volume/Key ID/data; chiave MAI nel repo/snapshot
+(solo il "dove" nella mappa). Registrato in memoria [[bitlocker-implementazione-safe]] e mappa
+compilata (sez. 9). NESSUNA attivazione fatta: BitLocker resta l'ultimo passo, da eseguire col
+paracadute quando l'utente è pronto. Flusso attivazione: mostra chiave → salva nei 2 posti →
+verifica → cifra → riavvio/verifica → changelog.
+
 ## 2026-06-15 — Avvisi rivisti: ASR context-aware, Transcription tenuta off
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Decisioni utente sui 3 avvisi:
