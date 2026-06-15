@@ -22,6 +22,7 @@
      .\Snapshot-Stato.ps1                 # tutto (consigliato)
      .\Snapshot-Stato.ps1 -Scope Machine  # solo dati di macchina
      .\Snapshot-Stato.ps1 -Scope User     # solo dati dell'account corrente
+     .\Snapshot-Stato.ps1 -Retention 7    # dopo il salvataggio tiene solo gli ultimi 7 (0 = tutti)
 
  MULTI-ACCOUNT
    I dati "file-based" (Claude/git/SSH) di TUTTI i profili in C:\Users vengono letti
@@ -34,7 +35,10 @@
 
 param(
     [ValidateSet('All','Machine','User')]
-    [string]$Scope = 'All'
+    [string]$Scope = 'All',
+    # Retention: quanti snapshot piu recenti tenere in snapshots\ (0 = tieni tutto).
+    # I lanci manuali usano 0 e non cancellano nulla; la task pianificata passa 7.
+    [int]$Retention = 0
 )
 
 $ErrorActionPreference = 'Continue'
@@ -951,3 +955,18 @@ Write-Host "Cartella: $outDir"
 Write-Host 'Apri SUMMARY.txt per la sintesi; CSV/TXT e la sottocartella utenti\ per i dettagli.'
 Write-Host 'Integrita: MANIFEST.sha256 (hash di ogni file dello snapshot).'
 Write-Host 'Confronto tra due snapshot: scripts\Compare-Snapshot.ps1'
+
+# --- Retention: tiene solo gli ultimi N snapshot (0 = disattivata, tieni tutto) ---
+# Il nome cartella snapshot_aaaammgg_hhmmss ordina alfabeticamente come cronologicamente,
+# quindi un ordinamento per Name decrescente mette il piu recente per primo. Lo snapshot
+# appena creato e' incluso e non viene mai rimosso.
+if($Retention -gt 0){
+    try {
+        $tutti = @(Get-ChildItem $outRoot -Directory -Filter 'snapshot_*' -ErrorAction Stop | Sort-Object Name -Descending)
+        if($tutti.Count -gt $Retention){
+            $daRimuovere = $tutti | Select-Object -Skip $Retention
+            foreach($d in $daRimuovere){ Remove-Item $d.FullName -Recurse -Force -ErrorAction SilentlyContinue }
+            Write-Host ("Retention: tenuti gli ultimi {0} snapshot, rimossi {1} piu vecchi." -f $Retention, @($daRimuovere).Count) -ForegroundColor Yellow
+        }
+    } catch { Write-Host "Retention: impossibile applicare la pulizia ($_)." -ForegroundColor Yellow }
+}

@@ -65,6 +65,15 @@ manteniamo il paracadute (Veeam + restore point) e VERIFICHIAMO dopo (snapshot P
 Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job
 Veeam in mappa, policy TurnOffWindowsCopilot opzionale.
 
+Snapshot esportabile schedulato (codice pronto, commit manuale): `Snapshot-Stato.ps1` ora ha
+`-Retention <int>` (0 = tieni tutto, default sui lanci manuali) e `Pianifica-Snapshot.ps1` installa
+la task giornaliera con `-Scope Machine -Retention 7`. Scelta `-Scope Machine`: la task gira come
+SYSTEM, quindi la sez. 13 (ambiente live dell'account) sarebbe falsata; Machine copre 1-12 incluso
+il multi-account da disco e tiene le foto automatiche omogenee. Output sempre in `snapshots\`
+(ignorata da git). Installazione (utente, admin): `.\scripts\Pianifica-Snapshot.ps1 -Installa
+-Frequenza Giornaliera -Ora 13:00`; reversibile con `-Disinstalla`; va annotata in changelog mappa
+quando installata. Handoff verboso in `_notes\handoff.md` (locale).
+
 AZIONE consigliata all'utente (dallo snapshot 2026-06-12): **riavvio in sospeso = SÌ** (uptime
 ~9g) → riavviare quando comodo (rende effettivo anche LSA RunAsPPL). Password `dev` esposta in
 chat → consigliata rotazione.

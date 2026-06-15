@@ -116,7 +116,13 @@ chiamare una funzione `H` (collide con l'alias `h`=Get-History); qui si usa `Esc
 `scripts/Pianifica-Snapshot.ps1` gestisce lo snapshot periodico opt-in: di default mostra solo lo
 stato (read-only); `-Installa` crea un'attività pianificata (admin) che esegue lo snapshot come
 SYSTEM a intervalli (settimanale/giornaliero) per il rilevamento del drift nel tempo;
-`-Disinstalla` la rimuove. L'unica modifica al sistema è la creazione/rimozione dell'attività.
+`-Disinstalla` la rimuove. L'unica modifica al sistema è la creazione/rimozione dell'attività. La
+task gira con `-Scope Machine`, perché da SYSTEM la sezione 13 (ambiente live dell'account) sarebbe
+quella di SYSTEM e falserebbe i diff, mentre Machine copre le sezioni 1-12 incluso l'inventario
+multi-account letto dal disco; e passa `-Retention` (parametro di entrambi gli script, default 7
+nella task, 0 cioè disattivata nei lanci manuali) che dopo il salvataggio tiene solo gli ultimi N
+snapshot in `snapshots/`, ordinati per nome cartella (cronologico), senza mai toccare quello appena
+creato.
 
 `scripts/Reinstall-Software.ps1` chiude il cerchio della portabilità: reimporta su una macchina
 nuova il `software_winget.json` prodotto dallo snapshot, previa revisione manuale del JSON.
