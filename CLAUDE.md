@@ -78,7 +78,8 @@ servono. Il materiale sotto `_notes/` si apre solo per verificare un requisito o
 - `docs/`     guide e mappa (tracciate; le copie compilate `*.compilata.md` restano locali)
 - `Avvia.ps1`  punto d'ingresso unico (menu) in radice: orchestra gli script di `scripts/`
 - `scripts/`  Snapshot-Stato.ps1, Compare-Snapshot.ps1, Allinea-BestPractice.ps1,
-              Genera-Report.ps1, Reinstall-Software.ps1 (devono stare qui: ricavano la radice dalla cartella genitore)
+              Genera-Report.ps1, Pianifica-Snapshot.ps1, Reinstall-Software.ps1
+              (devono stare qui: ricavano la radice dalla cartella genitore)
 - `snapshots/` output datato (ignorato da git)
 - `_notes/`   livello privato e verboso (ignorato da git)
 - `.claude/`  centro di controllo versionato (vedi indice sotto)

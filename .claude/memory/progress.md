@@ -6,6 +6,18 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-15 — #7 Snapshot periodico opt-in (Pianifica-Snapshot.ps1)
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). #7 FATTO: nuovo
+`scripts/Pianifica-Snapshot.ps1` (6° script). Default = stato (read-only). `-Installa` registra
+un'attività pianificata "windows-status Snapshot periodico" che esegue Snapshot-Stato.ps1 come
+SYSTEM (RunLevel Highest) settimanale (lun 12:30) o giornaliera, per il rilevamento del drift nel
+tempo; `-Disinstalla` la rimuove (reversibile). L'unica modifica al sistema è creare/rimuovere
+l'attività (serve admin). Aggiunte voci 6 (stato) e 6i (installa) nel menu Avvia. Collaudo stato
+read-only: "NON installato". NON installata: opt-in, da fare su richiesta utente con UAC.
+Con #7 la sequenza suggerimenti minori #4->#3->#5->#6->#7 è COMPLETA. Resta solo BitLocker
+(per ultimo, vedi memoria bitlocker-implementazione-safe).
+
 ## 2026-06-12 — #6 Estensione del baseline (6 nuovi controlli)
 
 Commit: 9407b27. #6 FATTO in `Allinea-BestPractice.ps1`: aggiunti 6 controlli (con Rif ISO/CIS).

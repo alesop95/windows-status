@@ -66,6 +66,9 @@ Allinea-BestPractice (riferimenti normativi per controllo). #5 report HTML autoc
 #6 estensione baseline: +6 controlli in Allinea-BestPractice (PS Module logging, LLMNR off, blocco
 macro Office da Internet applicabili; PS Transcription, ASR Defender, NetBIOS over TCP/IP come
 avvisi report-only), tutti con Rif ISO/CIS.
+#7 snapshot periodico opt-in: `scripts/Pianifica-Snapshot.ps1` (stato read-only di default;
+-Installa/-Disinstalla attività pianificata come SYSTEM per il rilevamento del drift; voci nel menu
+Avvia). Con #7 la sequenza dei suggerimenti minori #3-#7 è COMPLETA.
 
 Meccanismo "eccezioni / rischio accettato" in `Allinea-BestPractice.ps1`: file locale
 `baseline-eccezioni.json` (ignorato da git; template `baseline-eccezioni.esempio.json` tracciato);

@@ -53,6 +53,9 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 .\scripts\Genera-Report.ps1                  # report.html leggibile dell'ultimo snapshot (locale)
 
+.\scripts\Pianifica-Snapshot.ps1             # stato dello snapshot periodico (sola lettura)
+.\scripts\Pianifica-Snapshot.ps1 -Installa   # attiva lo snapshot periodico (attivita pianif., admin)
+
 .\scripts\Reinstall-Software.ps1             # su un PC nuovo, dopo aver rivisto il JSON winget
 ```
 

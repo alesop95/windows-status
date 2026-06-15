@@ -33,6 +33,8 @@ $voci = @(
   @{ N='3'; Titolo='Report baseline di sicurezza (divario)';      Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') } }
   @{ N='4'; Titolo='Applica baseline di sicurezza (guidato)';     Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') -Apply } }
   @{ N='5'; Titolo='Reinstalla software da winget export';        Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Reinstall-Software.ps1') } }
+  @{ N='6'; Titolo='Snapshot periodico: stato';                   Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Pianifica-Snapshot.ps1') } }
+  @{ N='6i';Titolo='Snapshot periodico: INSTALLA (attivita pianif.)'; Tipo='MODIFICA';      Azione={ & (Join-Path $scripts 'Pianifica-Snapshot.ps1') -Installa } }
 )
 
 function Show-Menu {

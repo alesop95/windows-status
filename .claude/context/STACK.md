@@ -16,7 +16,9 @@ last-verified-commit: 9407b27
 Il progetto è interamente in Windows PowerShell 5.1, senza dipendenze esterne: quattro script
 sotto `scripts/` più il launcher `Avvia.ps1` in radice, pensati per Windows 11 in lingua
 italiana. `Avvia.ps1` è il punto d'ingresso standardizzato (menu) che orchestra gli script e
-funziona identico clonando la repo su qualsiasi macchina; non ha logica propria. Lo snapshot
+funziona identico clonando la repo su qualsiasi macchina; non ha logica propria. Sei script in
+`scripts/`: Snapshot-Stato, Compare-Snapshot, Allinea-BestPractice, Genera-Report,
+Pianifica-Snapshot, Reinstall-Software. Lo snapshot
 completo richiede una shell elevata (amministratore) per leggere i profili altrui, BitLocker e
 Defender; l'inventario software usa `winget` quando presente e ripiega sul registro quando
 manca. Non c'è build, non c'è gestore di pacchetti: si clona e si esegue.
@@ -107,6 +109,11 @@ esclusi avvisi e accettati) e stampa per ogni controllo i RIFERIMENTI NORMATIVI 
 autoconsistente (CSS inline, sezioni navigabili, righe d'attenzione evidenziate); read-only,
 scrive solo dentro la cartella snapshot (ignorata da git). Avvertenza di codifica/PS: NON
 chiamare una funzione `H` (collide con l'alias `h`=Get-History); qui si usa `Esc` per l'HTML-encode.
+
+`scripts/Pianifica-Snapshot.ps1` gestisce lo snapshot periodico opt-in: di default mostra solo lo
+stato (read-only); `-Installa` crea un'attività pianificata (admin) che esegue lo snapshot come
+SYSTEM a intervalli (settimanale/giornaliero) per il rilevamento del drift nel tempo;
+`-Disinstalla` la rimuove. L'unica modifica al sistema è la creazione/rimozione dell'attività.
 
 `scripts/Reinstall-Software.ps1` chiude il cerchio della portabilità: reimporta su una macchina
 nuova il `software_winget.json` prodotto dallo snapshot, previa revisione manuale del JSON.
