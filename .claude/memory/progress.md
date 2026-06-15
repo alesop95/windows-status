@@ -6,6 +6,18 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-15 — Applicati i 3 controlli baseline pronti + fix tabella -Apply
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Applicati (paracadute Veeam,
+elevato via Allinea-BestPractice.ps1 -Apply -Solo PS-MODULE-LOG,LLMNR-OFF,OFFICE-MACRO
+-SenzaConferma): il punto di ripristino automatico (#1) è stato creato con successo, poi i 3
+controlli applicati e verificati 100% (3/3): PS Module logging ON, LLMNR off (EnableMulticast=0),
+macro Office da Internet bloccate. Rollback di ciascuno a changelog nella mappa compilata. Restano
+gli avvisi (Transcription/ASR/NetBIOS/SecureBoot) e SMB-SIGN rimandato. Fix in
+`Allinea-BestPractice.ps1`: la tabella riepilogativa del -Apply ora aggiorna la riga del report
+allo stato POST-applicazione (prima mostrava il pre-apply, fuorviante) — verificato: report
+successivo dà i 3 CONFORMI, punteggio 100%. UAC approvato dall'utente. Resta solo BitLocker.
+
 ## 2026-06-15 — #7 Snapshot periodico opt-in (Pianifica-Snapshot.ps1)
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). #7 FATTO: nuovo
