@@ -9,7 +9,7 @@
 ```
 Branch attivo:        main
 Commit di riferimento: 9407b27
-Data snapshot:        2026-06-12
+Data snapshot:        2026-06-15
 ```
 
 Working tree con modifiche preparate, non committate: vedi work-log (`progress.md`) per il
@@ -50,7 +50,8 @@ Suggerimenti minori in corso, ordine #4→#3→#5→#6→#7. **#4 readiness FATT
 controllo); **#5 report HTML FATTO** (`scripts/Genera-Report.ps1` → `report.html`, voce 2b in
 Avvia); **#6 estensione baseline FATTO** (+6 controlli: Module logging/LLMNR/macro Office
 applicabili, Transcription/ASR/NetBIOS avvisi; punteggio ora 50% su 8 auto-valutabili).
-Prossimo: **#7 snapshot periodico opt-in**. Poi
+**#7 snapshot periodico opt-in FATTO** (`scripts/Pianifica-Snapshot.ps1`, voci 6/6i in Avvia; non
+installato = opt-in). Sequenza #4-#7 COMPLETA. Poi
 estensione baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office), #7 snapshot
 periodico opt-in. **BitLocker = PER ULTIMO** (vedi memoria `bitlocker-implementazione-safe`).
 Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job
