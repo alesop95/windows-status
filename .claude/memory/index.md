@@ -40,7 +40,9 @@ BestPractice (baseline + restore point automatico + eccezioni risk-accepted). Av
 
 ScriptBlock logging ON; cache bitmap RDP disattivata; task one-shot rimossa; debloating Gruppo A
 (Xbox+DevHome), B (Spotify), AI (Copilot) per utente e a livello macchina (residuo solo nel
-profilo Administrator); SMB in ingresso ristretto al solo client di sviluppo via firewall.
+profilo Administrator); SMB in ingresso ristretto al solo client di sviluppo via firewall;
+baseline applicato il 2026-06-15 (PS Module logging ON, LLMNR off, blocco macro Office da
+Internet — punteggio Allinea 100% sui controlli auto-valutabili).
 Rischi accettati (NON modificare): Administrator e secondo account locale tenuti abilitati.
 
 ## Punto di ripresa
@@ -51,7 +53,8 @@ controllo); **#5 report HTML FATTO** (`scripts/Genera-Report.ps1` → `report.ht
 Avvia); **#6 estensione baseline FATTO** (+6 controlli: Module logging/LLMNR/macro Office
 applicabili, Transcription/ASR/NetBIOS avvisi; punteggio ora 50% su 8 auto-valutabili).
 **#7 snapshot periodico opt-in FATTO** (`scripts/Pianifica-Snapshot.ps1`, voci 6/6i in Avvia; non
-installato = opt-in). Sequenza #4-#7 COMPLETA. Poi
+installato = opt-in). Sequenza #4-#7 COMPLETA. I 3 controlli baseline pronti sono stati APPLICATI
+il 2026-06-15 (Module logging/LLMNR/macro Office, 100%). Poi
 estensione baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office), #7 snapshot
 periodico opt-in. **BitLocker = PER ULTIMO** (vedi memoria `bitlocker-implementazione-safe`).
 Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job

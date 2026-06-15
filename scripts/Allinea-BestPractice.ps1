@@ -329,8 +329,12 @@ foreach($c in $items){
             try {
                 & $c.Apply
                 $after = & $c.Test
-                if($after.Conforme){ Write-Host "    OK applicato. Nuovo stato: $($after.Stato)" -ForegroundColor Green; Write-Log "APPLICATO $($c.Id): $($after.Stato)" }
-                else { Write-Host "    Applicato ma ancora non conforme: $($after.Stato) (forse serve riavvio)" -ForegroundColor Yellow; Write-Log "APPLICATO-PARZIALE $($c.Id): $($after.Stato)" }
+                # aggiorna la riga del report con lo stato POST-applicazione (la tabella riflette il risultato reale)
+                $row = $report[$report.Count-1]
+                if($after.Conforme){ $row.Stato='CONFORME'; $row.Dettaglio=$after.Stato
+                    Write-Host "    OK applicato. Nuovo stato: $($after.Stato)" -ForegroundColor Green; Write-Log "APPLICATO $($c.Id): $($after.Stato)" }
+                else { $row.Dettaglio="$($after.Stato) (applicato; forse serve riavvio)"
+                    Write-Host "    Applicato ma ancora non conforme: $($after.Stato) (forse serve riavvio)" -ForegroundColor Yellow; Write-Log "APPLICATO-PARZIALE $($c.Id): $($after.Stato)" }
             } catch { Write-Host "    ERRORE durante l'applicazione: $_" -ForegroundColor Red; Write-Log "ERRORE $($c.Id): $_" }
         } else { Write-Host '    Saltato.'; Write-Log "SALTATO-UTENTE $($c.Id)" }
     }
