@@ -6,6 +6,27 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-15 — Retention snapshot + scope della task pianificata (snapshot esportabile schedulato)
+
+Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Obiettivo: una fotografia
+giornaliera automatica, dentro al progetto e mai committata. Soluzione: si usa la funzione già
+esistente `scripts/Pianifica-Snapshot.ps1` (NON un percorso parallelo in `C:\Scripts`, che
+divergerebbe dalla filosofia "gli script vivono in scripts\ e ricavano la radice"). Lo snapshot
+cade sempre in `E:\windows-status\snapshots\snapshot_<stamp>\`, ignorata da git, con redazione
+segreti + riscansione anti-segreti + `MANIFEST.sha256` sempre attivi. Implementato:
+(1) `Snapshot-Stato.ps1` nuovo parametro `-Retention <int>` (default 0 = tieni tutto, così i lanci
+manuali non cancellano): dopo `MANIFEST` tiene solo gli ultimi N (ordinamento per nome cartella =
+cronologico, lo snapshot appena creato mai rimosso). (2) `Pianifica-Snapshot.ps1` nuovo parametro
+`-Retention` (default 7) e la task ora passa `-Scope Machine -Retention 7`. DECISIONE (la "cosa
+migliore" chiesta dall'utente) sul SYSTEM: la task gira come SYSTEM, quindi la sezione 13 (ambiente
+live dell'account corrente) sarebbe quella di SYSTEM e falserebbe i diff → si usa `-Scope Machine`,
+che copre sezioni 1-12 incluso l'inventario multi-account letto dal disco e tiene le fotografie
+automatiche omogenee; l'ambiente di sviluppo personale (sez. 13) si cattura con un `-Scope All`
+manuale loggati nel proprio account. File toccati: `scripts/Snapshot-Stato.ps1`,
+`scripts/Pianifica-Snapshot.ps1`, scheda `.claude/context/STACK.md`. Nessuna modifica al sistema:
+l'installazione della task la lancia l'utente (`-Installa -Frequenza Giornaliera`), ed è quella la
+modifica reversibile (`-Disinstalla`), da annotare in changelog mappa quando installata.
+
 ## 2026-06-15 — Strategia chiave BitLocker AGGIORNATA: escrow gestito NinjaOne RMM + USB offline
 
 Commit: 9407b27. Verificato dallo snapshot che la macchina è gestita da **NinjaOne RMM**

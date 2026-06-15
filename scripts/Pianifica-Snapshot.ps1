@@ -17,18 +17,22 @@
    .\Pianifica-Snapshot.ps1                                  # stato (sola lettura)
    .\Pianifica-Snapshot.ps1 -Installa                        # settimanale, lunedi 12:30 (admin)
    .\Pianifica-Snapshot.ps1 -Installa -Frequenza Giornaliera -Ora 13:00
+   .\Pianifica-Snapshot.ps1 -Installa -Frequenza Giornaliera -Ora 13:00 -Retention 14
    .\Pianifica-Snapshot.ps1 -Disinstalla                     # rimuove l'attivita (admin)
 
  NOTA
-   Gli snapshot si accumulano in snapshots\ (ignorata da git): ripulire ogni tanto
-   le cartelle vecchie. Confrontare snapshot omogenei (l'attivita gira sempre elevata).
+   La task gira come SYSTEM con -Scope Machine (sezioni 1-12: la 13, ambiente live
+   dell'account, da SYSTEM sarebbe falsata) e con -Retention (default 7) tiene solo gli
+   ultimi N snapshot in snapshots\ (ignorata da git). Confrontare snapshot omogenei.
 ================================================================================
 #>
 param(
     [switch]$Installa,
     [switch]$Disinstalla,
     [ValidateSet('Settimanale','Giornaliera')][string]$Frequenza='Settimanale',
-    [string]$Ora='12:30'
+    [string]$Ora='12:30',
+    # Quanti snapshot piu recenti conservare ad ogni esecuzione (0 = tieni tutto).
+    [int]$Retention=7
 )
 
 $base     = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -63,15 +67,20 @@ if($Installa){
     if(-not $isAdmin){ Write-Host 'Serve PowerShell amministratore per creare l''attivita pianificata.' -ForegroundColor Red; return }
     if(-not (Test-Path $snap)){ Write-Host "Snapshot-Stato.ps1 non trovato in $base" -ForegroundColor Red; return }
     try {
-        $action  = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$snap`""
+        # -Scope Machine: la task gira come SYSTEM, quindi la sezione 13 (ambiente di
+        # sviluppo dell'account corrente) sarebbe quella di SYSTEM e falserebbe i diff.
+        # Machine copre 1-12, incluso l'inventario multi-account letto dal disco, e tiene
+        # le fotografie automatiche omogenee. -Retention applica la pulizia ad ogni run.
+        $argSnap = "-NoProfile -ExecutionPolicy Bypass -File `"$snap`" -Scope Machine -Retention $Retention"
+        $action  = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argSnap
         $trigger = if($Frequenza -eq 'Giornaliera'){ New-ScheduledTaskTrigger -Daily -At $Ora } else { New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At $Ora }
         $princ   = New-ScheduledTaskPrincipal -UserId 'S-1-5-18' -LogonType ServiceAccount -RunLevel Highest
         $set     = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) -MultipleInstances IgnoreNew
         Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $princ -Settings $set `
             -Description 'Snapshot periodico di windows-status (sola lettura) per il rilevamento del drift. Reversibile: Pianifica-Snapshot.ps1 -Disinstalla.' -Force | Out-Null
-        Write-Host "Attivita '$taskName' INSTALLATA ($Frequenza, ore $Ora, come SYSTEM)." -ForegroundColor Green
+        Write-Host "Attivita '$taskName' INSTALLATA ($Frequenza, ore $Ora, come SYSTEM, -Scope Machine, retention $Retention)." -ForegroundColor Green
         Write-Host 'Reversibile con: .\Pianifica-Snapshot.ps1 -Disinstalla'
-        Write-Host 'Ricorda: gli snapshot si accumulano in snapshots\ (ripulire le cartelle vecchie ogni tanto).'
+        Write-Host "Gli snapshot vanno in snapshots\ (ignorata da git); la retention tiene gli ultimi $Retention."
     } catch { Write-Host "Errore nella creazione dell'attivita: $_" -ForegroundColor Red }
     return
 }
