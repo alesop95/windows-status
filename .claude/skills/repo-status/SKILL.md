@@ -10,16 +10,22 @@ description: >
 ### Branch e commit recenti
 !`git log --oneline -20`
 
+### Branch corrente
+!`git branch --show-current`
+
 ### File modificati (non committati)
 !`git status --short`
 
-### Diff non committato (max 300 righe)
-!`git diff HEAD -- . ":(exclude)*.lock" ":(exclude)dist/" | head -300`
+### Diff non committato (riepilogo per file)
+!`git diff --stat HEAD -- . ":(exclude)*.lock" ":(exclude)dist/"`
 
 ### Tag e versioni
-!`git tag --sort=-version:refname | head -10`
+!`git tag --sort=-version:refname`
 
 ## Istruzioni
+
+Il diff sopra è un riepilogo per file (`--stat`); per il dettaglio riga-per-riga di un file
+specifico eseguire su richiesta `git diff HEAD -- <percorso>`.
 
 Sulla base dei dati sopra:
 1. Descrivere il lavoro in corso (branch + commit recenti)

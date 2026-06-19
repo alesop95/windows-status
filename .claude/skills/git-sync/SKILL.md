@@ -7,11 +7,11 @@ disable-model-invocation: true
 
 ## Modifiche introdotte dall'ultimo pull
 
-### Commit entrati (diff rispetto a HEAD~10)
-!`git log --oneline HEAD~10..HEAD 2>nul || git log --oneline -10`
+### Commit recenti del branch
+!`git log --oneline -10`
 
 ### File cambiati negli ultimi commit
-!`git diff --name-status HEAD~5..HEAD 2>nul || git show --name-status --format="" HEAD`
+!`git log --name-status -5 --format="%h %s"`
 
 ### CLAUDE.md è stato modificato di recente?
 !`git log --oneline -5 -- CLAUDE.md .claude/`

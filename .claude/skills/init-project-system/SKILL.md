@@ -14,9 +14,14 @@ disable-model-invocation: true
 
 ## Contesto git (best-effort, pre-iniettato)
 
-!`git rev-parse --is-inside-work-tree 2>nul || git rev-parse --is-inside-work-tree 2>/dev/null || echo "non-git-dir"`
-!`git rev-parse --abbrev-ref HEAD 2>nul || git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "(no branch)"`
-!`git log -1 --format="%h %ad %s" --date=short 2>nul || git log -1 --format="%h %ad %s" --date=short 2>/dev/null || echo "(no commits)"`
+!`git status --short`
+!`git branch --show-current`
+!`git log -1 --format="%h %ad %s" --date=short`
+
+Se la cartella non è ancora un repository git, questi comandi stampano un errore "not a git
+repository": va letto come modalità greenfield senza repo, in cui i Passi 0.5 eseguiranno
+`git init`. I comandi sono singoli e portabili (niente `||`, `echo` o redirezioni specifiche di
+shell) per passare il controllo permessi su Windows e Unix.
 
 ## Premessa
 
@@ -64,11 +69,11 @@ Interpretazione dell'esito e azione:
    piu `.claude-accountN` va segnalata come possibile profilo residuo, perche puo confondere la
    diagnosi.
 2. Identificare l'account attivo in questa sessione dal valore di `$env:CLAUDE_CONFIG_DIR` di
-   processo. La mappatura reale tra directory di profilo ed email degli account e specifica
-   della macchina e vive in `CLAUDE.local.md`, ignorato da git, perche questo repository e
-   pubblico: leggerla da li (`.claude-account1` corrisponde a <email account 1>,
-   `.claude-account2` a <email account 2>). Su una macchina diversa cambiano i nomi utente e le
-   associazioni: in tal caso riportare solo i percorsi rilevati senza inventare le email.
+   processo. Mappatura nota su questa macchina, da trattare come riferimento e non come dato
+   universale: `.claude-account1` corrisponde ad <email-account1> (default di VS Code e
+   del comando `claude` nudo), `.claude-account2` corrisponde a <email-account2>. Su una
+   macchina diversa cambiano i nomi utente e le associazioni: in tal caso riportare solo i
+   percorsi rilevati senza inventare le email.
 3. Se esiste un solo profilo, dichiarare quale account e in uso e proseguire al Passo 1.
 4. Se esistono piu profili, chiedere all'utente con quale account intende inizializzare il
    progetto, mostrando quello attualmente attivo. Se l'utente indica un account diverso da
@@ -133,6 +138,11 @@ personali, e, solo se il progetto integra un servizio esterno tramite un server 
 istanziato dal template opzionale e la cartella `mcp/` con l'implementazione del server, entrambi
 tracciati e in radice, mai sotto `.claude`. Senza integrazione MCP questi ultimi non si creano.
 
+I `templates/` possono inoltre contenere pacchetti opzionali di framework, riconoscibili come
+sottocartelle con un proprio `README.md` di istanziazione (attualmente `templates/latex/` per
+l'ambiente di build LaTeX). Non si attivano d'ufficio: si offrono con una domanda esplicita allo
+startup, esattamente come l'MCP (vedi Passo 4).
+
 ## Passi 1-8 — Runbook di inizializzazione
 
 Leggere la sezione "Comando di inizializzazione" di `.claude/PROJECT-SYSTEM.md` ed eseguirne i
@@ -156,9 +166,33 @@ il dettaglio autoritativo resta nel file.
    satellite e contenga la procedura di ripresa, piu lo stub di `CLAUDE.local.md` ignorato per
    gli override personali. Sull'MCP chiedere sempre esplicitamente all'utente, sia in greenfield
    sia in allineamento, se vuole configurare un server MCP, offrendo di crearlo ora o di
-   rimandarlo come promemoria; non assumere mai. In caso affermativo istanziare in radice
-   `.mcp.json` e la cartella `mcp/`, mai sotto `.claude`, e se un `.mcp.json` esiste gia mostrare
-   la differenza invece di sovrascrivere.
+   rimandarlo come promemoria; non assumere mai. In allineamento il server consigliato e
+   `code-context-provider-mcp`, gia pronto in `templates/mcp.json`, che via `npx` espone struttura
+   e simboli del codice per mappare un progetto esistente. In caso affermativo istanziare in radice
+   `.mcp.json` dal template della variante del sistema operativo (`templates/mcp.json` su
+   Linux/macOS, `templates/mcp.windows.json` su Windows; per un server avviato via `npx` non serve
+   la cartella `mcp/`, che riguarda solo i server implementati in proprio), mai sotto `.claude`, e se un `.mcp.json` esiste
+   gia mostrare la differenza invece di sovrascrivere.
+   Per i pacchetti opzionali consultare il registro `.claude/templates/PACKAGES.md`, che elenca
+   cosa il sistema sa offrire (al momento `latex`, `diagrams`, `code-context`, piu i segnaposto
+   `knowledge-wiki` e `book-to-skill`) con, per ciascuno, il trigger che dice quando proporlo. Con
+   la stessa logica del gate MCP, valutare quali pacchetti sono pertinenti al progetto secondo quel
+   trigger e proporli uno per uno, esplicitamente, offrendo di istanziarli ora o di rimandarli come
+   promemoria; non assumere mai, e un pacchetto gia presente non si reinstalla ma se ne mostra la
+   differenza. L'istanziazione segue il `README.md` del pacchetto quando e' a cartella: per esempio
+   `latex`, pertinente se il progetto contiene file `.tex`, crea `scripts/`, `tex-packages.txt` e
+   `.latexmkrc` in radice e la skill `latex-build` sotto `.claude/skills/`, abilita nel `.gitignore`
+   il blocco di artefatti del framework e adatta il manifesto al preambolo reale; se un file di
+   destinazione esiste gia si mostra la differenza invece di sovrascrivere. In caso negativo,
+   lasciare un promemoria esplicito che il pacchetto resta istanziabile in seguito. All'attivazione
+   di un pacchetto, mostrare subito il suo recap d'uso, cioe comandi e flusso essenziali presi dal
+   README del pacchetto, perche l'utente sappia come usarlo da subito.
+   Con la stessa logica, chiedere esplicitamente se creare un `README.md` pubblico per la
+   repository GitHub, istanziandolo dal template `templates/README-project.md` se presente;
+   se no, lasciare un promemoria esplicito. Il `README.md` e' tracciato in git, vive in radice
+   accanto a `CLAUDE.md`, ed e' destinato ai visitatori della repository (non al team interno
+   che usa `CLAUDE.md`). Il suo contenuto riflette stack, workflow e stato del progetto nella
+   misura in cui e' condivisibile pubblicamente. Non assumere: chiedere sempre.
 5. Creazione di `_notes` con `DIARIO.md`, `RESOCONTO.md`, `TEST-CHECKLIST.md`, solo dopo aver
    confermato che `_notes` e ignorato.
 6. Installazione delle skill del motore di riconciliazione e del flusso git, ciascuna come

@@ -18,19 +18,22 @@ default globale.
 
 ## Profili disponibili su questa macchina
 
-I profili si ricavano dagli alias host definiti in `%USERPROFILE%\.ssh\config`. Ogni alias
+I profili si ricavano dagli alias host definiti in `C:\Users\Utente\.ssh\config`. Ogni alias
 fissa quale chiave usare verso `github.com`, e va abbinato all'identita corrispondente.
 
-Profilo di lavoro: alias SSH `github-corp`, chiave `id_ed25519_corp`, identita `<user.name di
-lavoro>` e `<email di lavoro>`, organizzazione `<organizzazione di lavoro>`.
+Profilo di lavoro: alias SSH `github-corp`, chiave `id_ed25519_corp`, identita `user.name`
+<user-account1> e `user.email` <email-account1>, organizzazione <org-lavoro>. E il profilo
+con cui questo repository e gia configurato.
 
 Profilo personale: alias SSH `github-personal`, chiave `id_ed25519_personal`, identita
-`<user.name personale>` e `<email personale>`.
+`user.name` alesop95 e `user.email` alessio.sopranzi.95@gmail.com, utente GitHub alesop95.
 
-L'alias nudo `github.com` punta alla chiave di lavoro. Questi valori sono specifici della
-macchina e in questo file restano anonimi perche il repository e pubblico: la mappatura reale
-vive in `CLAUDE.local.md`, ignorato da git, e si verifica comunque nel `~/.ssh/config` locale
-senza inventarla.
+L'alias nudo `github.com` punta alla chiave di lavoro. La convenzione dei nomi degli alias,
+`github-personal` per l'identita personale e `github-corp` per quella di lavoro, e generale e si
+puo adottare identica su qualsiasi macchina, cosi che la stessa logica di selezione del profilo
+valga ovunque. I valori concreti dietro ogni alias, cioe il percorso della chiave, lo `user.name`
+e lo `user.email`, sono invece specifici della macchina e su un altro ambiente vanno riletti dal
+relativo `~/.ssh/config` senza inventarli.
 
 ## Protezione globale dal commit con identita sbagliata
 
@@ -61,16 +64,16 @@ git branch -M main
 
 # Forza l'OpenSSH di sistema e l'identita SOLO per questo repo (Windows)
 git config --local core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
-git config --local user.name "<user.name personale>"
-git config --local user.email "<email personale>"
+git config --local user.name "alesop95"
+git config --local user.email "alessio.sopranzi.95@gmail.com"
 
 # Collega il remoto tramite l'alias SSH personale
-git remote add origin git@github-personal:<owner>/<nome repo>.git
+git remote add origin git@github-personal:alesop95/<nome repo>.git
 ```
 
-L'alias `github-personal` e definito in `%USERPROFILE%\.ssh\config` e usa la chiave personale
-`id_ed25519_personal`, quindi il remoto `git@github-personal:<owner>/<nome repo>.git` punta a
-`github.com/<owner>/<nome repo>` con quella chiave. Per il profilo di lavoro si sostituiscono
+L'alias `github-personal` e definito in `C:\Users\Utente\.ssh\config` e usa la chiave personale
+`id_ed25519_personal`, quindi il remoto `git@github-personal:alesop95/<nome repo>.git` punta a
+`github.com/alesop95/<nome repo>` con quella chiave. Per il profilo di lavoro si sostituiscono
 identita e alias con quelli `github-corp` e l'owner con l'organizzazione di destinazione.
 
 Differenza per sistema operativo: su Windows si forza `core.sshCommand` all'eseguibile OpenSSH
