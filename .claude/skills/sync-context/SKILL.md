@@ -8,17 +8,21 @@ description: >
 
 ## Stato attuale del contesto
 
-### Snapshot (memory/index.md)
-!`cat .claude/memory/index.md 2>/dev/null | head -40`
-
 ### Commit HEAD corrente
-!`git rev-parse HEAD && git rev-parse --abbrev-ref HEAD && git log -1 --format="%h %ad %s" --date=short`
+!`git log -1 --format="%H  %h  %ad  %s" --date=short`
 
-### Schede di contesto presenti e loro frontmatter
-!`for f in .claude/context/*.md; do echo "=== $f ==="; sed -n '1,16p' "$f" | grep -E "^(last-verified-commit|generated-from-commit|generated-from-branch|covers-paths|  -)"; done 2>/dev/null`
+### Branch corrente
+!`git branch --show-current`
 
 ### Commit recenti
 !`git log --oneline --no-decorate -10`
+
+### Snapshot e frontmatter delle schede
+Leggere con lo strumento Read: prima `.claude/memory/index.md` (snapshot), poi i file
+`.claude/context/*.md` (elencabili con Glob), estraendo dal frontmatter di ciascuna scheda
+`last-verified-commit` e `covers-paths`. Questi contenuti non si iniettano via comando di shell, per
+restare portabili tra Windows e Unix e per non dipendere da `cat`, `sed` o cicli `for` (che il
+controllo permessi blocca).
 
 ## Istruzioni operative
 
