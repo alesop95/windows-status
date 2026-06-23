@@ -1,7 +1,6 @@
 {
-  "servers": [
-    {
-      "name": "<nome-server>",
+  "mcpServers": {
+    "<nome-server>": {
       "command": "node",
       "args": [
         "./mcp/<entrypoint>.js"
@@ -10,5 +9,5 @@
         "PROJECT_ROOT": "${workspaceFolder}"
       }
     }
-  ]
+  }
 }

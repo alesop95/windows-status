@@ -79,3 +79,56 @@ git push -u origin main
 
 > Per dettagli ufficiali e aggiornati su installazione/uso di Claude Code, fai riferimento alla
 > documentazione ufficiale Anthropic.
+
+## G. Server MCP a livello di account
+
+Claude Code supporta server MCP a due livelli distinti: *progetto* e *account*.
+
+Il livello *progetto* usa `.mcp.json` nella root del repo (versionato, attivo solo nelle
+sessioni aperte in quel progetto). Il livello *account* usa un file globale attivo in tutte le
+sessioni, indipendentemente dal progetto aperto.
+
+### Claude Code CLI
+
+Il file di configurazione account-level è `%USERPROFILE%\.claude-<nome-profilo>\mcp.json`.
+Su questa macchina sono presenti più profili Claude Code (uno per identità/account); ogni
+profilo ha il proprio `mcp.json` indipendente.
+
+Formato:
+```json
+{
+  "mcpServers": {
+    "<nome-server>": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "<pacchetto-npm>", "<percorso-1>", "<percorso-2>"]
+    }
+  }
+}
+```
+
+Nota: il file usa `mcpServers` come chiave radice (non `servers`). I percorsi nei `args` sono
+assoluti. Usare `cmd /c npx` su Windows anziché `npx` diretto, per evitare problemi di PATH.
+
+### App claude.ai desktop (Windows Store, MSIX)
+
+Il file di configurazione è separato da quello del CLI e si trova in:
+```
+%LOCALAPPDATA%\Packages\Claude_<id-pacchetto>\LocalCache\Roaming\Claude\claude_desktop_config.json
+```
+Il pacchetto MSIX ha un identificatore variabile (`Claude_pzs8sxrjxfjjc` su questa macchina).
+Il path esatto si trova cercando `claude_desktop_config.json` sotto `%LOCALAPPDATA%\Packages\`.
+
+L'app legge il file all'avvio. Modifiche al file diventano effettive solo dopo un riavvio
+completo, inclusa la chiusura dell'icona nel system tray. Il pulsante "Modifica configurazione"
+in Settings → Sviluppatore → Server MCP locali apre lo stesso file per la modifica; non esiste
+una UI con campi editabili separati.
+
+### Ripristino su macchina nuova
+
+Per ripristinare i server MCP account-level su una macchina diversa:
+1. Creare i file `mcp.json` nei profili Claude Code presenti in `%USERPROFILE%\.claude-<profilo>\`.
+2. Aggiornare `claude_desktop_config.json` prima di avviare la app claude.ai desktop.
+3. Verificare che i percorsi nei `args` esistano sulla nuova macchina prima del primo avvio.
+
+I server MCP account-level non vengono catturati dallo snapshot di questo progetto perché i
+file contengono percorsi specifici della macchina; vanno ricreati manualmente al ripristino.
