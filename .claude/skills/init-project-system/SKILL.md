@@ -73,7 +73,11 @@ Interpretazione dell'esito e azione:
    universale: `.claude-account1` corrisponde ad <email-account1> (default di VS Code e
    del comando `claude` nudo), `.claude-account2` corrisponde a <email-account2>. Su una
    macchina diversa cambiano i nomi utente e le associazioni: in tal caso riportare solo i
-   percorsi rilevati senza inventare le email.
+   percorsi rilevati senza inventare le email. Questa corrispondenza nome-account non e nemmeno
+   stabile nel tempo: al rinnovo di un token scaduto Claude puo ri-vincolare in modo silenzioso
+   una directory all'account attivo nel browser su claude.ai, quindi va verificata con `/status`
+   a inizio sessione e mai dedotta dal nome (meccanismo descritto in `git-identity-and-repo.md`,
+   sezione sul re-auth silenzioso).
 3. Se esiste un solo profilo, dichiarare quale account e in uso e proseguire al Passo 1.
 4. Se esistono piu profili, chiedere all'utente con quale account intende inizializzare il
    progetto, mostrando quello attualmente attivo. Se l'utente indica un account diverso da
