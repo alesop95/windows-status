@@ -73,12 +73,14 @@ servono. Il materiale sotto `_notes/` si apre solo per verificare un requisito o
 - `04_GIT_VERSIONAMENTO_MULTIACCOUNT.md` identità git multi-account
 - `05_QUICKSTART.md` guida rapida d'uso del tool
 - `06_RACCORDO_CHECKLIST_VA.md` come gli alert alimentano una checklist di remediation VA
+- `07_SALUTE_E_STABILITA.md` check di salute/stabilità (registro eventi: OOM, crash, BSOD, WHEA) e setup di monitoraggio
 
 ## Struttura
 - `docs/`     guide e mappa (tracciate; le copie compilate `*.compilata.md` restano locali)
 - `Avvia.ps1`  punto d'ingresso unico (menu) in radice: orchestra gli script di `scripts/`
 - `scripts/`  Snapshot-Stato.ps1, Compare-Snapshot.ps1, Allinea-BestPractice.ps1,
-              Genera-Report.ps1, Pianifica-Snapshot.ps1, Reinstall-Software.ps1
+              Genera-Report.ps1, Pianifica-Snapshot.ps1, Reinstall-Software.ps1,
+              Controlla-Salute.ps1 (salute/stabilità da registro eventi, vedi docs/07)
               (devono stare qui: ricavano la radice dalla cartella genitore)
 - `snapshots/` output datato (ignorato da git)
 - `_notes/`   livello privato e verboso (ignorato da git)

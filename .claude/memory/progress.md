@@ -6,6 +6,25 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-06-30 — Nuovo check di salute/stabilità da registro eventi (Controlla-Salute.ps1)
+
+Commit: (modifiche preparate, commit manuale dell'utente). Origine: incidente del 30/06 — tre app
+(Telegram/VS Code/Chrome) terminate in contemporanea per **esaurimento memoria/commit**, diagnosi
+ricostruita dal registro eventi (222 eventi ID 2004 dal 24 al 28/06, top consumatori node.exe +
+EPSecurityService + vmmemWSL; crash 30/06 con codici OOM `0xe0000008`/`0xc000012d`; 0 BSOD, 0 WHEA
+→ software, non hardware). GAP individuato: snapshot e Compare guardano la *configurazione*, nessuno
+guardava la *stabilità* (registro eventi). Aggiunto: (1) `scripts/Controlla-Salute.ps1` — check di
+SOLA LETTURA su memoria live, Resource-Exhaustion 2004, crash 1000 (con mappa codici OOM), hang
+1002, BSOD/Kernel-Power 41/6008, WHEA, corruzione NTFS/disk (escluso NTFS 98 informativo); verdetto
+ALERT/WARN; `-Installa`/`-Disinstalla` per task giornaliera SYSTEM (stesso pattern di
+Pianifica-Snapshot), output in `snapshots\salute_<data>\` (gitignored) con `-Retention`. (2)
+`docs/07_SALUTE_E_STABILITA.md` — check + setup (limite WSL2 .wslconfig, sorveglianza leak node,
+schedulazione, lettura del verdetto). (3) `Avvia.ps1` voci `2c` (check, sola lettura) e `7`
+(installa task). (4) `CLAUDE.md` elenco script/doc aggiornato. Diagnosi specifica della macchina in
+`_notes/salute-incidente-2026-06-30.md` (locale). Nessuna modifica al sistema: lo script è sola
+lettura; l'unica modifica (creazione task) la lancia l'utente ed è reversibile. Da chiarire con
+l'MSP: perché NinjaOne RMM non ha allertato sull'esaurimento memoria 24–28/06 (verificare soglie).
+
 ## 2026-06-15 — Retention snapshot + scope della task pianificata (snapshot esportabile schedulato)
 
 Commit: 9407b27 (modifiche preparate, commit manuale dell'utente). Obiettivo: una fotografia

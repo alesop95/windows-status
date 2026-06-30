@@ -30,11 +30,13 @@ $voci = @(
   @{ N='1'; Titolo='Fotografa lo stato (snapshot completo)';      Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Snapshot-Stato.ps1') } }
   @{ N='2'; Titolo='Confronta i due snapshot piu recenti';        Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Compare-Snapshot.ps1') } }
   @{ N='2b';Titolo='Genera report HTML dell''ultimo snapshot';     Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Genera-Report.ps1') } }
+  @{ N='2c';Titolo='Controlla salute e stabilita (registro eventi)'; Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Controlla-Salute.ps1') } }
   @{ N='3'; Titolo='Report baseline di sicurezza (divario)';      Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') } }
   @{ N='4'; Titolo='Applica baseline di sicurezza (guidato)';     Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') -Apply } }
   @{ N='5'; Titolo='Reinstalla software da winget export';        Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Reinstall-Software.ps1') } }
   @{ N='6'; Titolo='Snapshot periodico: stato';                   Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Pianifica-Snapshot.ps1') } }
   @{ N='6i';Titolo='Snapshot periodico: INSTALLA (attivita pianif.)'; Tipo='MODIFICA';      Azione={ & (Join-Path $scripts 'Pianifica-Snapshot.ps1') -Installa } }
+  @{ N='7'; Titolo='Check salute periodico: INSTALLA (attivita pianif.)'; Tipo='MODIFICA';  Azione={ & (Join-Path $scripts 'Controlla-Salute.ps1') -Installa } }
 )
 
 function Show-Menu {
