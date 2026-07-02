@@ -79,3 +79,30 @@ parentesi angolari; la mappatura reale vive solo in `CLAUDE.local.md`, ignorato 
 Motivazione: pubblicare la metodologia senza esporre identità personali e aziendali.
 Conseguenze: i `docs/` diventano tracciabili (si ignorano solo le copie `*.compilata.md`);
 prima di ogni push si verifica l'assenza di identificativi reali nei file tracciati.
+
+## ADR-007 — Drift di BitLocker tracciato via KeyProtectorId, mai la chiave
+
+Data: 2026-07-02
+Stato: accettata
+Contesto: BitLocker è stato attivato sulla macchina (workplace join, non Entra ID joined: la
+chiave non è quindi in escrow automatico in Entra ID). Serve accorgersi quando la chiave di
+ripristino viene rigenerata — disattivazione/riattivazione di BitLocker, sostituzione TPM
+dopo un cambio scheda madre, o un aggiornamento Windows che rompe la protezione, come già
+successo in passato — senza mai far transitare la chiave stessa per lo snapshot.
+Decisione: `Snapshot-Stato.ps1` esporta `sicurezza_bitlocker.csv` con, per ogni volume,
+`ProtectionStatus` e il `KeyProtectorId` di ogni protettore `RecoveryPassword` (un GUID che
+identifica il protettore, non la password). `Compare-Snapshot.ps1` confronta i GUID tra due
+snapshot: se cambiano segnala `[BITLOCKER] ... chiave RIGENERATA`, se la protezione passa da
+On a diverso da On segnala la disattivazione. La stessa modifica ha aggiunto la cattura
+dell'intera tabella delle partizioni (`hardware_partizioni.csv`, incluse quelle senza lettera
+come EFI/Recovery/MSR) e il relativo alert `[PARTIZIONI]`, per rendere visibili i cambi fatti
+con `diskpart` che il solo `Get-Volume` (lettere assegnate) non coglieva.
+Motivazione: il GUID del protettore è sufficiente a rilevare la rigenerazione ed è per
+costruzione non sensibile (non permette di sbloccare il volume), rispettando ADR-003 senza
+perdere la capacità di rilevamento.
+Conseguenze: ogni alert `[BITLOCKER]` di rigenerazione è il segnale operativo per verificare
+che l'escrow della chiave nuova (console RMM/MSP + copia USB offline, vedi mappa sez. 9) sia
+stato aggiornato; senza questo controllo un ripristino Veeam su disco nuovo potrebbe restare
+bloccato da una chiave vecchia non più valida. `Pianifica-Snapshot.ps1` supporta ora anche
+`-Frequenza Mensile`, cadenza scelta per intercettare questi eventi (rari, non giornalieri)
+senza accumulare snapshot inutili.

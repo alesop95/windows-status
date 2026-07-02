@@ -89,6 +89,25 @@ Get-Process node,Code,chrome -ErrorAction SilentlyContinue |
 Un dev server o un processo Electron lasciato attivo per giorni va riavviato; se il leak è
 in uno strumento, aggiornarlo.
 
+**Caso specifico di questa macchina: Claude Code stesso è un sospetto `node.exe`.** Ogni
+sessione avvia processo CLI e, per ogni server MCP configurato via `npx` (es. il filesystem
+server `obsidian-vaults` a livello account, vedi `CLAUDE.md` utente), uno o più `node.exe`
+figli che restano attivi finché la sessione è aperta. Sessioni lunghe non chiuse, o più
+account/istanze in parallelo (`.claude-account1`/`.claude-account2`), moltiplicano questi
+processi. Per distinguerli dagli altri `node.exe` (dev server, altri tool) risali al genitore:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+  Select-Object ProcessId, ParentProcessId,
+    @{n='Genitore';e={(Get-Process -Id $_.ParentProcessId -ErrorAction SilentlyContinue).ProcessName}},
+    @{n='WS_MB';e={[math]::Round((Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue).WS/1MB)}},
+    CommandLine
+```
+
+Se il genitore è `claude` e la riga di comando cita un server MCP, quel `node.exe` è
+un'istanza dell'MCP e va tenuto d'occhio come le altre: chiuderla insieme alla sessione che
+non serve più, non lasciarla appesa tra un lancio e l'altro di Claude Code.
+
 ---
 
 ## 3. Come leggere il verdetto

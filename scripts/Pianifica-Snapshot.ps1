@@ -18,6 +18,7 @@
    .\Pianifica-Snapshot.ps1 -Installa                        # settimanale, lunedi 12:30 (admin)
    .\Pianifica-Snapshot.ps1 -Installa -Frequenza Giornaliera -Ora 13:00
    .\Pianifica-Snapshot.ps1 -Installa -Frequenza Giornaliera -Ora 13:00 -Retention 14
+   .\Pianifica-Snapshot.ps1 -Installa -Frequenza Mensile -GiornoMese 1 -Ora 09:00
    .\Pianifica-Snapshot.ps1 -Disinstalla                     # rimuove l'attivita (admin)
 
  NOTA
@@ -29,8 +30,10 @@
 param(
     [switch]$Installa,
     [switch]$Disinstalla,
-    [ValidateSet('Settimanale','Giornaliera')][string]$Frequenza='Settimanale',
+    [ValidateSet('Settimanale','Giornaliera','Mensile')][string]$Frequenza='Settimanale',
     [string]$Ora='12:30',
+    # Giorno del mese per -Frequenza Mensile (1-28, per restare valido su tutti i mesi)
+    [ValidateRange(1,28)][int]$GiornoMese=1,
     # Quanti snapshot piu recenti conservare ad ogni esecuzione (0 = tieni tutto).
     [int]$Retention=7
 )
@@ -73,12 +76,17 @@ if($Installa){
         # le fotografie automatiche omogenee. -Retention applica la pulizia ad ogni run.
         $argSnap = "-NoProfile -ExecutionPolicy Bypass -File `"$snap`" -Scope Machine -Retention $Retention"
         $action  = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $argSnap
-        $trigger = if($Frequenza -eq 'Giornaliera'){ New-ScheduledTaskTrigger -Daily -At $Ora } else { New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At $Ora }
+        $trigger = switch($Frequenza){
+            'Giornaliera' { New-ScheduledTaskTrigger -Daily -At $Ora }
+            'Mensile'     { New-ScheduledTaskTrigger -Monthly -DaysOfMonth $GiornoMese -At $Ora -Months @(1..12) }
+            default       { New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At $Ora }
+        }
         $princ   = New-ScheduledTaskPrincipal -UserId 'S-1-5-18' -LogonType ServiceAccount -RunLevel Highest
         $set     = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) -MultipleInstances IgnoreNew
         Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $princ -Settings $set `
             -Description 'Snapshot periodico di windows-status (sola lettura) per il rilevamento del drift. Reversibile: Pianifica-Snapshot.ps1 -Disinstalla.' -Force | Out-Null
-        Write-Host "Attivita '$taskName' INSTALLATA ($Frequenza, ore $Ora, come SYSTEM, -Scope Machine, retention $Retention)." -ForegroundColor Green
+        $freqLabel = if($Frequenza -eq 'Mensile'){ "$Frequenza, giorno $GiornoMese, ore $Ora" } else { "$Frequenza, ore $Ora" }
+        Write-Host "Attivita '$taskName' INSTALLATA ($freqLabel, come SYSTEM, -Scope Machine, retention $Retention)." -ForegroundColor Green
         Write-Host 'Reversibile con: .\Pianifica-Snapshot.ps1 -Disinstalla'
         Write-Host "Gli snapshot vanno in snapshots\ (ignorata da git); la retention tiene gli ultimi $Retention."
     } catch { Write-Host "Errore nella creazione dell'attivita: $_" -ForegroundColor Red }
