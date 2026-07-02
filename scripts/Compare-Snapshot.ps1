@@ -299,6 +299,52 @@ if($null -ne $qo -and $null -ne $qn){
     foreach($s in $qn){ if($s.Name -notin @($qo.Name)){ Add-Alert 'SERVIZI' "nuovo servizio con percorso non quotato: $($s.Name) -> $($s.PathName)" } }
 }
 
+# 15. BitLocker: protezione disattivata, e rigenerazione della chiave (KeyProtectorId cambiato).
+#     Il CSV non contiene mai la chiave: solo il GUID del protettore, sufficiente per il diff.
+$blo = Load-Csv $Old 'sicurezza_bitlocker.csv'; $bln = Load-Csv $New 'sicurezza_bitlocker.csv'
+if($null -ne $blo -and $null -ne $bln){
+    $oldByMount=@{}; $blo | Group-Object MountPoint | ForEach-Object { $oldByMount[$_.Name]=$_.Group }
+    $newByMount=@{}; $bln | Group-Object MountPoint | ForEach-Object { $newByMount[$_.Name]=$_.Group }
+    foreach($mp in $newByMount.Keys){
+        $rowsN = $newByMount[$mp]; $statusN = ($rowsN | Select-Object -First 1).ProtectionStatus
+        if($oldByMount.ContainsKey($mp)){
+            $rowsO = $oldByMount[$mp]; $statusO = ($rowsO | Select-Object -First 1).ProtectionStatus
+            if($statusO -eq 'On' -and $statusN -ne 'On'){ Add-Alert 'BITLOCKER' "$mp : protezione DISATTIVATA ($statusO -> $statusN)" }
+            $idsO = @($rowsO | Where-Object KeyProtectorType -eq 'RecoveryPassword' | ForEach-Object { $_.KeyProtectorId } | Where-Object { $_ } | Sort-Object)
+            $idsN = @($rowsN | Where-Object KeyProtectorType -eq 'RecoveryPassword' | ForEach-Object { $_.KeyProtectorId } | Where-Object { $_ } | Sort-Object)
+            if($idsO.Count -gt 0 -and $idsN.Count -gt 0 -and @(Compare-Object $idsO $idsN).Count -gt 0){
+                Add-Alert 'BITLOCKER' "$mp : chiave di ripristino RIGENERATA (KeyProtectorId cambiato) - verifica che il backup/escrow della nuova chiave sia aggiornato"
+            }
+        } else {
+            Add-Alert 'BITLOCKER' "$mp : nuovo volume cifrato con BitLocker (protezione=$statusN)"
+        }
+    }
+    foreach($mp in $oldByMount.Keys){
+        if(-not $newByMount.ContainsKey($mp)){ Add-Alert 'BITLOCKER' "$mp : volume BitLocker non piu presente (rimosso o lettera cambiata)" }
+    }
+}
+
+# 16. Partizioni: nuove, rimosse o ridimensionate (rileva i cambi fatti con diskpart)
+$pto = Load-Csv $Old 'hardware_partizioni.csv'; $ptn = Load-Csv $New 'hardware_partizioni.csv'
+if($null -ne $pto -and $null -ne $ptn){
+    $keyOf = { "$($_.Disco)|$($_.Partizione)" }
+    $oldBy=@{}; $pto | ForEach-Object { $oldBy[(& $keyOf $_)]=$_ }
+    $newBy=@{}; $ptn | ForEach-Object { $newBy[(& $keyOf $_)]=$_ }
+    foreach($k in $newBy.Keys){
+        $n=$newBy[$k]
+        if(-not $oldBy.ContainsKey($k)){
+            Add-Alert 'PARTIZIONI' "nuova partizione: disco $($n.Disco) #$($n.Partizione) $($n.GB)GB lettera=$($n.Lettera) tipo=$($n.Tipo)"
+        } else {
+            $o=$oldBy[$k]
+            if($o.Lettera -ne $n.Lettera){ Add-Alert 'PARTIZIONI' "disco $($n.Disco) #$($n.Partizione): lettera cambiata $($o.Lettera) -> $($n.Lettera)" }
+            if($o.GB -ne $n.GB){ Add-Alert 'PARTIZIONI' "disco $($n.Disco) #$($n.Partizione) ($($n.Lettera)): dimensione cambiata $($o.GB)GB -> $($n.GB)GB" }
+        }
+    }
+    foreach($k in $oldBy.Keys){
+        if(-not $newBy.ContainsKey($k)){ $o=$oldBy[$k]; Add-Alert 'PARTIZIONI' "partizione rimossa: disco $($o.Disco) #$($o.Partizione) (era $($o.GB)GB, lettera=$($o.Lettera))" }
+    }
+}
+
 Write-Host ''
 Write-Host '=== ALERT DI SICUREZZA ===' -ForegroundColor Yellow
 if($alerts.Count -eq 0){

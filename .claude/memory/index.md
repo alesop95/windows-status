@@ -8,25 +8,27 @@
 
 ```
 Branch attivo:        main
-Commit di riferimento: 9407b27
-Data snapshot:        2026-06-15
+Commit di riferimento: d98a77d
+Data snapshot:        2026-07-02
 ```
 
 Working tree con modifiche preparate, non committate: vedi work-log (`progress.md`) per il
-dettaglio dell'ultima tornata. Il commit è manuale dell'utente; al commit successivo portare i
-`last-verified-commit` al nuovo HEAD (skill `sync-context`). La mappa compilata
-`docs/01_MAPPA_CONFIGURAZIONE.compilata.md` e `baseline-eccezioni.json` sono locali (ignorati).
+dettaglio dell'ultima tornata (BitLocker + partizioni diskpart, 2026-07-02). Il commit è manuale
+dell'utente; al commit successivo portare i `last-verified-commit` al nuovo HEAD (skill
+`sync-context`). La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` e
+`baseline-eccezioni.json` sono locali (ignorati) — non ancora aggiornata con lo stato reale di
+BitLocker/partizioni: va ricompilata dopo il prossimo snapshot admin.
 
 ## Stato di verifica delle schede
 
 | Scheda | last-verified | Stato |
 |---|---|---|
-| STACK.md | 9407b27 | aggiornata (descrive il working tree, commit in attesa) |
-| design-and-security.md | 9407b27 | aggiornata |
-| deployment.md | 9407b27 | aggiornata |
-| dev-testing.md | 9407b27 | aggiornata |
-| current-work.md | 9407b27 | aggiornata |
-| roadmap.md | 9407b27 | aggiornata |
+| STACK.md | d98a77d | aggiornata (riconciliato anche il gap storico di Controlla-Salute.ps1; descrive pure il lavoro in corso non committato su BitLocker/partizioni — bump di nuovo al prossimo commit) |
+| design-and-security.md | d98a77d | aggiornata (corretto join type errato Entra ID→workplace join; aggiunto ADR-007 BitLocker; descrive pure il lavoro in corso non committato) |
+| deployment.md | 9407b27 | da riverificare (non toccata in questa sessione, drift committato non escluso) |
+| dev-testing.md | 9407b27 | da riverificare (non toccata in questa sessione, drift committato non escluso) |
+| current-work.md | 9407b27 | da riverificare (non toccata in questa sessione, drift committato non escluso) |
+| roadmap.md | 9407b27 | da riverificare (non toccata in questa sessione, drift committato non escluso) |
 
 ## Capacità dello strumento (sintesi)
 
@@ -64,6 +66,23 @@ manteniamo il paracadute (Veeam + restore point) e VERIFICHIAMO dopo (snapshot P
 + chiave in console + copia USB). Volumi decisi al momento (probabile prima C:).
 Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job
 Veeam in mappa, policy TurnOffWindowsCopilot opzionale.
+
+**AGGIORNAMENTO 2026-07-02: BitLocker risulta ATTIVATO e le partizioni sono state modificate con
+`diskpart`.** Codice pronto (vedi ADR-007, work-log): `sicurezza_bitlocker.csv` (KeyProtectorId,
+mai la chiave) e `hardware_partizioni.csv`/`hardware_dischi_tabella.csv` in `Snapshot-Stato.ps1`,
+alert `[BITLOCKER]`/`[PARTIZIONI]` in `Compare-Snapshot.ps1`, `-Frequenza Mensile` in
+`Pianifica-Snapshot.ps1`. Verificato con parse-check + uno snapshot di prova non-admin (partizioni
+confermate: 4 dischi, incluse EFI/Recovery/MSR). DA FARE, pendente conferma utente (non inventato):
+(1) come sia stato attivato BitLocker — se dal MSP via NinjaOne come da piano sopra, o manualmente;
+(2) dove sia oggi la copia reale della chiave di ripristino (console RMM/MSP + USB come da piano, o
+altro) — la macchina è *workplace join*, quindi NON in Entra ID di default (corretto anche in
+docs/01 sez. 9 e docs/02, che assumevano erroneamente Entra ID); (3) un run **admin** di
+`Snapshot-Stato.ps1` per popolare `sicurezza_bitlocker.csv` con lo stato reale (la task pianificata
+giornaliera, se installata, gira già come SYSTEM e lo farà da sola al prossimo giro); (4) compilare
+`01_MAPPA_CONFIGURAZIONE.compilata.md` (locale) con la risposta a (1)/(2); (5) valutare se
+installare/passare a `-Frequenza Mensile` per intercettare rigenerazioni rare della chiave, oppure
+tenere la cadenza giornaliera già in essere (la rigenerazione verrebbe comunque rilevata al primo
+Compare utile, la cadenza mensile serve solo a non accumulare snapshot fra un evento raro e l'altro).
 
 Snapshot esportabile schedulato (codice pronto, commit manuale): `Snapshot-Stato.ps1` ora ha
 `-Retention <int>` (0 = tieni tutto, default sui lanci manuali) e `Pianifica-Snapshot.ps1` installa

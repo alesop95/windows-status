@@ -139,6 +139,19 @@ if($doMachine){
           Select-Object DriveLetter, FileSystemType, @{n='GB';e={[math]::Round($_.Size/1GB,1)}}, @{n='LiberiGB';e={[math]::Round($_.SizeRemaining/1GB,1)}}, HealthStatus |
           Export-Csv (Join-Path $outDir 'hardware_volumi.csv') -NoTypeInformation -Encoding UTF8
   } catch {}
+  # Partizioni (tutte, incluse quelle senza lettera: EFI/Recovery/MSR) - cattura anche i cambi fatti con diskpart
+  try {
+      $parts = @(Get-Partition -ErrorAction SilentlyContinue | ForEach-Object {
+          [pscustomobject]@{
+              Disco=$_.DiskNumber; Partizione=$_.PartitionNumber; Lettera=$_.DriveLetter; Tipo=$_.Type
+              GB=[math]::Round($_.Size/1GB,1); Boot=$_.IsBoot; Sistema=$_.IsSystem; Nascosta=$_.IsHidden
+              OffsetMB=[math]::Round($_.Offset/1MB,0)
+          } })
+      $parts | Sort-Object Disco,Partizione | Export-Csv (Join-Path $outDir 'hardware_partizioni.csv') -NoTypeInformation -Encoding UTF8
+      $diskInfo = @(Get-Disk -ErrorAction SilentlyContinue | Select-Object Number, @{n='StileTabella';e={$_.PartitionStyle}}, @{n='GB';e={[math]::Round($_.Size/1GB,1)}}, @{n='SpazioNonAllocatoGB';e={[math]::Round(($_.LargestFreeExtent)/1GB,1)}})
+      $diskInfo | Export-Csv (Join-Path $outDir 'hardware_dischi_tabella.csv') -NoTypeInformation -Encoding UTF8
+      if($parts){ Add-Hw 'Partizioni' "$(@($parts).Count) partizioni su $(@($diskInfo).Count) dischi (hardware_partizioni.csv, hardware_dischi_tabella.csv)" }
+  } catch {}
   # USB: controller (la versione nel nome indica la classe di velocita) + dispositivi presenti
   try {
       Get-CimInstance Win32_USBController -ErrorAction SilentlyContinue | Select-Object Name, Manufacturer |
@@ -436,11 +449,28 @@ if($doMachine){
   } catch { Add-Sum "Proxy/DoH non leggibili: $_" }
   try {
       Add-Sum 'BitLocker:'
-      Get-BitLockerVolume -ErrorAction Stop | ForEach-Object {
+      $blv = @(Get-BitLockerVolume -ErrorAction Stop)
+      $blv | ForEach-Object {
           Add-Sum "  $($_.MountPoint)  Protezione=$($_.ProtectionStatus)  $($_.EncryptionPercentage)%  $($_.KeyProtector.KeyProtectorType -join ',')"
       }
-      Add-Sum '  >> Su PC Entra ID joined la chiave di ripristino e di norma in Entra ID (entra.microsoft.com / account utente).'
-      Add-Sum '  >> La chiave NON viene salvata qui: nella mappa annota solo DOVE recuperarla.'
+      Add-Sum '  >> Macchina NON Entra ID joined (workplace join): la chiave NON e in Entra ID di default.'
+      Add-Sum '  >> La chiave NON viene salvata qui, ne il KeyProtectorId e un segreto: e solo un GUID che identifica'
+      Add-Sum '     il protettore, usato dal Compare per accorgersi se la chiave e stata rigenerata.'
+      # CSV diffabile: include il KeyProtectorId (GUID, NON la password di recupero) per rilevare
+      # rigenerazioni della chiave (disattiva/riattiva BitLocker, cambio TPM, update Windows che la rompe)
+      # senza mai maneggiare il segreto.
+      $blRows = @()
+      foreach($v in $blv){
+          $rp = @($v.KeyProtector | Where-Object KeyProtectorType -eq 'RecoveryPassword')
+          if($rp.Count -eq 0){
+              $blRows += [pscustomobject]@{ MountPoint=$v.MountPoint; ProtectionStatus=$v.ProtectionStatus; EncryptionMethod=$v.EncryptionMethod; EncryptionPercentage=$v.EncryptionPercentage; KeyProtectorType=($v.KeyProtector.KeyProtectorType -join ','); KeyProtectorId='' }
+          } else {
+              foreach($p in $rp){
+                  $blRows += [pscustomobject]@{ MountPoint=$v.MountPoint; ProtectionStatus=$v.ProtectionStatus; EncryptionMethod=$v.EncryptionMethod; EncryptionPercentage=$v.EncryptionPercentage; KeyProtectorType=$p.KeyProtectorType; KeyProtectorId=$p.KeyProtectorId }
+              }
+          }
+      }
+      $blRows | Export-Csv (Join-Path $outDir 'sicurezza_bitlocker.csv') -NoTypeInformation -Encoding UTF8
   } catch { Add-Sum "Stato BitLocker non leggibile (serve admin): $_" }
 
   # --- Postura hardware/OS: Secure Boot, TPM, VBS, LSA, UAC, SMB, RDP, WinRM, patch ---

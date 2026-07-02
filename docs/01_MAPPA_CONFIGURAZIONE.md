@@ -25,6 +25,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Scheda madre / BIOS      | `__________` (da `hardware_inventario.txt`) |
 | RAM (banchi / totale)    | `__________` (da `hardware_ram.csv`)   |
 | Dischi (tipo/bus/salute) | `__________` (da `hardware_dischi.csv`) |
+| Tabella partizioni (stile GPT/MBR, per disco) | `__________` (da `hardware_dischi_tabella.csv`, `hardware_partizioni.csv`; include le partizioni senza lettera come EFI/Recovery/MSR) |
 | USB (controller / dispositivi / dischi di massa) | `__________` (da `hardware_usb_*.csv`) |
 | Rete (adattatori / link) | `__________` (da `hardware_rete_adattatori.csv`) |
 | Monitor collegati        | `__________` (da `hardware_monitor.csv`) |
@@ -142,8 +143,9 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | ------------------------------------------ | ------------------------------------------------------ |
 | Microsoft Defender                         | `Attivo / ___`                                         |
 | Firewall                                   | `__________`                                           |
-| BitLocker                                  | `Attivo/Disattivo` + tipo protezione                   |
-| **Chiave di ripristino BitLocker -  dove** | `Entra ID (entra.microsoft.com) / ___` (NON la chiave) |
+| BitLocker (per volume)                     | `Attivo/Disattivo` + % cifratura + tipo protezione (da `sicurezza_bitlocker.csv`) |
+| **Chiave di ripristino BitLocker -  dove** | `__________` ✍️ (NON la chiave; su macchina solo *workplace join*, non Entra ID joined, la chiave NON è in Entra ID di default — verificare escrow reale: console MDM/RMM, USB offline, cartaceo) |
+| BitLocker - rilevamento rigenerazione chiave | Il Compare segnala da solo se il `KeyProtectorId` (un GUID, mai la password) cambia tra due snapshot: succede quando si disattiva/riattiva BitLocker, cambia il TPM, o un aggiornamento Windows rompe la protezione. Ogni alert `[BITLOCKER]` di rigenerazione è il segnale per aggiornare l'escrow con la chiave nuova. |
 | Secure Boot / TPM                          | `__________` (serve snapshot da admin)                 |
 | VBS / Credential Guard / HVCI              | `__________`                                           |
 | LSA RunAsPPL / UAC                         | `__________`                                           |

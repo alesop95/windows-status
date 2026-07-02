@@ -135,9 +135,15 @@ del produttore della nuova scheda madre, e usare `driver_terze_parti.csv` come c
 - **L'identità del dispositivo in Entra ID è legata all'hardware/TPM:** dopo un ripristino su un PC
   diverso il join può non corrispondere più. Probabile **ri-registrazione/ri-join** del dispositivo
   in Entra ID (e nuova conformità Intune). Pianificalo: non è un errore, è normale su hardware nuovo.
-- Se i dischi usano **BitLocker**, la **chiave di ripristino** dei dispositivi Entra ID è di norma
-  **archiviata in Entra ID**: la recuperi da `entra.microsoft.com` (admin) o dall'account utente.
-  Verifica *prima* di averne bisogno che sia effettivamente lì.
+- Se i dischi usano **BitLocker**, dove recuperare la **chiave di ripristino** dipende dal tipo di
+  *join*: su un dispositivo **Entra ID joined** è di norma **archiviata in Entra ID**
+  (`entra.microsoft.com`, admin o account utente). Su un dispositivo solo **workplace join** (come
+  questa macchina, vedi `CLAUDE.md`) **non** c'è escrow automatico in Entra ID: la chiave sta dove
+  l'ha messa chi ha attivato BitLocker — tipicamente la console del RMM/MSP che gestisce la
+  macchina, più una copia offline (USB in cassaforte) come *break-glass*. Annota il DOVE reale
+  nella mappa (sez. 9), mai la chiave. Verifica *prima* di averne bisogno che sia effettivamente
+  recuperabile: senza quella chiave il ripristino Veeam riporta l'immagine sul disco nuovo ma il
+  volume resta bloccato al primo avvio.
 
 ---
 

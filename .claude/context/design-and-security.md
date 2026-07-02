@@ -5,7 +5,7 @@ generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
   - .gitignore
-last-verified-commit: 9407b27
+last-verified-commit: d98a77d
 ---
 
 # Design e sicurezza applicativa
@@ -31,9 +31,24 @@ documenti (`docs/*.compilata.md`). Terzo, la verifica umana prima di ogni push, 
 repository è pubblico (ADR-006): i file tracciati restano anonimi, i valori reali vivono in
 `CLAUDE.local.md`.
 
-Vincolo di piattaforma: la macchina è Entra ID joined e gestita. Gli script leggono lo stato di
-Defender, Intune e BitLocker ma il progetto non li modifica mai senza ordine esplicito; la
-telemetria non si azzera perché Intune la usa per la conformità (paletti in `CLAUDE.md`).
+Vincolo di piattaforma: la macchina è registrata al tenant in modalità *workplace join*, non
+Entra ID joined né gestita da Intune (verificato dallo snapshot, vedi `CLAUDE.md`). Gli script
+leggono lo stato di Defender e BitLocker ma il progetto non li modifica mai senza ordine
+esplicito; la telemetria non si azzera per prudenza, in previsione di un eventuale futuro
+ingresso in Entra ID/Intune (paletti in `CLAUDE.md`). Conseguenza diretta per BitLocker: non
+essendoci Entra ID, la chiave di ripristino non ha un escrow automatico di piattaforma, quindi
+va custodita altrove (console RMM/MSP, copia offline) e annotata solo come *dove* nella mappa,
+mai come valore.
+
+Quarto livello, specifico per BitLocker (ADR-007): lo snapshot non tratta mai la chiave di
+ripristino come dato da fotografare, nemmeno oscurata. Cattura invece il `KeyProtectorId` del
+protettore `RecoveryPassword`, un GUID che identifica il protettore senza permettere di
+sbloccare nulla, e lo confronta tra due fotografie: un GUID diverso è il segnale di una
+rigenerazione (disattivazione/riattivazione, cambio TPM, aggiornamento Windows che rompe la
+protezione) da far seguire da una verifica dell'escrow. La stessa fotografia estende la
+copertura hardware alla tabella delle partizioni intera (`Get-Partition`/`Get-Disk`, incluse le
+partizioni senza lettera come EFI/Recovery/MSR), altrimenti un intervento con `diskpart` che non
+cambia le lettere assegnate passerebbe inosservato.
 
 Avvertenza operativa per gli strumenti di ricerca: ripgrep e gli strumenti che rispettano il
 `.gitignore` saltano i file ignorati, quindi una scansione di sicurezza su cartelle ignorate va

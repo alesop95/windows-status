@@ -4,7 +4,7 @@ generated-from-branch: main
 generated-date: 2026-06-10
 covers-paths:
   - scripts/*.ps1
-last-verified-commit: 9407b27
+last-verified-commit: d98a77d
 ---
 
 # Stack applicativo
@@ -13,12 +13,12 @@ last-verified-commit: 9407b27
 
 ## Stack e runtime
 
-Il progetto è interamente in Windows PowerShell 5.1, senza dipendenze esterne: quattro script
+Il progetto è interamente in Windows PowerShell 5.1, senza dipendenze esterne: sette script
 sotto `scripts/` più il launcher `Avvia.ps1` in radice, pensati per Windows 11 in lingua
 italiana. `Avvia.ps1` è il punto d'ingresso standardizzato (menu) che orchestra gli script e
-funziona identico clonando la repo su qualsiasi macchina; non ha logica propria. Sei script in
+funziona identico clonando la repo su qualsiasi macchina; non ha logica propria. Sette script in
 `scripts/`: Snapshot-Stato, Compare-Snapshot, Allinea-BestPractice, Genera-Report,
-Pianifica-Snapshot, Reinstall-Software. Lo snapshot
+Pianifica-Snapshot, Reinstall-Software, Controlla-Salute. Lo snapshot
 completo richiede una shell elevata (amministratore) per leggere i profili altrui, BitLocker e
 Defender; l'inventario software usa `winget` quando presente e ripiega sul registro quando
 manca. Non c'è build, non c'è gestore di pacchetti: si clona e si esegue.
@@ -34,7 +34,10 @@ quando una scelta del genere emerge.
 fotografia di sola lettura, organizzata in tre parti governate dal parametro `-Scope`
 (`All`, `Machine`, `User`). La parte macchina copre identità, join Entra ID e inventario
 hardware (sezione 1: scheda madre, BIOS/UEFI, GPU, banchi RAM, dischi fisici con tipo/bus/salute
-SMART, volumi, controller e dispositivi USB con i dischi di massa, adattatori di rete con
+SMART, volumi, tabella delle partizioni per disco (`hardware_partizioni.csv`: tutte le
+partizioni incluse quelle senza lettera come EFI/Recovery/MSR, stile GPT/MBR in
+`hardware_dischi_tabella.csv` — pensata per rendere visibile un cambio fatto con `diskpart`),
+controller e dispositivi USB con i dischi di massa, adattatori di rete con
 velocità di link, monitor — tutto in `hardware_*.csv` diffabili),
 account, sessioni e membri di Administrators (2), configurazioni macchina (3) inclusa la licenza /
 attivazione Windows (edizione, canale Retail/OEM/Volume, stato, tipo licenza — `licenza_windows.txt/.csv`
@@ -42,7 +45,9 @@ attivazione Windows (edizione, canale Retail/OEM/Volume, stato, tipo licenza —
 (`readiness.txt`: riavvio in sospeso, uptime/ultimo avvio, ultimo update installato, modalità
 Defender e ultime scansioni/firme AV — con alert READINESS nel Compare al comparire di un riavvio in sospeso), configurazioni di macchina (3), software da
 winget (con export riproducibile all'ultima versione, lista aggiornabili), registro e Appx (4), servizi (5), avvio e attività pianificate (6), rete e firewall (7),
-sicurezza (8: Defender e AV registrati, BitLocker, postura hardware/OS, esclusioni e ASR,
+sicurezza (8: Defender e AV registrati, BitLocker per volume con `KeyProtectorId` del
+protettore `RecoveryPassword` in `sicurezza_bitlocker.csv` — un GUID, mai la chiave, che serve
+solo a far accorgere il Compare di una rigenerazione — postura hardware/OS, esclusioni e ASR,
 auditpol, logging PowerShell, secedit, regole firewall inbound, catena di fiducia con root CA,
 Trusted Publishers, hosts, proxy e DoH), rilevamento Veeam (9), superficie d'attacco e
 persistenza (10): porte TCP/UDP in ascolto con processo proprietario, autoruns profondi
@@ -79,7 +84,12 @@ servizi con percorso non quotato comparsi, e variazioni hardware (nuovo disco �
 specifica se è un disco USB di massa, salute SMART non ottimale, cambio di RAM totale, dischi e
 dispositivi USB aggiunti/rimossi), e cambi di licenza/attivazione Windows (categoria LICENZA:
 stato attivazione o canale cambiati), e nuove ACL deboli gravi su cartelle sensibili o nel PATH
-(categoria ACL). Avvisa se i due snapshot hanno privilegi diversi.
+(categoria ACL). Categoria BITLOCKER: protezione disattivata su un volume, chiave di ripristino
+rigenerata (diff del `KeyProtectorId` tra i due snapshot, mai la chiave stessa), volume cifrato
+comparso o sparito. Categoria PARTIZIONI: partizione nuova, rimossa, ridimensionata o con
+lettera cambiata, dal confronto di `hardware_partizioni.csv` — è la categoria che rende visibile
+un intervento con `diskpart` anche quando non tocca lettere di unità già assegnate. Avvisa se i
+due snapshot hanno privilegi diversi.
 Se un CSV manca in uno dei due snapshot la categoria viene saltata senza errori. Vincolo di codifica: gli script vanno salvati in UTF-8 con BOM, perché Windows
 PowerShell 5.1 interpreta l'UTF-8 senza BOM come ANSI e i caratteri tipografici nelle stringhe
 spezzano il parsing.
@@ -113,9 +123,20 @@ autoconsistente (CSS inline, sezioni navigabili, righe d'attenzione evidenziate)
 scrive solo dentro la cartella snapshot (ignorata da git). Avvertenza di codifica/PS: NON
 chiamare una funzione `H` (collide con l'alias `h`=Get-History); qui si usa `Esc` per l'HTML-encode.
 
+`scripts/Controlla-Salute.ps1` guarda una dimensione diversa dallo snapshot: non la
+configurazione ma la *stabilità*, leggendo il registro eventi in sola lettura (memoria live e
+top processi, esaurimento memoria/commit `Resource-Exhaustion-Detector` ID 2004, crash
+applicativi ID 1000 con mappa dei codici OOM ricorrenti, hang ID 1002, BSOD/spegnimenti
+imprevisti Kernel-Power 41/6008, errori hardware WHEA, corruzione NTFS/disco esclusi gli eventi
+informativi) e produce un verdetto ALERT/WARN in `snapshots/salute_<data>/SUMMARY.txt`.
+`-Installa`/`-Disinstalla` gestiscono una task giornaliera SYSTEM con lo stesso pattern di
+Pianifica-Snapshot; `-Retention` tiene solo gli ultimi N report.
+
 `scripts/Pianifica-Snapshot.ps1` gestisce lo snapshot periodico opt-in: di default mostra solo lo
 stato (read-only); `-Installa` crea un'attività pianificata (admin) che esegue lo snapshot come
-SYSTEM a intervalli (settimanale/giornaliero) per il rilevamento del drift nel tempo;
+SYSTEM a intervalli (`-Frequenza Settimanale/Giornaliera/Mensile`, quest'ultima con
+`-GiornoMese 1-28` — cadenza pensata per eventi rari come una rigenerazione della chiave
+BitLocker, senza accumulare snapshot inutili) per il rilevamento del drift nel tempo;
 `-Disinstalla` la rimuove. L'unica modifica al sistema è la creazione/rimozione dell'attività. La
 task gira con `-Scope Machine`, perché da SYSTEM la sezione 13 (ambiente live dell'account) sarebbe
 quella di SYSTEM e falserebbe i diff, mentre Machine copre le sezioni 1-12 incluso l'inventario

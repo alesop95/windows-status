@@ -6,6 +6,35 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-02 — BitLocker attivato + partizioni modificate con diskpart: snapshot esteso
+
+Commit: (modifiche preparate, commit manuale dell'utente). Contesto: BitLocker è stato attivato
+sulla macchina e le partizioni sono state modificate con `diskpart`; nessuno dei due cambi era
+prima catturato in modo diffabile dallo snapshot (BitLocker solo come testo in SUMMARY.txt senza
+identificativo stabile, partizioni solo via `Get-Volume`/lettera che non vede EFI/Recovery/MSR né
+i ridimensionamenti). Vedi ADR-007 per il dettaglio della decisione. Aggiunto: (1)
+`Snapshot-Stato.ps1` — `sicurezza_bitlocker.csv` (per volume: ProtectionStatus, EncryptionMethod,
+%, KeyProtectorId dei protettori RecoveryPassword — MAI la chiave); `hardware_partizioni.csv` +
+`hardware_dischi_tabella.csv` via `Get-Partition`/`Get-Disk` (tutte le partizioni, stile GPT/MBR).
+(2) `Compare-Snapshot.ps1` — categorie `[BITLOCKER]` (protezione disattivata, chiave rigenerata via
+diff dei KeyProtectorId, volume nuovo/rimosso) e `[PARTIZIONI]` (nuova/rimossa/ridimensionata/
+lettera cambiata). (3) `Pianifica-Snapshot.ps1` — `-Frequenza Mensile -GiornoMese <1-28>`, cadenza
+adatta a eventi rari come la rigenerazione della chiave. (4) `docs/01_MAPPA_CONFIGURAZIONE.md` —
+riga partizioni in sez. 1, righe BitLocker aggiornate in sez. 9 correggendo l'assunzione errata di
+escrow in Entra ID (la macchina è *workplace join*, non Entra ID joined: nessun escrow automatico,
+verificato contro `CLAUDE.md`). (5) `docs/02_VEEAM_BACKUP_PORTABILITA.md` — stessa correzione nella
+sezione ripristino, con indicazione di annotare il DOVE reale (RMM/MSP + USB offline). (6)
+`docs/07_SALUTE_E_STABILITA.md` sez. 2c — nota specifica: Claude Code stesso genera `node.exe`
+(CLI + server MCP via `npx`, es. `obsidian-vaults`) che sono sospetti legittimi in caso di OOM
+ricorrente; comando per risalire al genitore (`claude`) via `Win32_Process`. Verificato: le tre
+modifiche PowerShell superano il parse-check; uno snapshot di prova non-admin ha confermato la
+cattura corretta di `hardware_partizioni.csv`/`hardware_dischi_tabella.csv` (4 dischi, partizioni
+nascoste incluse) — `sicurezza_bitlocker.csv` richiede admin e sarà popolato dal prossimo run della
+task pianificata giornaliera (gira come SYSTEM) o da un run manuale elevato. PENDENTE (da chiarire
+con l'utente, non inventato): come sia stato attivato BitLocker (MSP/NinjaOne come da piano
+2026-06-15, o manuale) e dove sia oggi la copia reale della chiave — da compilare in
+`01_MAPPA_CONFIGURAZIONE.compilata.md` (locale) una volta confermato, non nel file tracciato.
+
 ## 2026-06-30 — Nuovo check di salute/stabilità da registro eventi (Controlla-Salute.ps1)
 
 Commit: (modifiche preparate, commit manuale dell'utente). Origine: incidente del 30/06 — tre app
