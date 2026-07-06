@@ -71,7 +71,8 @@ Interpretazione dell'esito e azione:
 2. Identificare l'account attivo in questa sessione dal valore di `$env:CLAUDE_CONFIG_DIR` di
    processo. Mappatura nota su questa macchina, da trattare come riferimento e non come dato
    universale: `.claude-account1` corrisponde ad <email-account1> (default di VS Code e
-   del comando `claude` nudo), `.claude-account2` corrisponde a <email-account2>. Su una
+   del comando `claude` nudo), `.claude-account2` corrisponde a <email-account2>, `.claude-account3`
+   corrisponde a <email-account3>. Su una
    macchina diversa cambiano i nomi utente e le associazioni: in tal caso riportare solo i
    percorsi rilevati senza inventare le email. Questa corrispondenza nome-account non e nemmeno
    stabile nel tempo: al rinnovo di un token scaduto Claude puo ri-vincolare in modo silenzioso
