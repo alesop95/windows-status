@@ -93,7 +93,7 @@ in uno strumento, aggiornarlo.
 sessione avvia processo CLI e, per ogni server MCP configurato via `npx` (es. il filesystem
 server `obsidian-vaults` a livello account, vedi `CLAUDE.md` utente), uno o più `node.exe`
 figli che restano attivi finché la sessione è aperta. Sessioni lunghe non chiuse, o più
-account/istanze in parallelo (`.claude-account1`/`.claude-account2`), moltiplicano questi
+account/istanze in parallelo (`.claude-account1`/`.claude-account2`/`.claude-account3`), moltiplicano questi
 processi. Per distinguerli dagli altri `node.exe` (dev server, altri tool) risali al genitore:
 
 ```powershell

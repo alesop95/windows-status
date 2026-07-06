@@ -6,6 +6,27 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-06 — Tracciato terzo profilo Claude Code (.claude-account3)
+
+Commit: (da assegnare, modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `.claude/rules/git-identity-and-repo.md` (elenco profili PowerShell e mappatura
+account→email estesi da 2 a 3 voci), `.claude/skills/init-project-system/SKILL.md` (stessa
+estensione nella mappatura di riferimento "questa macchina"), `docs/07_SALUTE_E_STABILITA.md`
+(esempio di più account/istanze `node.exe` in parallelo esteso a 3), `CLAUDE.local.md` (nuova
+riga di mappatura .claude-account3, locale, non tracciata).
+Motivo: rilevata la presenza di `C:\Users\Utente\.claude-account3` (terzo profilo
+CLAUDE_CONFIG_DIR, con proprio `mcp.json` account-level per i vault Obsidian e un hook
+SessionEnd di wipe dedicato), non ancora censito nella documentazione dei profili multi-account
+di questa macchina, che si fermava a account1/account2.
+Nessuna modifica al sistema: `scripts/Snapshot-Stato.ps1` già enumera genericamente tutte le
+directory `.claude*` (sezione 11, via `Get-ChildItem -Filter '.claude*'`), quindi la sezione 🔄
+"Configurazioni di Claude per ogni account" di `docs/01_MAPPA_CONFIGURAZIONE.md` censirà
+account3 automaticamente al prossimo snapshot, senza bisogno di modifiche allo script.
+Mappatura `.claude-account3` → email reale (in `CLAUDE.local.md`, non tracciata) inizialmente
+solo inferita dal contesto di sessione, poi CONFERMATA con `/status` lanciato dall'utente lo
+stesso giorno (stesso caveat del re-auth silenzioso già documentato per account1/account2:
+verificare sempre con `/status`, mai dedurre dal nome della directory).
+
 ## 2026-07-02 — BitLocker attivato + partizioni modificate con diskpart: snapshot esteso
 
 Commit: (modifiche preparate, commit manuale dell'utente). Contesto: BitLocker è stato attivato
