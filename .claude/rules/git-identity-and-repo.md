@@ -22,9 +22,10 @@ L'account con cui Claude Code e autenticato e un terzo asse, distinto sia dall'i
 dalla chiave SSH: determina quale abbonamento e quali impostazioni di account si usano nella
 sessione, non chi firma i commit. Lo si seleziona con la variabile `CLAUDE_CONFIG_DIR`, una
 directory di configurazione per profilo. Su questa macchina le funzioni PowerShell
-`claude-account1` e `claude-account2`, definite nel profilo
+`claude-account1`, `claude-account2` e `claude-account3`, definite nel profilo
 `Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1`, puntano rispettivamente a
-`%USERPROFILE%\.claude-account1` e `%USERPROFILE%\.claude-account2`, mentre il comando `claude`
+`%USERPROFILE%\.claude-account1`, `%USERPROFILE%\.claude-account2` e
+`%USERPROFILE%\.claude-account3`, mentre il comando `claude`
 nudo usa la directory di default `%USERPROFILE%\.claude`. Ogni directory conserva le proprie
 credenziali nel file `<dir>\.credentials.json`, separato dalle altre, quindi in linea di
 principio ogni profilo mantiene il proprio account.
@@ -42,7 +43,8 @@ quell'altro, non per un guasto del profilo.
 Ne discende la regola operativa. Il binding di una directory non va mai dedotto dal suo nome ma
 verificato a inizio sessione con `/status`, o leggendo il campo `emailAddress` in
 `<dir>\.claude.json`. La mappatura per convenzione su questa macchina e `.claude-account1` su
-<email-account1> e `.claude-account2` su <email-account2>, ma resta una convenzione, non
+<email-account1>, `.claude-account2` su <email-account2> e `.claude-account3` su
+<email-account3>, ma resta una convenzione, non
 un invariante. Per riportare o cambiare l'account di una directory si imposta prima il browser su
 claude.ai sull'account desiderato, e solo dopo, in una sessione avviata con quel
 `CLAUDE_CONFIG_DIR`, si eseguono `/logout` e `/login`, confermando infine con `/status`. Toccare
