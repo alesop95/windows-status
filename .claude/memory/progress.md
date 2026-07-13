@@ -6,6 +6,27 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-13 — Nuova chiave SSH dedicata per VM207 "websiteAnalyst"
+
+Commit: (da assegnare, modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` (sezione 5, tabella "Chiavi SSH":
+aggiunta `id_ed25519_vm207` e l'alias `vm207` all'elenco delle chiavi dedicate per VM
+aziendali su Proxmox).
+Motivo: nel corso di una sessione sul progetto `network-design`, generata una nuova VM
+Proxmox (VM207 "websiteAnalyst", ruolo: hosting di un tool interno di analisi testi di
+siti web) e predisposto l'accesso SSH da questa macchina, con lo stesso pattern già in uso
+per le altre VM aziendali (chiave ed25519 dedicata, mai riusata tra macchine diverse,
+senza passphrase per coerenza con le chiavi VM esistenti). Nessuna modifica al sistema
+oltre a `~/.ssh/config` e alla cartella `~/.ssh/` (nuova coppia di chiavi): stesso caveat
+già annotato il 2026-07-10, `Snapshot-Stato.ps1` non enumera il contenuto di
+`~/.ssh/config`, quindi la sezione 🔄 5 non si aggiorna da sola e va mantenuta a mano.
+Indirizzo IP reale della VM non riportato qui (anonimizzato con lo schema `192.168.x.x`
+→ `10.61.x.x` già in uso nel repository `network-design`, dove vive la mappatura specifica
+e l'inventario completo della VM). Nella stessa sessione, dalla VM207 verso GitHub, è stata
+generata una seconda chiave (`id_ed25519_github_corp`) e registrato l'alias `github-corp`:
+quella chiave vive sul disco di VM207, non su questa macchina, quindi non compare nella
+mappa di questo progetto.
+
 ## 2026-07-10 — Censite le chiavi SSH dedicate per le VM aziendali su Proxmox
 
 Commit: (da assegnare, modifiche preparate, commit manuale dell'utente da fare).
