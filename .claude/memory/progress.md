@@ -6,6 +6,22 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-10 — Censite le chiavi SSH dedicate per le VM aziendali su Proxmox
+
+Commit: (da assegnare, modifiche preparate, commit manuale dell'utente da fare).
+File toccati: `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` (sezione 5, tabella "Chiavi SSH":
+aggiunta la coppia oracle mancante e le 5 chiavi VM nuove; sezione 12, nuova riga di changelog).
+Motivo: nel corso di una sessione di allineamento della skill studio-didattico sulle VM
+aziendali (Intralino, password manager, app Odoo/React, sito WordPress, OpenProject), generate
+5 chiavi ed25519 dedicate (una per VM, mai riusate tra macchine diverse) e registrati i
+corrispondenti alias in `~/.ssh/config`: `intralino`, `pwmanager-vm`, `odoo-vm`, `wordpress-vm`,
+`openproject-vm`. Nessuna modifica al sistema di questa macchina oltre a `~/.ssh/config` e alla
+cartella `~/.ssh/` (nuove coppie di chiavi): `Snapshot-Stato.ps1` non enumera il contenuto di
+`~/.ssh/config`, quindi la sezione 🔄 5 non si aggiorna da sola al prossimo snapshot e va
+mantenuta a mano quando cambiano le VM gestite. Indirizzi IP reali delle VM non riportati qui
+(anonimizzati con lo stesso schema `192.168.x.x` → `10.61.x.x` già in uso nel repository
+`network-design`, dove vive la mappatura specifica di ciascuna VM).
+
 ## 2026-07-06 — Tracciato terzo profilo Claude Code (.claude-account3)
 
 Commit: (da assegnare, modifiche preparate, commit manuale dell'utente da fare).
