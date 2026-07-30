@@ -6,6 +6,41 @@
 > documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento
 > sopravvive a un clone.
 
+## 2026-07-30 — Wipe del magazzino nascosto: coperti i tre residui che sopravvivevano
+
+Commit: (da assegnare, commit di questa sessione).
+File toccati: `.claude/templates/tools/session-end-wipe.ps1` e `.sh`, nuovo
+`.claude/templates/tools/scrub-claude-json.js`, `.claude/templates/tools/README.md`,
+`.claude/templates/README.md` (tabella di installazione), `.claude/PROJECT-SYSTEM.md`
+(sezione 15 riscritta e riallineata al template canonico), `docs/01_MAPPA_CONFIGURAZIONE.md`
+(riga di changelog). Sorgente delle modifiche: `E:\template-claude-developing`, dove sono
+state fatte per prime; qui sono arrivate per sincronizzazione, come da flusso abituale.
+Motivo: il wipe automatico lasciava indietro tre residui, scoperti lavorando su un progetto
+sotto `J:` in cui si voleva una sessione senza tracce. Primo, le cache e i registri di stato
+per-account `cache/`, `jobs/`, `ide/`, `todos/`, `statsig/`, `telemetry/` e
+`mcp-needs-auth-cache.json`, che non erano nell'elenco degli store effimeri. Secondo, gli
+scratchpad temporanei in `%LOCALAPPDATA%\Temp\claude\<slug>`, che stanno fuori dalla home
+dell'account e che nessun passaggio toccava: su questa macchina se n'erano accumulate cartelle
+di sessioni vecchie. Terzo, l'elenco dei percorsi aperti dentro `projects` di `.claude.json`,
+che sopravviveva a ogni pulizia.
+Il terzo passaggio è in Node e non in PowerShell per necessità, non per gusto:
+`ConvertFrom-Json` di PowerShell 5.1 tratta le chiavi JSON come case-insensitive e va in
+errore sul `.claude.json` di questa macchina, che contiene sia `e:/blog-alessio` sia
+`E:/blog-alessio`. Il companion `scrub-claude-json.js` riscrive il file in modo difensivo
+(verifica `oauthAccount`/`userID`, valida, scrive su temporaneo, rilegge, poi sostituisce) e
+tocca anche `.claude.json.backup`, che altrimenti conserverebbe le stesse voci. Effetto
+collaterale voluto: sparendo `hasTrustDialogAccepted`, Claude Code richiede di fidarsi della
+cartella al primo avvio successivo su quel percorso.
+Fuori dal repository, sulla macchina: la nuova versione è installata in `.claude-account1`,
+`.claude-account2`, `.claude-account3` e — lacuna trovata durante il lavoro — anche nella home
+di default `C:\Users\Utente\.claude`, che non aveva alcun hook di wipe e conservava due
+transcript, uno su `J:`. Per quella home sono stati necessari due accorgimenti: `.claude.json`
+non sta dentro la home ma accanto, in `C:\Users\Utente\.claude.json`, e mancava un
+`settings.json`, ora creato col solo hook `SessionEnd` e `autoMemoryEnabled: false`.
+Verifiche: parse OK dei quattro script installati, `node --check` sui companion, scrub provato
+su copie reali di `.claude.json` (nessuna chiave `D:`/`E:` persa, login intatto, chiavi
+duplicate per sola maiuscola conservate) e blocchi 1-3 simulati su un albero finto.
+
 ## 2026-07-13 — Nuova chiave SSH dedicata per VM207 "websiteAnalyst"
 
 Commit: (da assegnare, modifiche preparate, commit manuale dell'utente da fare).
