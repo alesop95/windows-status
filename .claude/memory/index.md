@@ -1,8 +1,6 @@
 # Snapshot di sincronizzazione
 
-> Da leggere per primo a inizio sessione. Fotografa lo stato del progetto al commit di
-> riferimento e mappa ogni scheda al suo stato di verifica. È la fonte di verità su cosa è fatto,
-> non le spunte del diario.
+> Da leggere per primo a inizio sessione. Fotografa lo stato del progetto al commit di riferimento e mappa ogni scheda al suo stato di verifica. È la fonte di verità su cosa è fatto, non le spunte del diario.
 
 ## Stato
 
@@ -12,12 +10,7 @@ Commit di riferimento: d98a77d
 Data snapshot:        2026-07-02
 ```
 
-Working tree con modifiche preparate, non committate: vedi work-log (`progress.md`) per il
-dettaglio dell'ultima tornata (BitLocker + partizioni diskpart, 2026-07-02). Il commit è manuale
-dell'utente; al commit successivo portare i `last-verified-commit` al nuovo HEAD (skill
-`sync-context`). La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` e
-`baseline-eccezioni.json` sono locali (ignorati) — non ancora aggiornata con lo stato reale di
-BitLocker/partizioni: va ricompilata dopo il prossimo snapshot admin.
+Working tree con modifiche preparate, non committate: vedi work-log (`progress.md`) per il dettaglio dell'ultima tornata (BitLocker + partizioni diskpart, 2026-07-02). Il commit è manuale dell'utente; al commit successivo portare i `last-verified-commit` al nuovo HEAD (skill `sync-context`). La mappa compilata `docs/01_MAPPA_CONFIGURAZIONE.compilata.md` e `baseline-eccezioni.json` sono locali (ignorati) — non ancora aggiornata con lo stato reale di BitLocker/partizioni: va ricompilata dopo il prossimo snapshot admin.
 
 ## Stato di verifica delle schede
 
@@ -32,67 +25,19 @@ BitLocker/partizioni: va ricompilata dopo il prossimo snapshot admin.
 
 ## Capacità dello strumento (sintesi)
 
-Snapshot (`scripts/Snapshot-Stato.ps1`): identità+hardware, account, config+licenza+readiness,
-software riproducibile+driver di terze parti, servizi, avvio, rete, sicurezza+postura+catena di
-fiducia, Veeam, superficie d'attacco/persistenza+audit ACL, export ripristinabili, per-account
-(Claude multi-profilo/git/SSH), ambiente dev. Compare con ~16 categorie di alert. Allinea-
-BestPractice (baseline + restore point automatico + eccezioni risk-accepted). Avvia.ps1 (menu).
+Snapshot (`scripts/Snapshot-Stato.ps1`): identità+hardware, account, config+licenza+readiness, software riproducibile+driver di terze parti, servizi, avvio, rete, sicurezza+postura+catena di fiducia, Veeam, superficie d'attacco/persistenza+audit ACL, export ripristinabili, per-account (Claude multi-profilo/git/SSH), ambiente dev. Compare con ~16 categorie di alert. Allinea- BestPractice (baseline + restore point automatico + eccezioni risk-accepted). Avvia.ps1 (menu).
 
 ## Interventi sul sistema già applicati (changelog completo nella mappa compilata)
 
-ScriptBlock logging ON; cache bitmap RDP disattivata; task one-shot rimossa; debloating Gruppo A
-(Xbox+DevHome), B (Spotify), AI (Copilot) per utente e a livello macchina (residuo solo nel
-profilo Administrator); SMB in ingresso ristretto al solo client di sviluppo via firewall;
-baseline applicato il 2026-06-15 (PS Module logging ON, LLMNR off, blocco macro Office da
-Internet — punteggio Allinea 100% sui controlli auto-valutabili).
-Rischi accettati (NON modificare): Administrator e secondo account locale tenuti abilitati.
+ScriptBlock logging ON; cache bitmap RDP disattivata; task one-shot rimossa; debloating Gruppo A (Xbox+DevHome), B (Spotify), AI (Copilot) per utente e a livello macchina (residuo solo nel profilo Administrator); SMB in ingresso ristretto al solo client di sviluppo via firewall; baseline applicato il 2026-06-15 (PS Module logging ON, LLMNR off, blocco macro Office da Internet — punteggio Allinea 100% sui controlli auto-valutabili). Rischi accettati (NON modificare): Administrator e secondo account locale tenuti abilitati.
 
 ## Punto di ripresa
 
-Suggerimenti minori in corso, ordine #4→#3→#5→#6→#7. **#4 readiness FATTO** (`readiness.txt`);
-**#3 punteggio conformità + ISO/CIS FATTO** in Allinea (collaudo 80%, riferimenti normativi per
-controllo); **#5 report HTML FATTO** (`scripts/Genera-Report.ps1` → `report.html`, voce 2b in
-Avvia); **#6 estensione baseline FATTO** (+6 controlli: Module logging/LLMNR/macro Office
-applicabili, Transcription/ASR/NetBIOS avvisi; punteggio ora 50% su 8 auto-valutabili).
-**#7 snapshot periodico opt-in FATTO** (`scripts/Pianifica-Snapshot.ps1`, voci 6/6i in Avvia; non
-installato = opt-in). Sequenza #4-#7 COMPLETA. I 3 controlli baseline pronti sono stati APPLICATI
-il 2026-06-15 (Module logging/LLMNR/macro Office, 100%). Poi
-estensione baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office), #7 snapshot
-periodico opt-in. **BitLocker = PER ULTIMO** (vedi memoria `bitlocker-implementazione-safe`). STRATEGIA DEFINITIVA
-DECISA il 2026-06-15: la macchina è gestita da **NinjaOne RMM** → escrow PRIMARIO della chiave in
-NinjaOne (auto-escrow), ridondanza su USB offline in cassaforte (break-glass), abilitazione
-DELEGATA a NinjaOne via il MSP/IT. NOI NON eseguiamo Enable-BitLocker: coordiniamo col MSP,
-manteniamo il paracadute (Veeam + restore point) e VERIFICHIAMO dopo (snapshot ProtectionStatus=On
-+ chiave in console + copia USB). Volumi decisi al momento (probabile prima C:).
-Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job
-Veeam in mappa, policy TurnOffWindowsCopilot opzionale.
+Suggerimenti minori in corso, ordine #4→#3→#5→#6→#7. **#4 readiness FATTO** (`readiness.txt`); **#3 punteggio conformità + ISO/CIS FATTO** in Allinea (collaudo 80%, riferimenti normativi per controllo); **#5 report HTML FATTO** (`scripts/Genera-Report.ps1` → `report.html`, voce 2b in Avvia); **#6 estensione baseline FATTO** (+6 controlli: Module logging/LLMNR/macro Office applicabili, Transcription/ASR/NetBIOS avvisi; punteggio ora 50% su 8 auto-valutabili). **#7 snapshot periodico opt-in FATTO** (`scripts/Pianifica-Snapshot.ps1`, voci 6/6i in Avvia; non installato = opt-in). Sequenza #4-#7 COMPLETA. I 3 controlli baseline pronti sono stati APPLICATI il 2026-06-15 (Module logging/LLMNR/macro Office, 100%). Poi estensione baseline (Module logging/Transcription, ASR, LLMNR/NetBIOS, macro Office), #7 snapshot periodico opt-in. **BitLocker = PER ULTIMO** (vedi memoria `bitlocker-implementazione-safe`). STRATEGIA DEFINITIVA DECISA il 2026-06-15: la macchina è gestita da **NinjaOne RMM** → escrow PRIMARIO della chiave in NinjaOne (auto-escrow), ridondanza su USB offline in cassaforte (break-glass), abilitazione DELEGATA a NinjaOne via il MSP/IT. NOI NON eseguiamo Enable-BitLocker: coordiniamo col MSP, manteniamo il paracadute (Veeam + restore point) e VERIFICHIAMO dopo (snapshot ProtectionStatus=On
++ chiave in console + copia USB). Volumi decisi al momento (probabile prima C:). Rimandati: Secure Boot (UEFI) e firma SMB (NAS legacy). Roadmap residua: server MCP locale, job Veeam in mappa, policy TurnOffWindowsCopilot opzionale.
 
-**AGGIORNAMENTO 2026-07-02: BitLocker risulta ATTIVATO e le partizioni sono state modificate con
-`diskpart`.** Codice pronto (vedi ADR-007, work-log): `sicurezza_bitlocker.csv` (KeyProtectorId,
-mai la chiave) e `hardware_partizioni.csv`/`hardware_dischi_tabella.csv` in `Snapshot-Stato.ps1`,
-alert `[BITLOCKER]`/`[PARTIZIONI]` in `Compare-Snapshot.ps1`, `-Frequenza Mensile` in
-`Pianifica-Snapshot.ps1`. Verificato con parse-check + uno snapshot di prova non-admin (partizioni
-confermate: 4 dischi, incluse EFI/Recovery/MSR). DA FARE, pendente conferma utente (non inventato):
-(1) come sia stato attivato BitLocker — se dal MSP via NinjaOne come da piano sopra, o manualmente;
-(2) dove sia oggi la copia reale della chiave di ripristino (console RMM/MSP + USB come da piano, o
-altro) — la macchina è *workplace join*, quindi NON in Entra ID di default (corretto anche in
-docs/01 sez. 9 e docs/02, che assumevano erroneamente Entra ID); (3) un run **admin** di
-`Snapshot-Stato.ps1` per popolare `sicurezza_bitlocker.csv` con lo stato reale (la task pianificata
-giornaliera, se installata, gira già come SYSTEM e lo farà da sola al prossimo giro); (4) compilare
-`01_MAPPA_CONFIGURAZIONE.compilata.md` (locale) con la risposta a (1)/(2); (5) valutare se
-installare/passare a `-Frequenza Mensile` per intercettare rigenerazioni rare della chiave, oppure
-tenere la cadenza giornaliera già in essere (la rigenerazione verrebbe comunque rilevata al primo
-Compare utile, la cadenza mensile serve solo a non accumulare snapshot fra un evento raro e l'altro).
+**AGGIORNAMENTO 2026-07-02: BitLocker risulta ATTIVATO e le partizioni sono state modificate con `diskpart`.** Codice pronto (vedi ADR-007, work-log): `sicurezza_bitlocker.csv` (KeyProtectorId, mai la chiave) e `hardware_partizioni.csv`/`hardware_dischi_tabella.csv` in `Snapshot-Stato.ps1`, alert `[BITLOCKER]`/`[PARTIZIONI]` in `Compare-Snapshot.ps1`, `-Frequenza Mensile` in `Pianifica-Snapshot.ps1`. Verificato con parse-check + uno snapshot di prova non-admin (partizioni confermate: 4 dischi, incluse EFI/Recovery/MSR). DA FARE, pendente conferma utente (non inventato): (1) come sia stato attivato BitLocker — se dal MSP via NinjaOne come da piano sopra, o manualmente; (2) dove sia oggi la copia reale della chiave di ripristino (console RMM/MSP + USB come da piano, o altro) — la macchina è *workplace join*, quindi NON in Entra ID di default (corretto anche in docs/01 sez. 9 e docs/02, che assumevano erroneamente Entra ID); (3) un run **admin** di `Snapshot-Stato.ps1` per popolare `sicurezza_bitlocker.csv` con lo stato reale (la task pianificata giornaliera, se installata, gira già come SYSTEM e lo farà da sola al prossimo giro); (4) compilare `01_MAPPA_CONFIGURAZIONE.compilata.md` (locale) con la risposta a (1)/(2); (5) valutare se installare/passare a `-Frequenza Mensile` per intercettare rigenerazioni rare della chiave, oppure tenere la cadenza giornaliera già in essere (la rigenerazione verrebbe comunque rilevata al primo Compare utile, la cadenza mensile serve solo a non accumulare snapshot fra un evento raro e l'altro).
 
-Snapshot esportabile schedulato (codice pronto, commit manuale): `Snapshot-Stato.ps1` ora ha
-`-Retention <int>` (0 = tieni tutto, default sui lanci manuali) e `Pianifica-Snapshot.ps1` installa
-la task giornaliera con `-Scope Machine -Retention 7`. Scelta `-Scope Machine`: la task gira come
-SYSTEM, quindi la sez. 13 (ambiente live dell'account) sarebbe falsata; Machine copre 1-12 incluso
-il multi-account da disco e tiene le foto automatiche omogenee. Output sempre in `snapshots\`
-(ignorata da git). Installazione (utente, admin): `.\scripts\Pianifica-Snapshot.ps1 -Installa
--Frequenza Giornaliera -Ora 13:00`; reversibile con `-Disinstalla`; va annotata in changelog mappa
-quando installata. Handoff verboso in `_notes\handoff.md` (locale).
+Snapshot esportabile schedulato (codice pronto, commit manuale): `Snapshot-Stato.ps1` ora ha `-Retention <int>` (0 = tieni tutto, default sui lanci manuali) e `Pianifica-Snapshot.ps1` installa la task giornaliera con `-Scope Machine -Retention 7`. Scelta `-Scope Machine`: la task gira come SYSTEM, quindi la sez. 13 (ambiente live dell'account) sarebbe falsata; Machine copre 1-12 incluso il multi-account da disco e tiene le foto automatiche omogenee. Output sempre in `snapshots\` (ignorata da git). Installazione (utente, admin): `.\scripts\Pianifica-Snapshot.ps1 -Installa -Frequenza Giornaliera -Ora 13:00`; reversibile con `-Disinstalla`; va annotata in changelog mappa quando installata. Handoff verboso in `_notes\handoff.md` (locale).
 
-AZIONE consigliata all'utente (dallo snapshot 2026-06-12): **riavvio in sospeso = SÌ** (uptime
-~9g) → riavviare quando comodo (rende effettivo anche LSA RunAsPPL). Password `dev` esposta in
-chat → consigliata rotazione.
+AZIONE consigliata all'utente (dallo snapshot 2026-06-12): **riavvio in sospeso = SÌ** (uptime ~9g) → riavviare quando comodo (rende effettivo anche LSA RunAsPPL). Password `dev` esposta in chat → consigliata rotazione.

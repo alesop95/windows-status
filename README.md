@@ -1,7 +1,6 @@
 # windows-status
 
-Fotografia **completa e ripristinabile** di un PC Windows 11, e progetto vivo per tenerla aggiornata nel tempo. Pensato per la mia macchina aziendale (registrata al tenant Microsoft 365 in
-modalità workplace join — non Entra ID joined né gestita da Intune — con backup Veeam Agent verso NAS) ma scritto in modo generico e riusabile **ovunque**.
+Fotografia **completa e ripristinabile** di un PC Windows 11, e progetto vivo per tenerla aggiornata nel tempo. Pensato per la mia macchina aziendale (registrata al tenant Microsoft 365 in modalità workplace join — non Entra ID joined né gestita da Intune — con backup Veeam Agent verso NAS) ma scritto in modo generico e riusabile **ovunque**.
 
 > Gli script sono **proprietari**: la cartella `snapshots/` (dati specifici della macchina) è ignorata da git; si versionano gli script e i documenti.
 
@@ -9,8 +8,7 @@ modalità workplace join — non Entra ID joined né gestita da Intune — con b
 
 ## Idea di fondo
 
-Lo "stato del PC" non lo scrivo a mano: lo faccio **rigenerare dalla macchina** con uno script di **sola lettura**. Lo stesso script fotografa anche **ogni account** (multi-account): utenti, programmi,
-e le configurazioni di **Claude**, **git**, **SSH** e dell'**ambiente di sviluppo**. I segreti non vengono mai salvati. Confrontando due fotografie vedo *esattamente* cosa è cambiato.
+Lo "stato del PC" non lo scrivo a mano: lo faccio **rigenerare dalla macchina** con uno script di **sola lettura**. Lo stesso script fotografa anche **ogni account** (multi-account): utenti, programmi, e le configurazioni di **Claude**, **git**, **SSH** e dell'**ambiente di sviluppo**. I segreti non vengono mai salvati. Confrontando due fotografie vedo *esattamente* cosa è cambiato.
 
 Il "ripristino ovunque" poggia su due gambe:
 1. **Immagine Veeam** dell'intero computer - *bare metal recovery* anche su hardware diverso (il ripristino letterale del PC).
@@ -31,8 +29,7 @@ Il "ripristino ovunque" poggia su due gambe:
 
 ## Uso
 
-**Snapshot completo** (consigliato: da PowerShell **amministratore**, altrimenti mancano BitLocker,
-Secure Boot, TPM, Defender e i dati degli altri account — il riepilogo segnala con cosa è stato eseguito):
+**Snapshot completo** (consigliato: da PowerShell **amministratore**, altrimenti mancano BitLocker, Secure Boot, TPM, Defender e i dati degli altri account — il riepilogo segnala con cosa è stato eseguito):
 
 ```powershell
 cd <cartella del progetto>
@@ -42,17 +39,14 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\scripts\Snapshot-Stato.ps1 -Scope User     # solo account corrente (ripetere per ogni account)
 ```
 
-**Confronto tra i due snapshot più recenti** (diff + sezione ALERT DI SICUREZZA in coda;
-confrontare snapshot presi con gli stessi privilegi, altrimenti il diff è rumore di visibilità):
+**Confronto tra i due snapshot più recenti** (diff + sezione ALERT DI SICUREZZA in coda; confrontare snapshot presi con gli stessi privilegi, altrimenti il diff è rumore di visibilità):
 
 ```powershell
 .\scripts\Compare-Snapshot.ps1
 .\scripts\Compare-Snapshot.ps1 -Old <cartella> -New <cartella>
 ```
 
-**Allineamento al baseline di sicurezza** (porta un PC vergine o difforme alle best practice;
-il report è sola lettura e sicuro ovunque, l'applicazione modifica il sistema e va fatta dopo
-aver verificato il paracadute — immagine recente + punto di ripristino):
+**Allineamento al baseline di sicurezza** (porta un PC vergine o difforme alle best practice; il report è sola lettura e sicuro ovunque, l'applicazione modifica il sistema e va fatta dopo aver verificato il paracadute — immagine recente + punto di ripristino):
 
 ```powershell
 .\scripts\Allinea-BestPractice.ps1           # REPORT del divario (non modifica nulla)
@@ -65,7 +59,6 @@ aver verificato il paracadute — immagine recente + punto di ripristino):
 .\scripts\Reinstall-Software.ps1
 ```
 
-L'output va in `snapshots\snapshot_<data>\` (ignorato da git): `SUMMARY.txt` per la sintesi,
-CSV/TXT per i dettagli, `utenti\` per le configurazioni per-account.
+L'output va in `snapshots\snapshot_<data>\` (ignorato da git): `SUMMARY.txt` per la sintesi, CSV/TXT per i dettagli, `utenti\` per le configurazioni per-account.
 
 ---
