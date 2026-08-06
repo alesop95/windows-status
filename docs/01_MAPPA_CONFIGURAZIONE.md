@@ -2,8 +2,7 @@
 
 > Questo è il documento che **tieni sempre aggiornato**. Le sezioni 🔄 si popolano dai file prodotti da `scripts\Snapshot-Stato.ps1` (cartella `snapshots\snapshot_*`): a fianco di ogni sezione trovi il file sorgente. Le sezioni ✍️ sono decisioni umane da compilare autonomamente.
 > 
-> **Segreti = mai qui.** Si indica solo *dove* sono custoditi (password manager, Entra ID, ecc.).
-> Se si versione una copia *compilata* con dati reali, chiamala `01_MAPPA_CONFIGURAZIONE.compilata.md` (è già in `.gitignore`) e valuta bene prima di un push pubblico.
+> **Segreti = mai qui.** Si indica solo *dove* sono custoditi (password manager, Entra ID, ecc.). Se si versione una copia *compilata* con dati reali, chiamala `01_MAPPA_CONFIGURAZIONE.compilata.md` (è già in `.gitignore`) e valuta bene prima di un push pubblico.
 
 Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 
@@ -64,17 +63,13 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Microsoft 365 / Office            | `__________` | `__________`                            |
 | `__________`                      | `__________` | `__________`                            |
 
-> Reinstallazione su PC nuovo: `scripts\Reinstall-Software.ps1` (usa `software_winget.json`,
-> reinstalla all'ultima versione). Software non-WinGet: reinstallo manuale da `software_registro.csv`.
-> Driver di terze parti necessari su nuovo hardware: `driver_terze_parti.csv` (+ `Export-WindowsDriver`
-> per i file; vedi `docs/02`, "Software e driver per il nuovo hardware").
+> Reinstallazione su PC nuovo: `scripts\Reinstall-Software.ps1` (usa `software_winget.json`, reinstalla all'ultima versione). Software non-WinGet: reinstallo manuale da `software_registro.csv`. Driver di terze parti necessari su nuovo hardware: `driver_terze_parti.csv` (+ `Export-WindowsDriver` per i file; vedi `docs/02`, "Software e driver per il nuovo hardware").
 
 ---
 
 ## 4. 🔄 Configurazioni di Claude -  per ogni account- — *da `utenti\<acct>_claude.txt`*
 
-> Multi-account: una riga per profilo. Lo snapshot salva inventario + `.claude.json`/`settings.json`/
-> `CLAUDE.md` **oscurati** (mai `.credentials.json`).
+> Multi-account: una riga per profilo. Lo snapshot salva inventario + `.claude.json`/`settings.json`/ `CLAUDE.md` **oscurati** (mai `.credentials.json`).
 
 | Account      | Claude configurato? | Server MCP impostati | CLAUDE.md utente | Note (modello, alias, ecc.) |
 | ------------ | ------------------- | -------------------- | ---------------- | --------------------------- |
@@ -104,8 +99,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | ------------ | ------------------------------- | ------------------------- | ------------ |
 | `__________` | `__________`                    | `__________`              | `__________` |
 
-> ✍️ Per avere i dati *live* di sviluppo di ogni account, esegui `Snapshot-Stato.ps1 -Scope User`
-> loggato con quell'account (i file su disco si leggono comunque tutti con lo snapshot admin).
+> ✍️ Per avere i dati *live* di sviluppo di ogni account, esegui `Snapshot-Stato.ps1 -Scope User` loggato con quell'account (i file su disco si leggono comunque tutti con lo snapshot admin).
 
 ---
 
@@ -175,8 +169,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Driver non firmati                       | `___`                     | `__________`                 |
 | Servizi con percorso non quotato         | `___`                     | `__________`                 |
 
-> ✍️ Ogni voce che `Compare-Snapshot.ps1` segnala nella sezione **ALERT DI SICUREZZA** (nuovi admin,
-> account, autorun, task, porte, cambi StartMode, driver non firmati) va spiegata qui o indagata.
+> ✍️ Ogni voce che `Compare-Snapshot.ps1` segnala nella sezione **ALERT DI SICUREZZA** (nuovi admin, account, autorun, task, porte, cambi StartMode, driver non firmati) va spiegata qui o indagata.
 
 ---
 
