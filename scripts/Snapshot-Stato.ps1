@@ -133,19 +133,28 @@ if($doMachine){
       $disks | Export-Csv (Join-Path $outDir 'hardware_dischi.csv') -NoTypeInformation -Encoding UTF8
       if($disks){ Add-Hw 'Dischi fisici' (($disks | ForEach-Object { "$($_.Modello) $($_.CapacitaGB)GB $($_.Tipo)/$($_.Bus) [$($_.Salute)]" }) -join ' | ') }
   } catch {}
-  # Volumi
+  # Volumi. Anche quelli SENZA lettera (Ripristino/EFI): sono proprio quelli che un
+  # ciclo di servicing elimina e ricrea, ed e' il GUID che i job di backup a livello
+  # di volume memorizzano. Vedi docs\08_MONITORAGGIO_BACKUP_VEEAM.md.
   try {
-      Get-Volume -ErrorAction SilentlyContinue | Where-Object DriveLetter |
-          Select-Object DriveLetter, FileSystemType, @{n='GB';e={[math]::Round($_.Size/1GB,1)}}, @{n='LiberiGB';e={[math]::Round($_.SizeRemaining/1GB,1)}}, HealthStatus |
+      Get-Volume -ErrorAction SilentlyContinue |
+          Select-Object @{n='Lettera';e={$_.DriveLetter}}, @{n='Etichetta';e={$_.FileSystemLabel}},
+                        FileSystemType, @{n='GB';e={[math]::Round($_.Size/1GB,1)}},
+                        @{n='LiberiGB';e={[math]::Round($_.SizeRemaining/1GB,1)}}, HealthStatus,
+                        @{n='GuidVolume';e={$_.UniqueId}} |
           Export-Csv (Join-Path $outDir 'hardware_volumi.csv') -NoTypeInformation -Encoding UTF8
   } catch {}
-  # Partizioni (tutte, incluse quelle senza lettera: EFI/Recovery/MSR) - cattura anche i cambi fatti con diskpart
+  # Partizioni (tutte, incluse quelle senza lettera: EFI/Recovery/MSR) - cattura anche i cambi fatti con diskpart.
+  # Il GuidVolume e' l'identificativo che cambia quando una partizione viene eliminata e ricreata a
+  # pari numero, tipo, offset e dimensione: senza di esso quel caso e' indistinguibile da "nessun cambio".
   try {
       $parts = @(Get-Partition -ErrorAction SilentlyContinue | ForEach-Object {
+          $guid = ''
+          try { $guid = ($_ | Get-Volume -ErrorAction SilentlyContinue).UniqueId } catch {}
           [pscustomobject]@{
               Disco=$_.DiskNumber; Partizione=$_.PartitionNumber; Lettera=$_.DriveLetter; Tipo=$_.Type
               GB=[math]::Round($_.Size/1GB,1); Boot=$_.IsBoot; Sistema=$_.IsSystem; Nascosta=$_.IsHidden
-              OffsetMB=[math]::Round($_.Offset/1MB,0)
+              OffsetMB=[math]::Round($_.Offset/1MB,0); GuidVolume=$guid
           } })
       $parts | Sort-Object Disco,Partizione | Export-Csv (Join-Path $outDir 'hardware_partizioni.csv') -NoTypeInformation -Encoding UTF8
       $diskInfo = @(Get-Disk -ErrorAction SilentlyContinue | Select-Object Number, @{n='StileTabella';e={$_.PartitionStyle}}, @{n='GB';e={[math]::Round($_.Size/1GB,1)}}, @{n='SpazioNonAllocatoGB';e={[math]::Round(($_.LargestFreeExtent)/1GB,1)}})
@@ -875,16 +884,38 @@ if($doUser){
   Try-Cmd 'node'               { node --version }
   Try-Cmd 'npm'                { npm --version }
   Try-Cmd 'npm globali'        { npm ls -g --depth=0 }
+  Try-Cmd 'yarn'               { yarn --version }
   Try-Cmd 'python'             { python --version }
+  # py -0 elenca TUTTI gli interpreti registrati, non solo quello che vince sul PATH:
+  # su questa macchina ne convivono due, e 'python --version' ne mostrerebbe uno solo.
+  Try-Cmd 'python interpreti'  { py -0 }
   Try-Cmd 'pip'                { pip --version }
-  Try-Cmd 'dotnet'             { dotnet --list-sdks }
+  # I pacchetti installati con 'pip install --user' non compaiono ne' nel registro
+  # di Windows ne' in WinGet: senza questa riga sono invisibili allo snapshot.
+  Try-Cmd 'pip pacchetti utente' { python -m pip list --user }
+  # --list-runtimes, non solo --list-sdks: su una macchina che usa applicazioni .NET
+  # senza svilupparle gli SDK sono assenti e i runtime sono tutto cio' che esiste.
+  Try-Cmd 'dotnet SDK'         { dotnet --list-sdks }
+  Try-Cmd 'dotnet runtime'     { dotnet --list-runtimes }
   Try-Cmd 'go'                 { go version }
   Try-Cmd 'rustc'              { rustc --version }
   Try-Cmd 'java'               { java -version }
+  Try-Cmd 'deno'               { deno --version }
+  Try-Cmd 'ffmpeg'             { (ffmpeg -version | Select-Object -First 1) }
   Try-Cmd 'docker'             { docker --version }
   Try-Cmd 'winget'             { winget --version }
   Try-Cmd 'scoop'              { scoop --version }
   Try-Cmd 'choco'              { choco --version }
+  # Cache dei browser di Playwright: e' pesante, non si reinstalla da un manifesto di
+  # pacchetti e serve alle suite end-to-end. Va saputa prima di una re-immagine.
+  try {
+      $pwDir = Join-Path $env:LOCALAPPDATA 'ms-playwright'
+      if(Test-Path $pwDir){
+          $pwB = @(Get-ChildItem $pwDir -Directory -ErrorAction SilentlyContinue |
+                   Where-Object { $_.Name -notlike '.*' } | Select-Object -ExpandProperty Name)
+          if($pwB){ $dev += '## Browser Playwright in cache (%LOCALAPPDATA%\ms-playwright):'; $dev += ($pwB -join ', '); $dev += '' }
+      }
+  } catch {}
   Try-Cmd 'VS Code estensioni' { code --list-extensions --show-versions }
   Try-Cmd 'WSL distro'         { wsl -l -v }
   Try-Cmd 'claude version'     { claude --version }
