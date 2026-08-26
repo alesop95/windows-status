@@ -338,6 +338,13 @@ if($null -ne $pto -and $null -ne $ptn){
             $o=$oldBy[$k]
             if($o.Lettera -ne $n.Lettera){ Add-Alert 'PARTIZIONI' "disco $($n.Disco) #$($n.Partizione): lettera cambiata $($o.Lettera) -> $($n.Lettera)" }
             if($o.GB -ne $n.GB){ Add-Alert 'PARTIZIONI' "disco $($n.Disco) #$($n.Partizione) ($($n.Lettera)): dimensione cambiata $($o.GB)GB -> $($n.GB)GB" }
+            # Il GUID di volume cambia quando una partizione viene ELIMINATA E RICREATA a pari
+            # numero, tipo, offset e dimensione: e' il caso che i tre confronti sopra non vedono,
+            # ed e' quello che rompe un job di backup a livello di volume, che memorizza il GUID.
+            # Precedente reale e razionale in docs\08_MONITORAGGIO_BACKUP_VEEAM.md.
+            if($o.GuidVolume -and $n.GuidVolume -and $o.GuidVolume -ne $n.GuidVolume){
+                Add-Alert 'VOLUMI' "disco $($n.Disco) #$($n.Partizione) ($($n.Tipo), $($n.GB)GB): GUID di volume CAMBIATO a partizione invariata - la partizione e' stata eliminata e ricreata. Un job di backup a livello di volume che la referenzia fallira' in 'Preparing for backup': riallinea i volumi nel job e verifica il primo run."
+            }
         }
     }
     foreach($k in $oldBy.Keys){

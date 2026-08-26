@@ -101,6 +101,8 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 
 > ✍️ Per avere i dati *live* di sviluppo di ogni account, esegui `Snapshot-Stato.ps1 -Scope User` loggato con quell'account (i file su disco si leggono comunque tutti con lo snapshot admin).
 
+> 🔄 La toolchain aggiunta dagli **altri progetti** della macchina (`D:\`, `E:\`) è censita a parte in `09_TOOLCHAIN_DA_ALTRI_PROGETTI.md`, con le divergenze verificate fra le schede di quei progetti e lo stato reale. Dallo snapshot la sezione 13 riporta ora anche: `yarn`, tutti gli interpreti Python (`py -0`, non solo quello che vince sul PATH), i pacchetti `pip --user` (invisibili a registro e WinGet), i **runtime** .NET oltre agli SDK (su questa macchina gli SDK sono assenti e i runtime sono tutto ciò che esiste), `deno`, `ffmpeg` e la cache dei browser Playwright.
+
 ---
 
 ## 6. 🔄 Servizi modificati rispetto al default -  *confronto via `Compare-Snapshot.ps1`*
@@ -185,6 +187,10 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 | Credenziali NAS -  dove                | `__________` (non le credenziali)                        |
 | **Supporto di ripristino creato il**   | `____-__-__` -  conservato in: `__________`              |
 | **Ultimo test di ripristino riuscito** | `____-__-__`                                             |
+| Monitoraggio della freschezza          | vedi `08_MONITORAGGIO_BACKUP_VEEAM.md`                   |
+| **Ultimo restore point visto**         | `____-__-__ __:__` -  verificato con `scripts\rmm\Veeam-BackupFreshness.ps1` |
+
+> ⚠️ Il modo tipico in cui questo job muore è **silenzioso**: nessun errore visibile, il job semplicemente non produce più restore point. Un caso reale è rimasto invisibile 15 giorni. La causa accertata è la rigenerazione della partizione di ripristino durante un ciclo di servicing, che cambia il GUID di volume memorizzato nel job a **numero di partizioni invariato**. Dettaglio, script di rilevamento e procedura di riallineamento in `08_MONITORAGGIO_BACKUP_VEEAM.md`.
 
 ---
 

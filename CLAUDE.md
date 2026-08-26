@@ -42,11 +42,14 @@ Lo stato del progetto è interamente recuperabile su disco. Si legge per primo `
 - `05_QUICKSTART.md` guida rapida d'uso del tool
 - `06_RACCORDO_CHECKLIST_VA.md` come gli alert alimentano una checklist di remediation VA
 - `07_SALUTE_E_STABILITA.md` check di salute/stabilità (registro eventi: OOM, crash, BSOD, WHEA) e setup di monitoraggio
+- `08_MONITORAGGIO_BACKUP_VEEAM.md` rilevare il guasto silenzioso del backup (freschezza dei restore point, drift dei GUID di volume) e i due script RMM di flotta
+- `09_TOOLCHAIN_DA_ALTRI_PROGETTI.md` censimento anonimo dei componenti che gli altri progetti della macchina hanno aggiunto, e divergenze verificate fra le loro schede e lo stato reale
 
 ## Struttura
 - `docs/`     guide e mappa (tracciate; le copie compilate `*.compilata.md` restano locali)
 - `Avvia.ps1`  punto d'ingresso unico (menu) in radice: orchestra gli script di `scripts/`
 - `scripts/`  Snapshot-Stato.ps1, Compare-Snapshot.ps1, Allinea-BestPractice.ps1, Genera-Report.ps1, Pianifica-Snapshot.ps1, Reinstall-Software.ps1, Controlla-Salute.ps1 (salute/stabilità da registro eventi, vedi docs/07) (devono stare qui: ricavano la radice dalla cartella genitore)
+- `scripts/rmm/` script di flotta da distribuire via RMM, NON parte della catena locale dello snapshot: girano come LOCAL SYSTEM sull'endpoint, non ricavano la radice del repo e non scrivono in `snapshots/`. Oggi Veeam-BackupFreshness.ps1 (freschezza dei restore point) e Disk-LayoutDrift.ps1 (drift dei GUID di volume). Vedi docs/08
 - `snapshots/` output datato (ignorato da git)
 - `_notes/`   livello privato e verboso (ignorato da git)
 - `.claude/`  centro di controllo versionato (vedi indice sotto)
