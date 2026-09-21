@@ -42,8 +42,12 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateRange(1, 9)]
-  [int]$Radici = 3,
+  # Elenco dei numeri di radice, non un conteggio: cosi' si puo' agire su un
+  # sottoinsieme (es. -Account 2,5) e i due installatori hanno la stessa firma.
+  # `-Radici` resta accettato come alias per non rompere comandi gia' scritti.
+  [Alias('Radici')]
+  [ValidateRange(1, 99)]
+  [int[]]$Account = @(1, 2, 3),
 
   [switch]$Verifica,
 
@@ -104,7 +108,7 @@ else {
 # --- Passo 3: le radici -----------------------------------------------------
 Scrivi '' 'Gray'
 $quadro = @()
-for ($n = 1; $n -le $Radici; $n++) {
+foreach ($n in ($Account | Sort-Object -Unique)) {
   $radice = Join-Path $env:USERPROFILE ".codex-account$n"
   $config = Join-Path $radice 'config.toml'
   $auth = Join-Path $radice 'auth.json'

@@ -63,7 +63,12 @@
 #>
 [CmdletBinding()]
 param(
-  [int[]]$Account = @(1, 2, 3),
+  # N account Claude e M account Codex sono INDIPENDENTI: i due agenti non sono
+  # usati dalle stesse persone, quindi imporre lo stesso numero e' un vincolo
+  # inventato. Vuoti = scoperta automatica delle radici presenti, con ripiego a
+  # 1,2,3 su una macchina nuova.
+  [int[]]$Claude,
+  [int[]]$Codex,
   [string[]]$Prefissi,
   [string]$Template = 'E:\template-claude-developing',
   [string]$RemotoTemplate,
@@ -82,6 +87,17 @@ function Nota($t, $c) { Write-Host $t -ForegroundColor $c }
 
 Titolo 'Installa-Agenti'
 if ($Verifica) { Nota 'Modo: SOLA LETTURA, nessuna modifica.' 'Yellow' }
+
+function Trova-Radici($prefisso) {
+  $trovate = @(Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Filter "$prefisso*" -ErrorAction SilentlyContinue |
+    ForEach-Object { if ($_.Name -match '(\d+)$') { [int]$Matches[1] } } | Sort-Object -Unique)
+  if ($trovate.Count -gt 0) { return $trovate }
+  return @(1, 2, 3)
+}
+
+if (-not $Claude -or $Claude.Count -eq 0) { $Claude = Trova-Radici '.claude-account' }
+if (-not $Codex -or $Codex.Count -eq 0) { $Codex = Trova-Radici '.codex-account' }
+Nota ("Radici Claude: {0}   Radici Codex: {1}" -f ($Claude -join ','), ($Codex -join ',')) 'White'
 
 # --- prerequisiti -----------------------------------------------------------
 Titolo 'Prerequisiti'
@@ -148,21 +164,18 @@ if (-not $SoloCodex) {
 }
 
 # --- i due installatori -----------------------------------------------------
-$argComuni = @{ Account = $Account }
-if ($Verifica) { $argComuni['Verifica'] = $true }
-if ($Forza) { $argComuni['Forza'] = $true }
-
 if (-not $SoloCodex) {
   Titolo 'Claude Code'
-  $argClaude = $argComuni.Clone()
-  $argClaude['Template'] = $Template
+  $argClaude = @{ Account = $Claude; Template = $Template }
+  if ($Verifica) { $argClaude['Verifica'] = $true }
+  if ($Forza) { $argClaude['Forza'] = $true }
   if ($Prefissi -and $Prefissi.Count -gt 0) { $argClaude['Prefissi'] = $Prefissi }
   & (Join-Path $PSScriptRoot 'Installa-Claude.ps1') @argClaude
 }
 
 if (-not $SoloClaude) {
   Titolo 'Codex CLI'
-  $argCodex = @{ Radici = ($Account | Measure-Object -Maximum).Maximum }
+  $argCodex = @{ Account = $Codex }
   if ($Verifica) { $argCodex['Verifica'] = $true }
   if ($Forza) { $argCodex['Forza'] = $true }
   & (Join-Path $PSScriptRoot 'Installa-Codex.ps1') @argCodex

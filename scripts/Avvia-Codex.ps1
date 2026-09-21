@@ -45,7 +45,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateRange(1, 9)]
+  [ValidateRange(1, 99)]
   [int]$Account,
 
   [string]$Progetto,
