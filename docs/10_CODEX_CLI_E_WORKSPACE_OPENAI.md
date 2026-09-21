@@ -500,4 +500,7 @@ Se l'OTP non arriva, l'ordine di controllo che paga e' questo, e la prima domand
 | `scripts\Avvia-Codex.ps1` | scritto e collaudato, nei due modi normale e `-Stato` |
 | `scripts\Installa-Codex.ps1` | scritto e collaudato, ripristino 1:1 verificato con `-Forza` |
 | `scripts\Pulisci-Codex.ps1` | scritto e collaudato nei modi `-Lista`, `-DryRun`, `-Tutto` e in pulizia vera. Prefissi da compilare |
-| Radici autenticate | `account1` e `account2`. `account3` subordinato al consenso dell'interessato |
+| Radici autenticate | **tutte e tre**, identita' verificate dalle rivendicazioni dentro `auth.json` |
+| `scripts\Installa-Agenti.ps1` | punto d'ingresso unico per entrambi gli agenti, collaudato |
+| `scripts\Installa-Claude.ps1` | scritto e collaudato con installazione da zero su radice di prova, poi rimossa |
+| Setup complessivo | **sei account attivi**, tre per agente |
