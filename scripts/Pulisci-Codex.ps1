@@ -70,6 +70,7 @@ param(
   [switch]$Tutto,
   [switch]$IncludiDefault,
   [int]$GiorniAttivita = 0,
+  [string[]]$Prefissi,
   [switch]$Deroga
 )
 
@@ -88,7 +89,17 @@ $ErrorActionPreference = 'Stop'
 #  Su Windows hanno la forma 'D:\' o 'E:\'; su un'altra macchina sarebbero altri,
 #  e un insieme sbagliato non produce un errore ma un magazzino vuoto.
 # =============================================================================
-$prefissiDaPreservare = @('<KEEP_PREFIXES>')
+#  Compilati il 2026-09-21 su questa macchina, dopo averli LETTI con -Lista da
+#  una sessione reale. Corrispondono alle due radici su cui vivono i progetti di
+#  sviluppo, le stesse che il wipe di Claude preserva come slug 'D--' ed 'E--'.
+#  Su un'altra macchina vanno riletti, non riusati.
+$prefissiDaPreservare = @('D:\', 'E:\')
+
+# Override a riga di comando, con -Prefissi. Serve per un uso occasionale su un
+# insieme diverso, e soprattutto per poter COLLAUDARE la terza guardia: senza di
+# esso l'unico modo di provarla sarebbe modificare il file, che e' il momento in
+# cui una guardia smette di essere provata e diventa una dichiarazione.
+if ($Prefissi -and $Prefissi.Count -gt 0) { $prefissiDaPreservare = $Prefissi }
 
 $attivitaRoot = Join-Path $env:USERPROFILE 'Documents\Codex'
 $logFile = Join-Path $env:USERPROFILE 'Documents\Codex\pulisci-codex.log'

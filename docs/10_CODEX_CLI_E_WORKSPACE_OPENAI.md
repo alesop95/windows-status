@@ -251,9 +251,43 @@ Non isolano tre cose, e sono le piu' importanti. I membri appartengono alla **st
 
 Le leve reali, in ordine di efficacia: la **ritenzione delle chat**, che domina tutto; il **perimetro di accesso sul filesystem**, cioe' questa sezione; l'**anonimizzazione del contenuto** sul perimetro del repository, che e' l'unica cosa che agisce sul contenuto; e il **wipe locale**, che e' l'ultimo anello e non il primo.
 
-> **Verificato il 2026-09-21, e conviene conoscerlo perche' la diagnosi trae in inganno.** `codex doctor` riporta `sandbox backend disabled` accanto a `filesystem sandbox restricted`, il che suggerisce una politica dichiarata e non imposta. **E' falso, la sandbox e' applicata davvero**: un tentativo di scrittura fuori perimetro fallisce con un `UnauthorizedAccessException` del **sistema operativo**, non con un messaggio dell'applicazione. Non va quindi letta come assenza di protezione.
->
-> Resta invece **non dimostrato** quale radice sia scrivibile durante una sessione reale: il sottocomando `codex sandbox` blocca ogni scrittura, compresa la cartella corrente, anche forzando `-s workspace-write`, quindi non e' il banco di prova adatto e va verificato dentro una sessione vera su un progetto vero.
+### La sandbox va installata, e la diagnosi lo dice male
+
+`codex doctor` riporta `sandbox backend disabled` accanto a `filesystem sandbox restricted`, il che suggerisce una politica dichiarata e non imposta. La spiegazione, emersa solo alla prima sessione interattiva, e' piu' banale: **il backend non era ancora stato installato**. Alla prima sessione Codex propone di configurarlo, con tre opzioni:
+
+| Opzione | Quando |
+|---|---|
+| **Sandbox predefinita, richiede privilegi di amministratore** | **la scelta giusta.** Una elevazione UAC una volta sola |
+| Sandbox non-admin | ripiego; la proposta stessa la dichiara `higher risk if prompt injected` |
+| Esci | nessuna sandbox |
+
+La variante non-admin va presa solo se l'elevazione e' negata da una macchina gestita, e in quel caso va annotata come limite noto da recuperare. Dopo la configurazione la sessione dichiara `Sandbox ready`.
+
+### La scoperta che conta: l'approvazione scavalca la sandbox
+
+Prova eseguita il 2026-09-21 dentro una sessione reale, con `approval_policy = "on-request"`. All'agente e' stato chiesto di scrivere un file **fuori** dal progetto. Il comando e' stato **approvato dall'utente**, ed e' riuscito: file creato, codice di uscita 0, nessun errore.
+
+Non e' un difetto della sandbox. **E' il progetto: l'approvazione e' la via d'uscita dal perimetro.** Un comando approvato viene eseguito fuori dalla sandbox, che protegge da cio' che l'agente fa di propria iniziativa, non da cio' che una persona autorizza.
+
+La conseguenza va detta senza giri di parole, perche' e' facile costruirsi un falso senso di sicurezza:
+
+> **Il perimetro vale quanto la persona che clicca approva.** Con `on-request`, se si approva per riflesso, `writable_roots = []` non protegge nulla.
+
+Ne discende una leva concreta, da usare quando la materia lo merita: per una sessione su materiale sensibile si avvia con `--ask-for-approval never`, e i comandi che violerebbero il perimetro **falliscono** invece di chiedere. Piu' attrito, ma il perimetro smette di dipendere da un riflesso.
+
+### 3.4.2 La cartella di lavoro non e' un dettaglio
+
+Avviare Codex senza indicare una cartella di lavoro lo fa partire nella **home dell'utente**, e in quel caso `sandbox_mode = "workspace-write"` rende scrivibile **l'intera home**. Nessun avviso lo segnala: la sessione si apre normalmente e dichiara soltanto `directory: ~`.
+
+C'e' un secondo effetto, osservato il 2026-09-21 e meno ovvio. Partendo dalla home, Codex trova `~\.codex` **dentro la cartella corrente** e la scambia per una configurazione di progetto, emettendo un avviso su chiavi non supportate in `C:\Users\Utente\.codex\config.toml`. La radice di default e la configurazione locale di progetto si sovrappongono per il solo fatto di trovarsi nello stesso posto.
+
+Per questo `Avvia-Codex.ps1` ha un parametro `-Progetto` e **rifiuta di avviare una sessione interattiva senza**. La cartella va indicata, non ereditata:
+
+```powershell
+.\scripts\Avvia-Codex.ps1 -Account 2 -Progetto E:\un-progetto
+```
+
+Il modo `-Stato`, che non apre una sessione, non richiede il progetto.
 
 ### 3.5 `AGENTS.md` come puntatore, mai come copia
 
@@ -480,7 +514,7 @@ Se l'OTP non arriva, l'ordine di controllo che paga e' questo, e la prima domand
 2. **Verificare quali interruttori siano davvero modificabili.** Nella console diversi appaiono di un blu attenuato rispetto ad altri, il che di norma indica un controllo attivo ma non modificabile da quel pannello. Finche' non e' verificato, alcune righe della tabella 2.2 sono constatazioni e non azioni.
 3. **Decidere su ChatGPT Record.** E' la fonte di materiale di terzi con la densita' piu' alta, e la decisione dipende dall'esito del punto 1.
 4. **Estendere lo script di snapshot alle radici `CODEX_HOME`**, come da sezione 5. La forma migliore e' `codex doctor --json`, che produce un report gia' redatto: e' l'omologo di un controllo di igiene dell'account, e nessuno deve scrivere un parser di `config.toml`.
-5. **Compilare i prefissi di `Pulisci-Codex.ps1`.** Lo script e' **fatto** e collaudato, ma i prefissi sono ancora il segnaposto e finche' restano tali rifiuta di rimuovere, come da progetto. Non si possono compilare a tavolino: servono sessioni reali da cui leggere le cartelle di lavoro, quindi il passo e' usare Codex su un progetto vero, poi `-Lista`, poi compilare, poi `-DryRun`.
+5. ~~Compilare i prefissi di `Pulisci-Codex.ps1`~~ **FATTO il 2026-09-21.** La sequenza ha funzionato come progettata: sessione reale su un progetto, `-Lista` che legge la cartella di lavoro **da dentro il rollout**, compilazione, prova a vuoto. Tutte e tre le guardie sono state verificate contro dati reali, inclusa la terza, provata passando i prefissi di un'ipotetica altra macchina: rifiuta, e con `-Deroga` procede dichiarandolo.
 6. **Verificare se esista un hook di ciclo di vita**, come da 4.2.
 7. **Trattare la radice di default come un quarto store a pieno titolo**, non come un residuo: e' quella dell'app desktop, ha credenziali, sessioni e memorie, e non ha le chiavi di prevenzione. Vedi 3.3.2. Da decidere se imporvi la configurazione di riferimento, verificando se l'applicazione la riscrive.
 
@@ -504,3 +538,5 @@ Se l'OTP non arriva, l'ordine di controllo che paga e' questo, e la prima domand
 | `scripts\Installa-Agenti.ps1` | punto d'ingresso unico per entrambi gli agenti, collaudato |
 | `scripts\Installa-Claude.ps1` | scritto e collaudato con installazione da zero su radice di prova, poi rimossa |
 | Setup complessivo | **sei account attivi**, tre per agente |
+| Sandbox Windows | installata alla prima sessione, variante con privilegi di amministratore |
+| `scripts\Pulisci-Codex.ps1` | **operativo**: prefissi compilati, tre guardie verificate su dati reali |

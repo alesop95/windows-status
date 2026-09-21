@@ -48,6 +48,8 @@ param(
   [ValidateRange(1, 9)]
   [int]$Account,
 
+  [string]$Progetto,
+
   [switch]$Stato,
 
   [switch]$NoPulizia,
@@ -93,10 +95,37 @@ if ($Stato) {
   exit 0
 }
 
+# --- Guardia 3: la cartella di lavoro -------------------------------------
+# Senza una cartella di lavoro esplicita Codex parte nella home dell'utente, e
+# con sandbox_mode = "workspace-write" il perimetro scrivibile diventa l'INTERA
+# home. E' molto piu' largo di quanto chiunque intenda, e non lo segnala nessuno.
+# C'e' anche un secondo effetto, osservato il 2026-09-21: partendo dalla home,
+# Codex scambia la radice di default `~\.codex` per una configurazione di
+# progetto, perche' si trova dentro la cartella corrente.
+$argomenti = @()
+if ($Progetto) {
+  if (-not (Test-Path -LiteralPath $Progetto)) {
+    Write-Host "La cartella di progetto $Progetto non esiste." -ForegroundColor Red
+    exit 1
+  }
+  $Progetto = (Resolve-Path -LiteralPath $Progetto).Path
+  $argomenti += @('-C', $Progetto)
+  Write-Host "Progetto    = $Progetto" -ForegroundColor Cyan
+}
+elseif (-not $Resto -or $Resto.Count -eq 0) {
+  Write-Host '' -ForegroundColor Gray
+  Write-Host 'ATTENZIONE: nessuna cartella di progetto indicata.' -ForegroundColor Yellow
+  Write-Host 'La sessione partirebbe nella home dell''utente, e con sandbox workspace-write' -ForegroundColor Yellow
+  Write-Host 'il perimetro scrivibile sarebbe l''intera home. Indica il progetto:' -ForegroundColor Yellow
+  Write-Host ("  .\scripts\Avvia-Codex.ps1 -Account {0} -Progetto <percorso>" -f $Account) -ForegroundColor White
+  exit 1
+}
+
 # --- Esecuzione -------------------------------------------------------------
 try {
-  if ($Resto -and $Resto.Count -gt 0) {
-    & codex @Resto
+  $tutti = @($argomenti) + @($Resto | Where-Object { $_ })
+  if ($tutti.Count -gt 0) {
+    & codex @tutti
   }
   else {
     & codex
