@@ -44,6 +44,7 @@ Lo stato del progetto è interamente recuperabile su disco. Si legge per primo `
 - `07_SALUTE_E_STABILITA.md` check di salute/stabilità (registro eventi: OOM, crash, BSOD, WHEA) e setup di monitoraggio
 - `08_MONITORAGGIO_BACKUP_VEEAM.md` rilevare il guasto silenzioso del backup (freschezza dei restore point, drift dei GUID di volume) e i due script RMM di flotta
 - `09_TOOLCHAIN_DA_ALTRI_PROGETTI.md` censimento anonimo dei componenti che gli altri progetti della macchina hanno aggiunto, e divergenze verificate fra le loro schede e lo stato reale
+- `11_ORCHESTRAZIONE_AGENTI_SU_WINDOWS.md` strumenti per far lavorare più agenti in parallelo: perché `tmux` esclude metà del panorama su questa macchina, Nimbalyst come unico candidato nativo, installazione con verifica del digest, e il caveat sul server di sincronizzazione di terze parti
 - `10_CODEX_CLI_E_WORKSPACE_OPENAI.md` secondo agente da terminale: setup multi-account via `CODEX_HOME`, ripristino 1:1 dopo formattazione, i cinque store da ripulire, baseline della console di amministrazione, i due canali di spesa OpenAI (chiave API contro login ChatGPT) e le trappole diagnostiche incontrate
 
 ## Struttura

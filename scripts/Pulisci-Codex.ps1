@@ -64,7 +64,10 @@
 #>
 [CmdletBinding()]
 param(
-  [int[]]$Account = @(1, 2, 3),
+  # Vuoto = scoperta automatica delle radici presenti. Un elenco fisso qui
+  # significherebbe che una quarta radice creata domani resta fuori dalla
+  # pulizia senza che nulla lo segnali.
+  [int[]]$Account,
   [switch]$Lista,
   [switch]$DryRun,
   [switch]$Tutto,
@@ -193,6 +196,13 @@ function Remove-Percorso($percorso, $etichetta) {
 }
 
 # --- radici da trattare -----------------------------------------------------
+
+# Scoperta automatica: si enumerano le radici realmente presenti nel profilo.
+if (-not $Account -or $Account.Count -eq 0) {
+  $Account = @(Get-ChildItem -LiteralPath $env:USERPROFILE -Directory -Filter '.codex-account*' -ErrorAction SilentlyContinue |
+    ForEach-Object { if ($_.Name -match '(\d+)$') { [int]$Matches[1] } } | Sort-Object -Unique)
+  if (-not $Account -or $Account.Count -eq 0) { $Account = @(1, 2, 3) }
+}
 
 $radici = @()
 foreach ($n in $Account) {
