@@ -351,6 +351,30 @@ Il setup multi-account e' riproducibile **per intero dal repository**, senza cop
 
 Il primo comando e' di sola lettura e stampa il quadro; il secondo installa Codex se assente, crea le radici mancanti e scrive in ciascuna il `config.toml` dalla copia di riferimento. E' **idempotente**: rieseguirlo non sovrascrive un `config.toml` gia' presente, salvo `-Forza`, che serve a riallineare le radici quando la copia di riferimento cambia.
 
+### Dove vivono gli strumenti, e perche' non dentro le radici
+
+La domanda si pone da sola: se ogni radice e' un perimetro isolato, perche' gli script non vivono dentro di essa, una copia per account? La risposta e' che **le radici sono stato, il repository e' strumento**, e confonderli rompe proprio la riproducibilita' che si vuole ottenere. Cinque ragioni, in ordine di gravita'.
+
+Le radici **muoiono con la macchina**. Uno strumento di ricostruzione che vive dentro cio' che va ricostruito non esiste piu' nel momento in cui serve.
+
+L'installatore **deve girare prima che le radici esistano**: ospitarlo in una radice e' un paradosso, perche' serve a crearla.
+
+Il wipe **non deve vivere dentro cio' che ripulisce**. Una pulizia leggermente piu' larga del previsto rimuove il proprio strumento, e lo fa senza errori.
+
+**Tre copie divergono in silenzio.** Uno script parametrizzato per account e' una sola fonte di verita'; tre copie accumulano correzioni disallineate e nessuno sa piu' quale sia quella giusta. E' la stessa ragione per cui `AGENTS.md` e' un puntatore e non una copia.
+
+E' infine **lo scopo dichiarato del repository che li ospita**: si versionano gli script e i documenti, non le fotografie dello stato.
+
+Gli script non contengono percorsi fissi, usano la posizione del proprio file e il profilo utente, quindi il repository si clona ovunque, anche su una macchina con lettere di disco diverse.
+
+### Il puntatore nelle radici
+
+Resta un problema reale che la collocazione nel repository crea: le radici diventano **orfane**. Chi le trovasse fra due anni non avrebbe modo di sapere dove stiano strumenti, documentazione e regole.
+
+Si risolve con un puntatore, non con una copia: `Installa-Codex.ps1` scrive in ogni radice un **`AGENTS.md`** dalla copia versionata `codex-agents.riferimento.md`. Codex lo legge all'inizio di ogni sessione su quella radice, quindi il puntatore non e' un promemoria per un umano di passaggio ma un documento che fa un lavoro: dichiara all'agente stesso dove vivono gli strumenti, che la memoria legittima e' solo quella di progetto, che commit e push restano manuali, e che segreti e identificativi non entrano nei file tracciati.
+
+Vale anche qui la regola gia' enunciata: **non si modifica nella radice**, si modifica il riferimento e si ridistribuisce con `-Forza`, altrimenti le radici divergono senza che nulla lo segnali.
+
 ### Cosa si ripristina e cosa no
 
 | Elemento | Ripristino |
