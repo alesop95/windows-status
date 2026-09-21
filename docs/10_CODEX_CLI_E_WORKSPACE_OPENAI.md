@@ -398,6 +398,43 @@ Il 2026-09-21 l'installatore e' stato eseguito con `-Forza` su tre radici gia' p
 
 ---
 
+## 6-bis. Simmetria fra i due agenti da terminale
+
+Questa macchina ospita due agenti da terminale, entrambi multi-account, e per un po' solo uno dei due era riproducibile con un comando. La differenza non era una svista ma una conseguenza tecnica, e va conosciuta perche' spiega perche' l'installazione non puo' essere identica.
+
+**Claude Code ha un hook di fine sessione.** Un hook e' un comando registrato nel `settings.json` dell'account che punta a un file, quindi lo script di wipe **deve esistere come copia dentro ogni radice**. **Codex non ha un hook di ciclo di vita**, si avvia da un wrapper, e i suoi script restano nel repository. Da qui due installatori diversi.
+
+### Un solo punto d'ingresso
+
+```powershell
+.\scripts\Installa-Agenti.ps1 -Verifica
+.\scripts\Installa-Agenti.ps1 -Prefissi 'D--','E--' -ClonaTemplate
+```
+
+`Installa-Agenti.ps1` non duplica nulla: verifica i prerequisiti, risolve la dipendenza dal template clonandolo se manca, e chiama i due installatori. Da una macchina Windows nuda a multi-account completo su entrambi gli agenti si passa da qui.
+
+### Perche' due repository e non uno
+
+E' la domanda che si pone chiunque veda la dipendenza, e la risposta e' che **hanno lavori diversi**.
+
+Il **template** e' lo *standard*: generico, portabile fra macchine e fra persone, privo di qualunque valore di questa macchina. **Questo repository** e' *questa macchina*: contiene i valori che solo qui hanno senso, i prefissi dei dischi di sviluppo e il numero di account.
+
+Copiare i riferimenti del template dentro questo repository creerebbe due versioni che divergono in silenzio, che e' il difetto che tutto il resto del progetto esiste per evitare. Mettere i valori di questa macchina nel template lo renderebbe inservibile altrove. La dipendenza va quindi **tenuta**, resa **esplicita** e **automatizzata**, non eliminata: l'orchestratore la risolve da se', e l'utente non ha bisogno di sapere quale repository fa cosa.
+
+### `Installa-Claude.ps1` e i suoi due difetti trovati al collaudo
+
+Lo script sostituisce nel `session-end-wipe.ps1` del template il percorso della radice e i prefissi da preservare, copia il companion, e fonde nel `settings.json` l'hook e `autoMemoryEnabled: false` **preservando ogni altra chiave**, con una scrittura difensiva in Node per la ragione gia' nota: `ConvertFrom-Json` di PowerShell 5.1 tratta le chiavi come case-insensitive.
+
+Ha tre guardie, e la terza ha trovato due difetti veri durante il collaudo su una radice di prova, entrambi del tipo che sarebbe emerso solo alla prima chiusura di sessione.
+
+Il primo: la sostituzione dei segnaposto era fatta con `-replace`, e **nella stringa di sostituzione i caratteri `$` sono riferimenti a gruppi di cattura**, non testo letterale. Righe che contengono variabili uscivano mangiate. Corretto passando a una sostituzione riga per riga, senza regex.
+
+Il secondo: **PowerShell 5.1 mangia le virgolette annidate** quando passa un argomento a un eseguibile nativo, e l'hook finiva registrato con il percorso non quotato. Su un percorso con spazi non avrebbe funzionato. Corretto passando a Node il solo percorso e facendogli comporre il comando.
+
+La guardia stessa ha poi dovuto essere corretta per un falso positivo: contava anche i segnaposto citati **nei commenti** di intestazione del template, che restano li' legittimamente, e dava quindi un allarme a ogni installazione riuscita. Un allarme che suona sempre smette di essere letto, quindi ora guarda le sole righe di assegnamento.
+
+---
+
 ## 7. I due canali di spesa OpenAI, e l'integrazione con Trados Studio
 
 Il perimetro OpenAI dell'azienda non e' solo l'abbonamento: ci sono **due canali di spesa distinti**, con fatture separate, e confonderli porta a decisioni sbagliate in entrambe le direzioni. La regola per distinguerli e' meccanica e non ha eccezioni.
