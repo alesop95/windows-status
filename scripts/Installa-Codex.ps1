@@ -55,6 +55,7 @@ $ErrorActionPreference = 'Stop'
 
 $repo = Split-Path -Parent $PSScriptRoot
 $riferimento = Join-Path $repo 'codex-config.riferimento.toml'
+$riferimentoAgents = Join-Path $repo 'codex-agents.riferimento.md'
 
 function Scrivi($testo, $colore) {
   Write-Host $testo -ForegroundColor $colore
@@ -130,6 +131,22 @@ for ($n = 1; $n -le $Radici; $n++) {
     }
   }
 
+  # AGENTS.md: puntatore al repository, non copia degli strumenti. Codex lo legge
+  # all'inizio di ogni sessione su questa radice, quindi il puntatore fa un lavoro
+  # utile invece di essere solo un promemoria per un umano di passaggio.
+  $agents = Join-Path $radice 'AGENTS.md'
+  $serveAgents = (-not (Test-Path -LiteralPath $agents)) -or $Forza
+  if ($serveAgents -and (Test-Path -LiteralPath $riferimentoAgents)) {
+    if ($Verifica) {
+      if ($azione -eq 'gia a posto') { $azione = 'AGENTS.md da scrivere' }
+    }
+    else {
+      Copy-Item -LiteralPath $riferimentoAgents -Destination $agents -Force
+      if ($azione -eq 'gia a posto') { $azione = 'AGENTS.md scritto' }
+      else { $azione = $azione + ' + AGENTS.md' }
+    }
+  }
+
   # auth.json non viene mai toccato, ne' creato ne' rimosso ne' copiato.
   $haAuth = Test-Path -LiteralPath $auth
   $statoLogin = 'DA FARE'
@@ -138,6 +155,7 @@ for ($n = 1; $n -le $Radici; $n++) {
   $quadro += [pscustomobject]@{
     Radice = ".codex-account$n"
     Config = (Test-Path -LiteralPath $config)
+    Agents = (Test-Path -LiteralPath $agents)
     Login  = $statoLogin
     Azione = $azione
   }
