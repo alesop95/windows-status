@@ -181,6 +181,13 @@ if (-not $SoloClaude) {
   & (Join-Path $PSScriptRoot 'Installa-Codex.ps1') @argCodex
 }
 
+if (-not $Verifica) {
+  Titolo 'Comandi di shell'
+  $comandi = Join-Path $PSScriptRoot 'Installa-Comandi.ps1'
+  if (Test-Path -LiteralPath $comandi) { & $comandi }
+  else { Nota '  Installa-Comandi.ps1 non presente: i comandi brevi non sono stati installati.' 'DarkYellow' }
+}
+
 Titolo 'Riepilogo'
 Nota 'Cio'' che NON viene ripristinato da nessuno dei due, deliberatamente:' 'White'
 Nota '  - le credenziali: si rifa'' un login per radice e per agente' 'DarkGray'

@@ -438,6 +438,26 @@ Questa macchina ospita due agenti da terminale, entrambi multi-account, e per un
 
 **Claude Code ha un hook di fine sessione.** Un hook e' un comando registrato nel `settings.json` dell'account che punta a un file, quindi lo script di wipe **deve esistere come copia dentro ogni radice**. **Codex non ha un hook di ciclo di vita**, si avvia da un wrapper, e i suoi script restano nel repository. Da qui due installatori diversi.
 
+### La simmetria d'uso, che e' diversa da quella di sostanza
+
+La simmetria costruita finora era **di sostanza**: due installatori, due catene, un punto d'ingresso. Restava pero' un'asimmetria **d'uso**, ed e' quella che si sente ogni giorno: Claude si avviava con `claude-account2`, Codex con il percorso intero di uno script dentro il repository.
+
+Era sbagliato per un motivo di principio: **il repository e' la fonte degli strumenti, non il modo in cui li si lancia**. Lanciare per percorso significa che lo strumento quotidiano dipende da dove hai clonato il repo.
+
+`scripts\Installa-Comandi.ps1` scrive nel profilo PowerShell le funzioni per tutte le radici presenti, scoprendole da sole. Dopo l'installazione i due agenti si avviano allo stesso modo:
+
+```powershell
+cd <progetto>
+claude-account2
+codex-account2
+```
+
+La cartella corrente diventa il progetto, come ci si aspetta da un comando di shell.
+
+**La differenza interna resta, ed e' documentata perche' non e' arbitraria.** La funzione di Claude imposta la variabile e chiama l'eseguibile: basta, perche' la pulizia la fa l'hook nativo. La funzione di Codex passa dal launcher, perche' Codex **non ha un hook di ciclo di vita** e guardie, vincolo sulla cartella di lavoro e pulizia all'uscita vivono nel wrapper. Stessa invocazione, motori diversi.
+
+Il blocco scritto nel profilo e' delimitato da marcatori e viene sostituito a ogni esecuzione, quindi lo script e' idempotente. Il profilo viene copiato prima di essere toccato, e alla prima installazione `-RimuoviVecchie` toglie le definizioni scritte a mano in precedenza: **in PowerShell vince l'ultima definita**, quindi una definizione vecchia lasciata in coda farebbe ombra a quella generata senza che nulla lo segnali.
+
 ### Un solo punto d'ingresso
 
 ```powershell
