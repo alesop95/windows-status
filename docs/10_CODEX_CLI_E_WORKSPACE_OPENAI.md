@@ -508,6 +508,36 @@ Se l'OTP non arriva, l'ordine di controllo che paga e' questo, e la prima domand
 
 ---
 
+## 7-bis. Misurare il consumo di tutte le radici insieme
+
+Con sei radici su due agenti, il consumo si guarda una radice alla volta e quindi non si guarda mai. La conseguenza non e' estetica: **si lavora su una flotta satura mentre un'altra e' ferma**, che e' precisamente lo spreco che il setup multi-account esiste per evitare.
+
+```powershell
+.\scripts\Consumo-Agenti.ps1
+.\scripts\Consumo-Agenti.ps1 -Giorni 7
+.\scripts\Consumo-Agenti.ps1 -Json
+```
+
+Sola lettura. Non chiama nessun servizio: legge i file di sessione che i due agenti tengono gia' sul disco, tramite `ccusage`, che li interpreta senza inviare nulla altrove. Scopre da sola le radici presenti, comprese le due **radici di default** senza numero, che consumano quota e sono il posto in cui e' piu' facile perdere di vista dove siano finiti i token.
+
+Segnala inoltre lo **squilibrio fra le flotte** quando supera un fattore cinque, perche' il serbatoio fermo e' la leva che aumenta il lavoro svolto senza avvicinare alcun limite.
+
+### Due trappole di lettura, entrambe incontrate
+
+**La colonna in valuta e' nozionale.** E' quanto quei token costerebbero a tariffa a consumo; su un piano in abbonamento non si paga. Serve come indicatore di valore, non come spesa, e leggerla come una fattura porta a conclusioni sbagliate sull'ordine di grandezza.
+
+**`Cache Read` domina e non e' lavoro nuovo.** E' contesto riletto, e su un rilievo reale valeva quasi il 99 per cento del totale. Le colonne che descrivono il lavoro sono `Input`, `Output` e `Cache Create`.
+
+### Un difetto trovato al collaudo, che vale oltre questo strumento
+
+Per misurare una radice alla volta si punta la variabile d'ambiente di quella flotta alla radice e quella dell'altra altrove. La prima versione la puntava a un **nome inventato**, e `ccusage` non restituiva zero: **falliva**, e il fallimento arrivava come "nessun dato", indistinguibile da un consumo nullo.
+
+La seconda versione usava una cartella vuota ma esistente, e falliva ancora: non basta che esista, **deve avere la forma di una radice di agente**. La versione corretta crea le sottocartelle che le due flotte si aspettano.
+
+La forma generale merita di essere ricordata perche' non riguarda questo strumento: **un errore di lettura che si presenta come assenza di dato produce una misura sbagliata e silenziosa**, ed e' il modo in cui una misurazione diventa peggiore di nessuna misurazione.
+
+---
+
 ## 8. Punti aperti
 
 1. **Ticket all'assistenza per la ritenzione delle chat.** Nessuna altra azione compensa questa voce. Target 90 giorni.
