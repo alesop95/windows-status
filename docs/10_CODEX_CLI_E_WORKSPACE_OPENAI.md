@@ -489,6 +489,33 @@ La guardia stessa ha poi dovuto essere corretta per un falso positivo: contava a
 
 ---
 
+## 6-ter. Dove vivono gli script, e perche' si sono spostati
+
+Per un giorno la catena dei due agenti e' stata divisa senza una ragione: gli strumenti di Claude nel **template**, quelli di Codex in **questo repository**. Non era una scelta, era l'ordine in cui le cose erano state costruite, e si sentiva ogni volta che serviva ricordare dove stesse un pezzo.
+
+La regola che li rimette a posto e' quella gia' dichiarata altrove nel sistema, applicata fino in fondo: **generico e riusabile da chiunque sta nel template; specifico di questa macchina sta qui.**
+
+Applicandola davvero, **l'intera catena e' generica**. Nessuno di quegli script contiene valori di questa macchina: usano la posizione del proprio file e il profilo utente, e i soli valori specifici sono i **prefissi degli slug da preservare** nel wipe e il **numero di radici**, che sono parametri e non codice.
+
+| Repository | Cosa contiene |
+|---|---|
+| **template**, pacchetto `agenti-terminale` | installatori, launcher, pulizia, comandi di shell, misura del consumo, file di riferimento |
+| **questo repository** | `scripts\Agenti.ps1`, che conosce il percorso del template e i due valori di questa macchina |
+
+Il vantaggio non e' ordine estetico: **chiunque erediti il template si porta dietro il multi-agente completo**, non meta'.
+
+### Perche' non si copia
+
+Questo pacchetto e' l'unico che **non si istanzia copiando**. Il repository di macchina non ne contiene una copia ma una chiamata, per la stessa ragione per cui `AGENTS.md` e' un puntatore: **due copie divergono in silenzio**, e la correzione fatta in una non arriva all'altra.
+
+### Come e' stato fatto senza rompere niente
+
+L'ordine conta, e vale registrarlo perche' e' riusabile per qualunque spostamento fra repository. **Si copia prima, si verifica, e solo alla fine si rimuove**: in nessun momento esiste uno stato in cui la catena e' a meta'.
+
+Tre cose si sarebbero rotte con uno spostamento diretto, e sono state trattate esplicitamente. I **comandi brevi nel profilo** contengono il percorso assoluto del launcher, quindi il profilo va rigenerato dalla nuova posizione. L'**`AGENTS.md`** distribuito nelle radici cita i percorsi degli strumenti, quindi va riscritto e ridistribuito. E i due **installatori avevano il percorso del template cablato**, quindi ora lo **derivano** dalla posizione del proprio file: un percorso assoluto dentro un template lo renderebbe inservibile altrove, che e' esattamente cio' che un template non deve essere.
+
+---
+
 ## 7. I due canali di spesa OpenAI, e l'integrazione con Trados Studio
 
 Il perimetro OpenAI dell'azienda non e' solo l'abbonamento: ci sono **due canali di spesa distinti**, con fatture separate, e confonderli porta a decisioni sbagliate in entrambe le direzioni. La regola per distinguerli e' meccanica e non ha eccezioni.
@@ -555,6 +582,37 @@ Per misurare una radice alla volta si punta la variabile d'ambiente di quella fl
 La seconda versione usava una cartella vuota ma esistente, e falliva ancora: non basta che esista, **deve avere la forma di una radice di agente**. La versione corretta crea le sottocartelle che le due flotte si aspettano.
 
 La forma generale merita di essere ricordata perche' non riguarda questo strumento: **un errore di lettura che si presenta come assenza di dato produce una misura sbagliata e silenziosa**, ed e' il modo in cui una misurazione diventa peggiore di nessuna misurazione.
+
+---
+
+## 7-ter. Modello, ragionamento e livello di servizio
+
+Tre leve distinte, tutte a default costoso, e nessuna e' evidente.
+
+| Leva | Default | Per una mappatura ripetitiva |
+|---|---|---|
+| **Modello** | il cavallo da lavoro generico | quello dichiarato *fast and affordable* |
+| **Ragionamento** | `medium` | `low`: il mandato e' meccanico, non c'e' nulla da ragionare |
+| **Livello di servizio** | **`priority`, cioe' `fast`** | spento |
+
+Il livello di servizio merita la riga in grassetto: la sua descrizione e' *"1.5x speed, **increased usage**"*, e **tutti** i modelli lo hanno come default. Si paga velocita' in quota, per impostazione predefinita e senza che nulla lo dica.
+
+### Come si legge e come si spegne
+
+Il livello di servizio si governa con un **comando dedicato**, `/fast`, descritto dalla TUI come *"1.5x speed, increased usage"*. Non e' un passo del flusso di `/model`, ed e' per questo che cercarlo li' fa perdere tempo: e' una voce a se' nell'elenco che si apre digitando `/`.
+
+> Nota di metodo che vale oltre questo caso: prima di cercare una chiave di configurazione o di frugare in un binario, **si apre l'elenco dei comandi dello strumento**. Qui la risposta era a un carattere di distanza, e l'ho cercata per mezz'ora nei posti sbagliati. E' la stessa disciplina della sezione 20 del sistema di progetto, applicata all'interfaccia invece che agli artefatti.
+
+La riga di stato sotto il prompt resta comunque l'indicatore dello stato corrente:
+
+```text
+gpt-5.6-luna low            due componenti: livello veloce SPENTO
+gpt-5.6-sol medium fast     tre componenti: livello veloce ATTIVO
+```
+
+**Passare da `/model` e riscegliere modello e ragionamento azzera il livello di servizio.** Verificato sul contesto di turno di una sessione reale: dopo il passaggio il campo del livello **non compare affatto**, mentre modello ed effort ci sono. Non e' una proprieta' del modello scelto, perche' tutti dichiarano `priority` come default: e' la scelta esplicita che riporta la sessione allo standard.
+
+Quindi la procedura per un lotto: `/model`, si sceglie il modello economico, si sceglie `low`, e si controlla che la riga di stato abbia **due** componenti e non tre.
 
 ---
 
