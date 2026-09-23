@@ -31,8 +31,8 @@ Tutti i valori sotto sono stati letti dalla macchina il 2026-08-26, non dalle sc
 | `yt-dlp` | 2026.8.19 | `pip install --user`, `%APPDATA%\Python\Python313\Scripts` | `retrogame-mod-pok-dev` (sottotitoli come fonti citabili) |
 | Deno | 2.9.5 | **WinGet**, shim in `%LOCALAPPDATA%\Microsoft\WinGet\Links` | `retrogame-mod-pok-dev` (runtime JS per yt-dlp) |
 | ffmpeg | 9.0.1 full build (gyan.dev), compilato con `--enable-whisper` | **WinGet**, shim in `%LOCALAPPDATA%\Microsoft\WinGet\Links` | pipeline di trascrizione |
-| .NET runtime | Desktop 8.0.28 e 8.0.29, NETCore 6.0.36 / 8.0.28 / 8.0.29, ASP.NET Core 8 | installer | `retrogame-mod-pok-dev` (applicazioni .NET Windows Forms) |
-| .NET SDK | **nessuno** | — | nessuno: la macchina usa applicazioni .NET, non le sviluppa |
+| .NET runtime | Desktop 8.0.31 e 10.0.12, NETCore 6.0.36 / 8.0.31 / 10.0.12, ASP.NET Core 8.0.29 / 8.0.31 / 10.0.12 (riletti il 2026-09-23 con `dotnet --list-runtimes`) | installer | `retrogame-mod-pok-dev` (applicazioni .NET Windows Forms) |
+| .NET SDK | 10.0.401, dal 2026-09-23 | **WinGet**, pacchetto `Microsoft.DotNet.SDK.10`, in `C:\Program Files\dotnet\sdk` accanto ai runtime; verificato con `dotnet --list-sdks` | `retrogame-mod-pok-dev`: compila la libreria del verificatore di salvataggi dal clone del suo sorgente, che richiede `net10.0` e C# 14, per generare esemplari con la stessa libreria che ne giudica la legalità. Prima di questa data la macchina non aveva alcun SDK |
 | git | 2.55.0.windows.3 | installer | trasversale |
 | Veeam Agent for Microsoft Windows | 13.0.3.1220 | installer | vedi `08_MONITORAGGIO_BACKUP_VEEAM.md` |
 | Driver CH340/CH341 (wch.cn - Ports) | 3.9.2024.9 | consegnato da Windows Update come driver di dispositivo, non da installer manuale; servizio kernel `CH341SER_A64` (`CH341S64.SYS`) | `retrogame-mod-pok-dev` (GBxCart RW v1.4 Pro, lettore di cartucce Game Boy/GBA) |
