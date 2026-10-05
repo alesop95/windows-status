@@ -86,11 +86,33 @@ Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
 
 Se il genitore è `claude` e la riga di comando cita un server MCP, quel `node.exe` è un'istanza dell'MCP e va tenuto d'occhio come le altre: chiuderla insieme alla sessione che non serve più, non lasciarla appesa tra un lancio e l'altro di Claude Code.
 
+### 2d. Quando la vincolata non appartiene a nessun processo (analisi del 2026-10-05)
+
+La sezione 2c presuppone che il commit esaurito stia in un processo. Su questa macchina il presupposto è falso, e lo dimostrano gli stessi eventi 2004, che nel ramo XML `UserData/MemoryExhaustionInfo/SystemInfo` riportano separatamente `SystemCommitCharge`, `ProcessCommitCharge`, `PagedPoolUsage`, `NonPagedPoolUsage` e `PhysicalMemoryUsage`. La differenza fra il commit di sistema e la somma di commit dei processi e dei due pool è commit che nessun processo possiede come privato: sezioni condivise appoggiate al file di paging, viste mappate, allocazioni di driver.
+
+Misura presa su tutti gli eventi 2004 presenti nel registro System al 2026-10-05, dal 27/05 al 05/10, con lo script di lettura riportato sotto: in ogni episodio la vincolata è al limite (222 GB fino a luglio, 244 GB dopo l'ingrandimento del pagefile), il commit dei processi sta fra 29 e 81 GB, i due pool insieme fra 7 e 26 GB, e la quota non attribuita fra 115 e 185 GB. La RAM fisica effettivamente usata negli stessi istanti è fra 38 e 82 GB su 128: la vincolata che manca è prenotata ma non residente. Il processo più grande di ogni evento non supera mai 8,3 GB (un `7zG.exe` del 02/10), e di norma sta sotto i 3 GB.
+
+La quota non attribuita cresce con l'uptime a ritmo quasi costante, circa 6,5 GB al giorno, cioè 270 MB l'ora, e cresce anche di notte a macchina inattiva: fra 00:28 e 09:09 del 27/06 è salita di 2,3 GB. Subito dopo un riavvio vale circa 5 GB (misura del 05/10 a 30 minuti di uptime). Ne segue che il sistema arriva al limite dopo tre o quattro settimane senza riavvio, indipendentemente dal carico, e che ingrandire il pagefile ha solo spostato in là la data: il 05/10 la macchina, avviata il 10/09, si è bloccata (Kernel-Power 41 con `BugcheckCode=0`, cioè nessuna schermata blu ma blocco e riavvio forzato) sette minuti dopo l'ultimo evento 2004. Un ritmo costante e indipendente dall'attività dell'utente indica un componente che alloca a intervalli regolari e non rilascia, plausibilmente un servizio o un driver; quale sia è ancora da verificare.
+
+Lettura della ripartizione dagli eventi, in sola lettura:
+
+```powershell
+Get-WinEvent -FilterHashtable @{LogName='System'; ProviderName='Microsoft-Windows-Resource-Exhaustion-Detector'; Id=2004} | ForEach-Object { $s=([xml]$_.ToXml()).Event.UserData.MemoryExhaustionInfo.SystemInfo; [pscustomobject]@{Quando=$_.TimeCreated; VincolataGB=[math]::Round($s.SystemCommitCharge/1GB,1); ProcessiGB=[math]::Round($s.ProcessCommitCharge/1GB,1); NonAttribuitaGB=[math]::Round(($s.SystemCommitCharge-$s.ProcessCommitCharge-$s.PagedPoolUsage-$s.NonPagedPoolUsage)/1GB,1); RAMusataGB=[math]::Round($s.PhysicalMemoryUsage/1GB,1)} }
+```
+
+Per individuare il detentore serve una serie temporale da un riavvio in avanti, che metta accanto alla quota non attribuita, per ogni processo, il commit privato, i byte committed delle regioni mappate (`MEM_MAPPED`, letti con `VirtualQueryEx`) e il numero di handle: il processo che cresce allo stesso ritmo della quota non attribuita la sta trattenendo, e se nessuno cresce il detentore è un driver. Lo strumento è `scripts\Campiona-Vincolata.ps1`: senza parametri prende un campione in sola lettura e lo accoda a `snapshots\vincolata\totali.csv` e `processi.csv`; con `-Installa`, da PowerShell amministratore, registra un'attività pianificata che lo esegue come SYSTEM ogni 15 minuti, e `-Disinstalla` la rimuove. Da utente non amministratore non legge circa 160 processi su 400, fra cui i servizi, ed è per questo che la serie va presa dall'attività. Anche come SYSTEM i processi protetti, come l'antimalware, restano illeggibili per la memoria mappata: di quelli restano commit privato e handle.
+
+```powershell
+.\scripts\Campiona-Vincolata.ps1               # un campione (sola lettura)
+.\scripts\Campiona-Vincolata.ps1 -Installa     # ogni 15 minuti come SYSTEM (admin)
+.\scripts\Campiona-Vincolata.ps1 -Disinstalla  # rimuove l'attività (admin)
+```
+
 ---
 
 ## 3. Come leggere il verdetto
 
-- **`[ALERT][OOM]`** → memoria/commit esaurita. Applica 2b (WSL), individua il leak (2c). Soluzione strutturale: fermare il leak, **non** ingrandire il pagefile.
+- **`[ALERT][OOM]`** → memoria/commit esaurita. Prima di cercare il processo (2c) verifica con 2d se la vincolata è davvero nei processi; poi 2b (WSL). Soluzione strutturale: fermare il leak, **non** ingrandire il pagefile.
 - **`[ALERT][BSOD]` / `[ALERT][HARDWARE]` (WHEA)** → è hardware: test RAM (`mdsched.exe`), driver, temperature. *Nell'incidente 2026-06-30 questi erano a zero → causa software.*
 - **`[ALERT][DISCO]`** → corruzione reale: `chkdsk`, SMART, backup immediato.
 - **`[WARN][STABILITA]`** (Kernel-Power 41 / 6008) → spegnimento non pulito: mancanza alimentazione, hang totale o reset forzato. Se isolato, episodico.
