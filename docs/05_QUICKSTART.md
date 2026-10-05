@@ -3,7 +3,7 @@
 > Guida rapida d'uso. Per il dettaglio di ogni sezione vedi gli altri documenti in `docs/` e le intestazioni dei tre script in `scripts/`. Criterio del progetto: **prima la mappatura, poi la pulizia.**
 
 ## Cos'è
-Una fotografia completa, ripetibile e a prova di manomissione di un PC Windows 11: stato di sistema, sicurezza a livello di audit (postura, superficie d'attacco, persistenza, catena di fiducia), configurazioni per ogni account (Claude multi-profilo, git, SSH, browser) e quanto serve a **ricostruire la macchina altrove**. Ogni dato sensibile è oscurato alla fonte; ogni snapshot si chiude con una scansione anti-segreti e un manifest SHA256.
+Una fotografia completa e ripetibile di un PC Windows 11: stato di sistema, sicurezza a livello di audit (postura, superficie d'attacco, persistenza, catena di fiducia), configurazioni per ogni account (Claude, radici Codex, git, SSH, browser) e quanto serve a **ricostruire la macchina altrove**. Lo snapshot omette le credenziali degli agenti, controlla l'output con una scansione anti-segreti e produce un manifest SHA256.
 
 ## Avvio rapido: un comando solo
 
@@ -26,7 +26,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 5. VERSIONA    ->  git add/commit/push (operazione manuale dell'utente)
 ```
 
-Fotografa prima e dopo ogni modifica importante (installazioni, pulizia, aggiornamenti grossi) e periodicamente come controllo. `SUMMARY.txt` per la sintesi umana, `snapshot.json` per quella a macchina, la sottocartella `utenti\` per le configurazioni per-account.
+Fotografa prima e dopo ogni modifica importante (installazioni, pulizia, aggiornamenti grossi) e periodicamente come controllo. `SUMMARY.txt` per la sintesi umana, `snapshot.json` per quella a macchina, la sottocartella `utenti\` per le configurazioni per-account. Lo snapshot schedulato `-Scope Machine` legge le radici degli agenti da disco, ma come SYSTEM può non vedere WinGet: per ottenere `software_winget.json` e la toolchain live esegui anche `-Scope User` nell'account interattivo e controlla il riepilogo.
 
 ## Comandi
 
@@ -66,7 +66,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 `ADMIN` (nuovi amministratori) - `ACCOUNT` (creati/riabilitati) - `AUTORUN` (avvio + registro profondo) - `TASK` (task nuove o azione cambiata) - `PORTE` (nuove porte in ascolto) - `SERVIZI` (nuovi, StartMode/account cambiati, percorsi non quotati) - `DRIVER` (non firmati) - `POSTURA` (Secure Boot, TPM, VBS, UAC, SMB, RDP... cambiati) - `DEFENDER` (nuove esclusioni, ASR indebolite) - `FIREWALL` (nuove regole inbound) - `TRUST` (nuove root CA, publisher, hosts modificato) - `BROWSER` (nuove estensioni). Regola di triage: *ogni alert e legittimo solo dopo che sai spiegarlo*.
 
 ## Ripristino su un altro PC (le due gambe)
-Immagine **Veeam** (bare metal, vedi `02_VEEAM_BACKUP_PORTABILITA.md`) + questo repo: `Reinstall-Software.ps1` per i programmi, `task_xml\` per le attivita pianificate, `wifi\` e `associazioni_file.xml` per le impostazioni, i file `utenti\` per ricostruire Claude/git/SSH, la mappa per tutto il resto.
+Immagine **Veeam** (bare metal, vedi `02_VEEAM_BACKUP_PORTABILITA.md`) + questo repo: `Reinstall-Software.ps1` per i programmi, `task_xml\` per le attivita pianificate, `wifi\` e `associazioni_file.xml` per le impostazioni, i file `utenti\` per ricostruire Claude/git/SSH, la mappa per tutto il resto. Per gli agenti usa `scripts\Agenti.ps1 verifica` e `installa` con il template `agenti-terminale`; per npm globale, `pip --user`, SDK .NET e cache Playwright vedi `02_VEEAM_BACKUP_PORTABILITA.md` e `09_TOOLCHAIN_DA_ALTRI_PROGETTI.md`.
 
 ## Modifiche al sistema (debloating, hardening): regole
 Tutto ciò che MODIFICA il sistema (debloating, servizi, registro, RDP, ecc.) NON è automatico: si propone, si applica a micro-step, **una categoria alla volta**, con paracadute (immagine Veeam recente + punto di ripristino) prima, e riavvio + verifica (Outlook/Teams/OneDrive/VPN/SSO) dopo. Ogni modifica effettiva va a changelog nella mappa con: data, cosa, perche, come si annulla.

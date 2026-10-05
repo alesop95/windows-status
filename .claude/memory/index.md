@@ -4,6 +4,8 @@
 
 ## Stato
 
+**AGGIORNAMENTO 2026-10-05 — setup riproducibile.** Lo snapshot del 04/10 eseguito come SYSTEM non ha `software_winget.json`: non era una base sufficiente per `Reinstall-Software.ps1`. Il 05/10 un export WinGet interattivo ha prodotto in `snapshots/exports/winget_20261005/` un manifesto privato valido con 76 pacchetti; lo snapshot e il reinstallatore ora verificano presenza e contenuto del manifesto. Lo snapshot macchina censisce le radici Codex tramite presenza e hash dei soli file di configurazione, senza credenziali o cronologia. Toolchain aggiornata in `docs/09` e mappa compilata; dettagli e limiti nel work-log del 05/10. Spotify è ricomparso fra le Appx, con regole firewall inbound: decidere se mantenerlo prima di includerlo nel setup. Nessun cambiamento al sistema in questa tornata, nessun commit automatico.
+
 ```
 Branch attivo:        main
 Commit di riferimento: d98a77d

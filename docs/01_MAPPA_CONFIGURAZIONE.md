@@ -101,7 +101,7 @@ Ultimo aggiornamento: `____-__-__`  •  Aggiornato da: `__________`
 
 > ✍️ Per avere i dati *live* di sviluppo di ogni account, esegui `Snapshot-Stato.ps1 -Scope User` loggato con quell'account (i file su disco si leggono comunque tutti con lo snapshot admin).
 
-> 🔄 La toolchain aggiunta dagli **altri progetti** della macchina (`D:\`, `E:\`) è censita a parte in `09_TOOLCHAIN_DA_ALTRI_PROGETTI.md`, con le divergenze verificate fra le schede di quei progetti e lo stato reale. Dallo snapshot la sezione 13 riporta ora anche: `yarn`, tutti gli interpreti Python (`py -0`, non solo quello che vince sul PATH), i pacchetti `pip --user` (invisibili a registro e WinGet), i **runtime** .NET oltre agli SDK (su questa macchina gli SDK sono assenti e i runtime sono tutto ciò che esiste), `deno`, `ffmpeg` e la cache dei browser Playwright.
+> 🔄 La toolchain aggiunta dagli **altri progetti** della macchina (`D:\`, `E:\`) è censita a parte in `09_TOOLCHAIN_DA_ALTRI_PROGETTI.md`. La sezione 13 dello snapshot riporta anche `yarn`, tutti gli interpreti Python (`py -0`), i pacchetti `pip --user`, gli SDK e i runtime .NET, `deno`, `ffmpeg` e la cache Playwright. Lo SDK .NET 10 è presente dal 2026-09-23; non dedurre l'assenza di SDK da un censimento precedente.
 
 ---
 

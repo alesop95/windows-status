@@ -2,6 +2,10 @@
 
 > Append-only, in ordine cronologico inverso (la voce più recente in alto). Ogni passo significativo di codice e ogni intervento manuale rilevante lascia una voce con data, file toccati, motivo e commit di riferimento. Qui confluisce anche il log di riconciliazione dei documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento sopravvive a un clone.
 
+## 2026-10-05 — Riproducibilità dopo gli aggiornamenti di settembre/ottobre
+
+Commit: modifiche preparate, commit manuale dell'utente. Confrontati gli snapshot admin del 28/09 e 04/10: nessun nuovo programma nel registro; Spotify è ricomparso come Appx con regole firewall inbound, da chiarire prima di fissarlo nel setup. Lo snapshot `-Scope User` del 05/10 conferma Node 22.23.3, npm 10.9.9, Codex CLI 0.160.0 e .NET SDK 10.0.401. Corretto `Snapshot-Stato.ps1`: rileva le quattro radici Codex tramite hash di `config.toml`/`AGENTS.md` senza leggere `auth.json`, database o trascrizioni; conta i pacchetti WinGet solo dopo un export valido e consente l'export anche con `-Scope User`. Gli snapshot come SYSTEM non producono `software_winget.json`; esportato manualmente in una sessione interattiva un manifesto locale ignorato da git con 76 pacchetti e 2 sorgenti. `Reinstall-Software.ps1` rifiuta manifesti assenti/vuoti/non validi. Aggiornate le guide 01, 02, 05, 09 e 10 e la mappa compilata privata. Verificati parse PowerShell, linter Markdown, `git diff --check`, snapshot reale e scansione anti-segreti. Lo snapshot macchina di prova non era elevato: il rilievo amministrativo del 04/10 resta quello autorevole per le sezioni protette.
+
 ## 2026-10-05 — Blocco di sistema per commit esaurito: la vincolata non è nei processi
 
 Commit: (nessuno; modifica preparata a `docs/07_SALUTE_E_STABILITA.md`, nuova sezione 2d). Nessuna modifica al sistema. Innesco: blocco totale del 05/10 alle 10:29 (Kernel-Power 41, `BugcheckCode=0`, uptime dal 10/09), sette minuti dopo un evento 2004; screenshot di Gestione attività con vincolata 34/244 GB a 30 minuti dal riavvio.
