@@ -6,13 +6,14 @@
    Crea una fotografia completa e ripetibile dello stato della macchina e di
    OGNI account: identita, utenti, sessioni, software, servizi, avvio, rete,
    sicurezza, superficie d'attacco e persistenza (porte, autoruns, WMI, task,
-   driver), Veeam, e (per ogni profilo) configurazioni di Claude, git, SSH e
+   driver), Veeam, e (per ogni profilo) configurazioni di Claude, Codex, git, SSH e
    ambiente di sviluppo. Output in ..\snapshots\snapshot_<data>.
 
  GARANZIE
    - NON modifica nulla: legge ed esporta soltanto.
    - I SEGRETI NON vengono salvati: token, API key, password, chiavi private SSH
-     e il file .credentials.json di Claude sono esclusi o oscurati (***REDACTED***).
+     e .credentials.json di Claude sono esclusi o oscurati; auth.json di Codex
+     non viene mai letto.
    - Verifica comunque l'output prima di versionarlo: la cartella snapshots\ e'
      ignorata da git per default (vedi .gitignore).
 
@@ -25,7 +26,7 @@
      .\Snapshot-Stato.ps1 -Retention 7    # dopo il salvataggio tiene solo gli ultimi 7 (0 = tutti)
 
  MULTI-ACCOUNT
-   I dati "file-based" (Claude/git/SSH) di TUTTI i profili in C:\Users vengono letti
+   I dati "file-based" (Claude/Codex/git/SSH) di TUTTI i profili in C:\Users vengono letti
    dal disco (serve admin), inclusi i profili Claude multi-account (.claude-account*
    selezionati via CLAUDE_CONFIG_DIR). I dati "live" (versioni di node/python,
    estensioni VS Code, git config attivo) riflettono SOLO l'account che esegue lo
@@ -68,6 +69,38 @@ function Protect-Secrets([string]$t){
     $t = [regex]::Replace($t,'xox[baprs]-[A-Za-z0-9\-]{10,}','***REDACTED.SLACK***')
     $t = [regex]::Replace($t,'(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----','***REDACTED.PRIVATE-KEY***')
     return $t
+}
+function Get-ConfigHash([string]$path){
+    if(-not (Test-Path -LiteralPath $path)){ return 'ASSENTE' }
+    try { return (Get-FileHash -LiteralPath $path -Algorithm SHA256 -ErrorAction Stop).Hash }
+    catch { return 'ILLEGIBILE' }
+}
+function Save-WingetInventory {
+    $manifest = Join-Path $outDir 'software_winget.json'
+    $pending = Join-Path $outDir 'software_winget.pending.json'
+    if(-not (Get-Command winget -ErrorAction SilentlyContinue)){
+        Add-Sum 'WinGet non disponibile in questo account: manifesto assente; eseguire -Scope User da un account con WinGet.'
+        return
+    }
+    & winget export -o $pending --accept-source-agreements 2>$null | Out-Null
+    $exportCode = $LASTEXITCODE
+    if($exportCode -ne 0 -or -not (Test-Path -LiteralPath $pending)){
+        Add-Sum "WinGet export FALLITO (codice $exportCode): manifesto assente; ripetere -Scope User in una sessione interattiva."
+        return
+    }
+    try {
+        $j = Get-Content -LiteralPath $pending -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $nPkg = 0
+        foreach($source in @($j.Sources)){ $nPkg += @($source.Packages | Where-Object { $_.PackageIdentifier }).Count }
+        if($nPkg -eq 0){ throw 'nessun PackageIdentifier nel manifesto' }
+        Move-Item -LiteralPath $pending -Destination $manifest -ErrorAction Stop
+        Add-Sum "WinGet: $nPkg pacchetti nel manifesto software_winget.json."
+    } catch {
+        Add-Sum "WinGet export non utilizzabile: $($_.Exception.Message); rigenerare il manifesto prima del ripristino."
+        return
+    }
+    & winget list 2>$null | Out-File (Join-Path $outDir 'software_winget.txt') -Encoding UTF8
+    & winget upgrade 2>$null | Out-File (Join-Path $outDir 'software_winget_aggiornabili.txt') -Encoding UTF8
 }
 
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -302,16 +335,7 @@ if($doMachine){
   } catch { Add-Sum "Readiness non leggibile: $_" }
 
   Section '4. SOFTWARE INSTALLATO'
-  try {
-      Get-Command winget -ErrorAction Stop | Out-Null
-      winget list 2>$null | Out-File (Join-Path $outDir 'software_winget.txt') -Encoding UTF8
-      # software_winget.json = elenco riproducibile: 'winget import' lo reinstalla all'ULTIMA versione
-      winget export -o (Join-Path $outDir 'software_winget.json') --accept-source-agreements 2>$null | Out-Null
-      # winget upgrade: cosa e' installato ma NON all'ultima versione (utile prima di una re-immagine)
-      winget upgrade 2>$null | Out-File (Join-Path $outDir 'software_winget_aggiornabili.txt') -Encoding UTF8
-      $nPkg = 0; try { $j = Get-Content (Join-Path $outDir 'software_winget.json') -Raw | ConvertFrom-Json; $nPkg = @($j.Sources.Packages).Count } catch {}
-      Add-Sum "WinGet: $nPkg pacchetti riproducibili in software_winget.json (reinstall all'ultima versione con scripts\Reinstall-Software.ps1 / 'winget import'); aggiornabili in software_winget_aggiornabili.txt."
-  } catch { Add-Sum 'WinGet non disponibile (uso il registro per l''inventario; reinstallazione manuale).' }
+  Save-WingetInventory
   try {
       Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
           Where-Object DisplayName | Select-Object DisplayName,DisplayVersion,Publisher,InstallDate | Sort-Object DisplayName |
@@ -801,10 +825,10 @@ if($doMachine){
 }
 
 # ============================================================================
-#  PARTE PER-UTENTE (file-based, da disco) — Claude / git / SSH per OGNI account
+#  PARTE PER-UTENTE (file-based, da disco) — Claude / Codex / git / SSH
 # ============================================================================
 if($doMachine){
-  Section '12. CONFIGURAZIONI PER ACCOUNT (Claude / git / SSH)  [da disco]'
+  Section '12. CONFIGURAZIONI PER ACCOUNT (Claude / Codex / git / SSH)  [da disco]'
   try {
       # Esclusi anche i profili di servizio (TEMP*, UMFD-* dei Font Driver Host): non sono account reali
       $profiles = Get-ChildItem 'C:\Users' -Directory -ErrorAction Stop |
@@ -848,6 +872,26 @@ if($doMachine){
       }
       SaveUser "${u}_claude.txt" ($lines -join "`r`n")
 
+      # Codex: inventario a lista consentita. Non esplorare ricorsivamente le
+      # radici: auth.json, database e trascrizioni possono contenere segreti.
+      # Il riferimento riproducibile e' nel template agenti-terminale.
+      $codexDirs = @(Get-ChildItem $homeDir -Directory -Force -ErrorAction SilentlyContinue |
+          Where-Object { $_.Name -eq '.codex' -or $_.Name -match '^\.codex-account[0-9]+$' } |
+          Sort-Object Name)
+      $codexLines = @("# Radici Codex per $u", 'Solo presenza e hash della configurazione; nessun contenuto di auth, sessioni o database.', '')
+      foreach($cd in $codexDirs){
+          $cfg = Join-Path $cd.FullName 'config.toml'
+          $agents = Join-Path $cd.FullName 'AGENTS.md'
+          $codexLines += "## $($cd.Name)"
+          $codexLines += "config.toml: $(Get-ConfigHash $cfg)"
+          $codexLines += "AGENTS.md: $(Get-ConfigHash $agents)"
+          $codexLines += "auth.json: $(if(Test-Path -LiteralPath (Join-Path $cd.FullName 'auth.json')){ 'PRESENTE (non letto)' } else { 'ASSENTE' })"
+          $codexLines += ''
+      }
+      if($codexDirs.Count -eq 0){ $codexLines += 'Nessuna radice Codex.' }
+      SaveUser "${u}_codex.txt" ($codexLines -join "`r`n")
+      Add-Sum "  Codex: $($codexDirs.Count) radice/i (utenti\${u}_codex.txt; auth.json mai letto)"
+
       # --- git (mai i token) ---
       $gitcfg = Join-Path $homeDir '.gitconfig'
       if(Test-Path $gitcfg){
@@ -873,6 +917,10 @@ if($doMachine){
 #  PARTE UTENTE LIVE — ambiente di sviluppo dell'account corrente
 # ============================================================================
 if($doUser){
+  if(-not $doMachine){
+      Section '4. SOFTWARE WINGET (ACCOUNT CORRENTE)'
+      Save-WingetInventory
+  }
   Section "13. AMBIENTE DI SVILUPPO E PERSONALIZZAZIONI (account corrente: $env:USERNAME)"
   $dev = @("# Ambiente sviluppo — $env:USERDOMAIN\$env:USERNAME — $(Get-Date)","")
   function Try-Cmd($label,$scriptblock){

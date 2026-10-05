@@ -2,7 +2,7 @@
 
 Questa macchina ospita molti progetti su `D:\` ed `E:\`, e ciascuno installa ciò che gli serve. Il rischio, per un progetto che esiste per **ristabilire la stessa configurazione altrove**, è che quelle aggiunte non siano registrate da nessuna parte: al momento del ripristino mancherebbero componenti che nessun manifesto di pacchetti conosce, e che si riscoprono rompendosi.
 
-Questo documento è il censimento anonimo di quelle aggiunte, ricavato il **2026-08-26** dai progetti citati e **verificato sulla macchina**, non dedotto dalle loro schede. La distinzione conta: in tre casi la scheda del progetto e lo stato reale della macchina non coincidono, e la sezione 3 li elenca.
+Questo documento è il censimento anonimo di quelle aggiunte, ricavato il **2026-08-26** dai progetti citati e **verificato sulla macchina**, non dedotto dalle loro schede. Le versioni della toolchain dell'account corrente sono state ricontrollate il **2026-10-05** con uno snapshot `-Scope User`; non rappresentano automaticamente gli altri account.
 
 > Regola di perimetro rispettata: i progetti censiti **non sono stati modificati in alcun modo**, nemmeno nei file di memoria. Sono stati aperti in sola lettura. L'unico progetto aggiornato è questo.
 
@@ -20,10 +20,12 @@ Tutti i valori sotto sono stati letti dalla macchina il 2026-08-26, non dalle sc
 
 | Componente | Versione | Canale / posizione | Progetto che lo richiede |
 |---|---|---|---|
-| Node.js | 22.23.1 | installer, `Node.js` nel registro | `my-wedding-day` (vincolato da `.node-version`) |
-| npm | 10.9.8 | con Node | `my-wedding-day` |
+| Node.js | 22.23.3 (05/10) | installer, `Node.js` nel registro | `my-wedding-day` (vincolato da `.node-version`) |
+| npm | 10.9.9 (05/10) | con Node | `my-wedding-day` |
 | yarn | 1.22.22 | globale | `my-wedding-day` (script `prebuild`, `prestart`) |
 | firebase-tools | 15.25.0 | npm globale, `%APPDATA%\npm` | `my-wedding-day` (emulatori, `test:rules`) |
+| Codex CLI | 0.160.0 (05/10) | npm globale `@openai/codex`; tre radici `CODEX_HOME` e la radice predefinita si ricostruiscono dal pacchetto `agenti-terminale`, vedi `docs/10` | trasversale |
+| pnpm | 9.12.3 (05/10) | npm globale, `%APPDATA%\npm` | trasversale |
 | Eclipse Temurin **JRE** | 21.0.11+10 (x64) | `C:\Program Files\Eclipse Adoptium\jre-21.0.11.10-hotspot` | `my-wedding-day`: **gli emulatori Firebase non partono senza una JVM** |
 | Browser Playwright | chromium 1223 e 1228, headless shell, ffmpeg, winldd | cache in `%LOCALAPPDATA%\ms-playwright` | `my-wedding-day` (suite `e2e`) |
 | Python | 3.13.14 e 3.12.10 | installer, **due interpreti** | trasversale |
@@ -32,7 +34,7 @@ Tutti i valori sotto sono stati letti dalla macchina il 2026-08-26, non dalle sc
 | Deno | 2.9.5 | **WinGet**, shim in `%LOCALAPPDATA%\Microsoft\WinGet\Links` | `retrogame-mod-pok-dev` (runtime JS per yt-dlp) |
 | ffmpeg | 9.0.1 full build (gyan.dev), compilato con `--enable-whisper` | **WinGet**, shim in `%LOCALAPPDATA%\Microsoft\WinGet\Links` | pipeline di trascrizione |
 | .NET runtime | Desktop 8.0.31 e 10.0.12, NETCore 6.0.36 / 8.0.31 / 10.0.12, ASP.NET Core 8.0.29 / 8.0.31 / 10.0.12 (riletti il 2026-09-23 con `dotnet --list-runtimes`) | installer | `retrogame-mod-pok-dev` (applicazioni .NET Windows Forms) |
-| .NET SDK | 10.0.401, dal 2026-09-23 | **WinGet**, pacchetto `Microsoft.DotNet.SDK.10`, in `C:\Program Files\dotnet\sdk` accanto ai runtime; verificato con `dotnet --list-sdks` | `retrogame-mod-pok-dev`: compila la libreria del verificatore di salvataggi dal clone del suo sorgente, che richiede `net10.0` e C# 14, per generare esemplari con la stessa libreria che ne giudica la legalità. Prima di questa data la macchina non aveva alcun SDK |
+| .NET SDK | 10.0.401, confermato il 2026-10-05 | **WinGet**, pacchetto `Microsoft.DotNet.SDK.10`, in `C:\Program Files\dotnet\sdk` accanto ai runtime; verificato con `dotnet --list-sdks` | `retrogame-mod-pok-dev`: compila la libreria del verificatore di salvataggi dal clone del suo sorgente, che richiede `net10.0` e C# 14. Prima del 2026-09-23 la macchina non aveva SDK |
 | git | 2.55.0.windows.3 | installer | trasversale |
 | Veeam Agent for Microsoft Windows | 13.0.3.1220 | installer | vedi `08_MONITORAGGIO_BACKUP_VEEAM.md` |
 | Driver CH340/CH341 (wch.cn - Ports) | 3.9.2024.9 | consegnato da Windows Update come driver di dispositivo, non da installer manuale; servizio kernel `CH341SER_A64` (`CH341S64.SYS`) | `retrogame-mod-pok-dev` (GBxCart RW v1.4 Pro, lettore di cartucce Game Boy/GBA) |
@@ -78,3 +80,5 @@ Gli altri progetti di `D:\` sono stati passati in cerca di modifiche al registro
 ## 6. Raccordo
 
 Le voci di questo documento vanno riportate nella sezione software di `01_MAPPA_CONFIGURAZIONE.md` e considerate in `02_VEEAM_BACKUP_PORTABILITA.md` al momento di ricostruire la macchina, dove la sezione sul software per il nuovo hardware è il posto in cui la toolchain qui sopra diventa una lista di reinstallazione. La cattura automatica di queste informazioni è stata aggiunta alla sezione 13 di `scripts\Snapshot-Stato.ps1`, quindi da qui in avanti il censimento si aggiorna da sé a ogni snapshot.
+
+Il confronto degli snapshot macchina del 28/09 e del 04/10/2026 non trova nuovi programmi nel registro, ma trova il ritorno di Spotify fra le app Windows e nuove regole firewall inbound associate. Spotify era stato rimosso in una precedente pulizia: prima di includerlo in un nuovo setup va chiarito se il ritorno sia voluto. Il confronto contiene anche aggiornamenti di Edge, OneDrive e Teams; le rispettive variazioni di percorso e task vanno verificate nel loro contesto, senza copiarle come configurazione di base.

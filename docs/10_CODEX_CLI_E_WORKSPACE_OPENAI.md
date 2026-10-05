@@ -126,7 +126,7 @@ npm install -g @openai/codex
 
 Codex tiene **tutto** il proprio stato persistente sotto una sola radice, riposizionabile con la variabile d'ambiente `CODEX_HOME`. E' l'esatto omologo di `CLAUDE_CONFIG_DIR`, e permette di replicare la stessa topologia per account gia' in uso sulla macchina.
 
-Inventario **verificato con `codex doctor` su questa macchina**, versione 0.155.1, e non dedotto dalla documentazione, che su due punti risultava superata.
+Inventario **verificato con `codex doctor` su questa macchina**, versione 0.155.1, e non dedotto dalla documentazione, che su due punti risultava superata. Il rilievo `-Scope User` del 2026-10-05 trova `@openai/codex` 0.160.0: le osservazioni di comportamento qui sotto restano riferite alla 0.155.1 finché non vengono riprovate. Lo snapshot `-Scope Machine` censisce ora le radici `.codex` e `.codex-account<N>` con presenza e hash di `config.toml` e `AGENTS.md`; esclude per costruzione `auth.json`, database e sessioni. Per ricostruirle si usa il pacchetto `agenti-terminale` del template, poi ciascun membro rifà il login.
 
 | Contenuto di `CODEX_HOME` | Natura |
 |---|---|
