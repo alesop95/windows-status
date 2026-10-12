@@ -83,19 +83,31 @@ Il livello *progetto* usa `.mcp.json` nella root del repo (versionato, attivo so
 
 Il file di configurazione account-level è `%USERPROFILE%\.claude-<nome-profilo>\mcp.json`. Su questa macchina sono presenti più profili Claude Code (uno per identità/account); ogni profilo ha il proprio `mcp.json` indipendente.
 
-Formato:
+Formato consigliato per un server MCP distribuito come pacchetto npm: il pacchetto si installa una volta, a livello globale e con la versione fissata, e il config lancia `node.exe` sul file d'ingresso con il percorso assoluto.
+
+```powershell
+npm install -g <pacchetto-npm>@<versione>
+```
+
 ```json
 {
   "mcpServers": {
     "<nome-server>": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "<pacchetto-npm>", "<percorso-1>", "<percorso-2>"]
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "<%APPDATA%>\\npm\\node_modules\\<pacchetto-npm>\\dist\\index.js",
+        "<percorso-1>", "<percorso-2>"
+      ]
     }
   }
 }
 ```
 
-Nota: il file usa `mcpServers` come chiave radice (non `servers`). I percorsi nei `args` sono assoluti. Usare `cmd /c npx` su Windows anziché `npx` diretto, per evitare problemi di PATH.
+Nota: il file usa `mcpServers` come chiave radice (non `servers`). I percorsi nei `args` sono assoluti, e nel JSON `%APPDATA%` non viene espanso: va scritto per esteso. Il file d'ingresso è quello indicato dal campo `bin` del `package.json` del pacchetto.
+
+Perché non `cmd /c npx -y <pacchetto>`, che era la forma documentata qui fino al 2026-10-12. Senza versione, npx a ogni avvio chiede al registro l'ultima release e, se ne trova una nuova, reinstalla nella sua cache `%LOCALAPPDATA%\npm-cache\_npx\<hash>`. L'hash dipende solo dal nome del pacchetto, quindi la cartella è una sola per tutti i client che lanciano lo stesso server: l'app desktop, che a ogni avvio ne fa partire più istanze, e ogni profilo di Claude Code. Il 2026-10-12, all'uscita della 1.0.0 di `@modelcontextprotocol/server-filesystem`, tre npx partiti nello stesso secondo hanno reinstallato in parallelo nella stessa cartella. Windows tiene bloccati i file in uso, e sono usciti EBUSY, ENOTEMPTY, EPERM ed ENOENT: il server non è ripartito né per l'app né per le sessioni di Claude Code. La forma `npx -y <pacchetto>@<versione>` riduce il rischio ma non lo toglie, perché la prima installazione resta comunque una corsa fra client. L'installazione globale non ha corse: si fa una volta, da terminale, e i client leggono soltanto.
+
+Il prezzo è che gli aggiornamenti diventano manuali: si ripete `npm install -g <pacchetto-npm>@<nuova-versione>` con l'app chiusa, e si verifica che il file d'ingresso non abbia cambiato percorso.
 
 ### App claude.ai desktop (Windows Store, MSIX)
 
@@ -110,9 +122,10 @@ L'app legge il file all'avvio. Modifiche al file diventano effettive solo dopo u
 ### Ripristino su macchina nuova
 
 Per ripristinare i server MCP account-level su una macchina diversa:
-1. Creare i file `mcp.json` nei profili Claude Code presenti in `%USERPROFILE%\.claude-<profilo>\`.
-2. Aggiornare `claude_desktop_config.json` prima di avviare la app claude.ai desktop.
-3. Verificare che i percorsi nei `args` esistano sulla nuova macchina prima del primo avvio.
+1. Installare i pacchetti dei server a livello globale, con la versione fissata (oggi `npm install -g @modelcontextprotocol/server-filesystem@1.0.0`).
+2. Creare i file `mcp.json` nei profili Claude Code presenti in `%USERPROFILE%\.claude-<profilo>\`.
+3. Aggiornare `claude_desktop_config.json` prima di avviare la app claude.ai desktop.
+4. Verificare che i percorsi nei `args`, compreso il file d'ingresso del pacchetto, esistano sulla nuova macchina prima del primo avvio.
 
 I server MCP account-level non vengono catturati dallo snapshot di questo progetto perché i file contengono percorsi specifici della macchina; vanno ricreati manualmente al ripristino.
 
