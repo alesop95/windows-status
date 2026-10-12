@@ -115,3 +115,25 @@ Per ripristinare i server MCP account-level su una macchina diversa:
 3. Verificare che i percorsi nei `args` esistano sulla nuova macchina prima del primo avvio.
 
 I server MCP account-level non vengono catturati dallo snapshot di questo progetto perché i file contengono percorsi specifici della macchina; vanno ricreati manualmente al ripristino.
+
+## H. Instradamento dei modelli a livello di account
+
+Dal 2026-10-12 i profili Claude Code di questa macchina instradano il lavoro meccanico dei subagent su modelli più economici. L'impianto è lo stesso del livello *account* descritto nella sezione G: la logica vive in un posto solo, fuori dai profili, e ciò che cambia da un profilo all'altro è un file di configurazione.
+
+La logica è una mod di Claude Code che sta nel progetto `template-claude-developing`, sotto `.claude\templates\instradamento-modelli\mod`, e non viene copiata nei profili: ogni profilo la carica da quel percorso tramite `env.CLAUDE_CODE_PLUGIN_DIRS` nel proprio `settings.json`. Due copie divergerebbero in silenzio; una registrazione punta sempre alla versione corrente.
+
+La configurazione è il file `%USERPROFILE%\.claude-<profilo>\instradamento-modelli.json`. I tre profili hanno oggi lo stesso contenuto: modo `instrada`, e una tabella che manda su Haiku con ragionamento basso i tipi di agente il cui lavoro è meccanico (`Explore`, `statusline-setup`, `lettore-documentazione`) e su Sonnet con ragionamento basso o medio quelli intermedi (`claude-code-guide`, `general-purpose`). I tipi che richiedono giudizio, fra cui `code-reviewer` e `security-auditor`, restano fuori dalla tabella di proposito: non vengono instradati.
+
+Perché l'instradamento abbia qualcosa da instradare serve una seconda impostazione, ed è la metà che si dimentica. L'agente non apre subagent di propria iniziativa se un file di istruzioni non glielo consente, quindi il `CLAUDE.md` di ciascun profilo porta una sezione che lo autorizza a delegare il lavoro meccanico e gli vieta di delegare quello che richiede giudizio. Senza quella sezione la tabella resta scritta e non passa di lì nessuno.
+
+Verifica in sola lettura, dal progetto del template, che dice profilo per profilo se la mod è registrata e in che modo si trova:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".claude/templates/instradamento-modelli/tools/installa-instradamento.ps1" -Verifica -IncludiDefault
+```
+
+Dentro una sessione, `/instradamento` scrive il modo corrente, la tabella, quanti subagent sono stati instradati e i token consumati per modello; `/instradamento osserva` e `/instradamento spento` cambiano il modo per quella sessione sola, senza toccare il file. I conteggi cumulati stanno nello store del plugin, condiviso fra le sessioni della macchina, e sono un libro mastro: per il consumo fatturato resta `ccusage`.
+
+### Ripristino su macchina nuova
+
+Come per i server MCP, questi file non entrano nello snapshot perché contengono percorsi specifici della macchina. Al ripristino: clonare `template-claude-developing`, poi lanciare `installa-instradamento.ps1` una volta per profilo, che scrive la configurazione di partenza (modo `osserva`) e registra il percorso della mod nel `settings.json` di quel profilo; poi portare il modo a `instrada` e riscrivere la tabella; infine ricopiare nel `CLAUDE.md` di ogni profilo la sezione che autorizza la delega. Per tornare indietro basta rimettere `"modo": "osserva"`, che misura senza instradare, oppure `"spento"`.
