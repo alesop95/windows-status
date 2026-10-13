@@ -46,6 +46,10 @@ Estensioni minori: font utente nello snapshot; firma SMB e Secure Boot (RIMANDAT
 
 ## Promemoria espliciti
 
+Memoria vincolata (2026-10-13, docs/13): causa accertata con l'esperimento di rilascio (5,7 GB liberati, 98% delle sezioni). Osservare che cosa smette di funzionare con `ArmourySocketServer` fermo, scegliere il rimedio fra quelli della sezione 8 di docs/13, poi verificare con il campionatore che il ritmo scenda a zero. Fino ad allora riavviare entro due settimane. Capire a parte il Kernel-Power 41 del 06/10 11:52, che non dipende dalla vincolata.
+
+PowerPoint lento (2026-10-13, docs/12): la causa della crescita della cache sul caso della flotta resta ignota; sulla flotta, corsa periodica dello script RMM in `-ReportOnly`.
+
 Server MCP locale che esponga gli snapshot (ultimo stato, diff, ricerca) come tool: rimandato, `.mcp.json` segnaposto già in radice, implementazione da progettare in `mcp/`.
 
 Compilazione della mappa `docs/01_MAPPA_CONFIGURAZIONE.md` con il primo snapshot reale (le sezioni 🔄), e documentazione manuale del job Veeam (sezione 10 della mappa).
