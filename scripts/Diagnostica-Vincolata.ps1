@@ -234,7 +234,7 @@ if(-not (Test-Path $fTot) -or -not (Test-Path $fPro)){
     Add-Sum 'Serie assente. Raccoglierla con: .\scripts\Campiona-Vincolata.ps1 -Installa (admin, un campione ogni 15 minuti).'
     $summary -join "`r`n" | Write-Host; exit 3
 }
-$tot = @(Import-Csv $fTot | ForEach-Object { [pscustomobject]@{ Ora=$_.Ora; Up=(ToD $_.UptimeOre); Vinc=(ToD $_.VincolataGB); Lim=(ToD $_.LimiteGB); NA=(ToD $_.NonAttribuitaGB); H=(ToD $_.HandleTotali) } })
+$tot = @(Import-Csv $fTot | ForEach-Object { [pscustomobject]@{ Ora=$_.Ora; Up=(ToD $_.UptimeOre); Vinc=(ToD $_.VincolataGB); Lim=(ToD $_.LimiteGB); NA=(ToD $_.NonAttribuitaGB); H=(ToD $_.HandleTotali); Priv=(ToD $_.PrivatoProcessiGB) } })
 $avvii = New-Object System.Collections.Generic.List[object]; $cur = New-Object System.Collections.Generic.List[object]
 foreach($t in $tot){ if($cur.Count -and $t.Up -lt $cur[$cur.Count-1].Up){ $avvii.Add($cur.ToArray()); $cur = New-Object System.Collections.Generic.List[object] }; $cur.Add($t) }
 if($cur.Count){ $avvii.Add($cur.ToArray()) }
@@ -267,11 +267,15 @@ if($rec.Count -ge 8){
         $ritmoAvvio = $ritmo; $ritmo = $rr*24; $etichetta = $finestra
         Add-Sum ''
         Add-Sum ("Ritmo {0} ({1} campioni, ultimo del {2}): {3} GB al giorno; sull'intero avvio valido: {4}." -f $finestra,$rec.Count,$ult[-1].Ora,(F1 $ritmo),(F1 $ritmoAvvio))
+        $script:usaFinestra = $true
+        # Una perdita cresce col tempo e non col lavoro; la quota che segue il privato dei processi e' carico di lavoro (sezioni condivise, tabelle delle pagine).
+        $script:rLavoro = Get-Pearson ([double[]]($rec | ForEach-Object Priv)) ([double[]]($rec | ForEach-Object NA))
+        if($null -ne $script:rLavoro){ Add-Sum ("  Correlazione nella finestra fra quota non attribuita e privato dei processi: r = {0}; privato da {1} a {2} GB." -f $script:rLavoro.ToString('0.00',$inv),(F1 $rec[0].Priv),(F1 $rec[-1].Priv)) }
         # Un calo brusco fra due campioni e' un rilascio (processo terminato, rimedio): la retta che lo attraversa non misura la crescita.
         $salti = 0; for($i=1; $i -lt $rec.Count; $i++){ if($rec[$i-1].NA - $rec[$i].NA -ge 1){ $salti++ } }
         if($salti -gt 0){
             Add-Sum ("  ATTENZIONE: cali di almeno 1 GB fra campioni consecutivi nella finestra: {0}. Il ritmo recente non e' rappresentativo: si usa quello dell'intero avvio. Rimisurare con -Dal <ora successiva al calo>." -f $salti)
-            $script:ritmoDubbio = $true; $ritmo = $ritmoAvvio; $etichetta = "dell'ultimo avvio valido"
+            $script:ritmoDubbio = $true; $script:usaFinestra = $false; $ritmo = $ritmoAvvio; $etichetta = "dell'ultimo avvio valido"
         }
     }
 }
@@ -412,8 +416,14 @@ if($crescita){
 if($sospetto -and $crescita -and $proc.Count -eq 0){
     Add-Sum ''
     Add-Sum "Detentore identificato nella serie: $sospetto, che pero' adesso non e' in esecuzione."
-    Add-Sum '  Il ritmo indicato comprende il periodo in cui girava: se e'' stato fermato come rimedio non dice ancora niente sull''effetto.'
-    Add-Sum "  Rimisurare con -Dal <ora dell'arresto> quando dopo quell'ora ci sono almeno 8 campioni, cioe' due ore."
+    if($script:usaFinestra){
+        Add-Sum "  La crescita della finestra non viene da lui: il ritmo misurato e' di cio' che resta con il detentore fermo."
+        if($null -ne $script:rLavoro -and $script:rLavoro -ge 0.8){ Add-Sum '  Segue il privato dei processi, quindi e'' verosimilmente carico di lavoro e non una perdita: rimisurare su una finestra lunga, meglio se comprende una notte, e cercare un secondo detentore solo se il ritmo resta.' }
+        else { Add-Sum '  Non segue il privato dei processi: puo'' esserci un secondo detentore. Rimisurare su una finestra lunga e confrontare su quella finestra gli handle per processo di processi.csv.' }
+    } else {
+        Add-Sum '  Il ritmo indicato comprende il periodo in cui girava: se e'' stato fermato come rimedio non dice ancora niente sull''effetto.'
+        Add-Sum "  Rimisurare con -Dal <ora dell'arresto> quando dopo quell'ora ci sono almeno 8 campioni, cioe' due ore."
+    }
 }
 elseif($sospetto -and $crescita){
     Add-Sum ''
