@@ -46,6 +46,9 @@ param(
     [double]$SogliaR = 0.98,
     [int]$MinCampioni = 24,
     [double]$RitmoMinimo = 1.0,
+    [int]$UltimeOre = 6,
+    # Misura il ritmo solo sui campioni successivi a questo istante (es. l'ora di un rimedio), formato 2026-10-13T13:35
+    [string]$Dal = '',
     [string]$Processo = '',
     [int]$Giorni = 60,
     [switch]$VerificaRilascio,
@@ -54,6 +57,7 @@ param(
 
 $ErrorActionPreference = 'Continue'
 $script:attivita = @()
+$script:ritmoDubbio = $false
 $base    = Split-Path -Parent $MyInvocation.MyCommand.Path
 $proj    = Split-Path -Parent $base
 if(-not $Cartella){ $Cartella = Join-Path $proj 'snapshots\vincolata' }
@@ -251,6 +255,26 @@ if($validi.Count -eq 0){
     $f = Join-Path $Cartella "diagnosi_$stamp.txt"; ($summary -join "`r`n") | Out-File $f -Encoding UTF8; Write-Host ($summary -join "`r`n"); exit 3
 }
 $ritmo = ($validi[-1]).GBGiorno
+$etichetta = "dell'ultimo avvio valido"
+# Ritmo recente: dopo un rimedio applicato a macchina accesa la regressione sull'intero avvio mescola il prima e il dopo.
+$ult = $avvii[$avvii.Count-1]
+if($Dal){ $rec = @($ult | Where-Object { $_.Ora -ge $Dal }); $finestra = "dal $Dal" }
+else    { $rec = @($ult | Where-Object { $_.Up -ge ($ult[-1].Up - $UltimeOre) }); $finestra = "delle ultime $UltimeOre ore" }
+if($Dal -and $rec.Count -lt 8){ Add-Sum ''; Add-Sum ("Dal {0} ci sono {1} campioni: ne servono almeno 8 (due ore) per misurare il ritmo." -f $Dal,$rec.Count) }
+if($rec.Count -ge 8){
+    $rr = Get-Pendenza ([double[]]($rec | ForEach-Object Up)) ([double[]]($rec | ForEach-Object NA))
+    if($null -ne $rr){
+        $ritmoAvvio = $ritmo; $ritmo = $rr*24; $etichetta = $finestra
+        Add-Sum ''
+        Add-Sum ("Ritmo {0} ({1} campioni, ultimo del {2}): {3} GB al giorno; sull'intero avvio valido: {4}." -f $finestra,$rec.Count,$ult[-1].Ora,(F1 $ritmo),(F1 $ritmoAvvio))
+        # Un calo brusco fra due campioni e' un rilascio (processo terminato, rimedio): la retta che lo attraversa non misura la crescita.
+        $salti = 0; for($i=1; $i -lt $rec.Count; $i++){ if($rec[$i-1].NA - $rec[$i].NA -ge 1){ $salti++ } }
+        if($salti -gt 0){
+            Add-Sum ("  ATTENZIONE: cali di almeno 1 GB fra campioni consecutivi nella finestra: {0}. Il ritmo recente non e' rappresentativo: si usa quello dell'intero avvio. Rimisurare con -Dal <ora successiva al calo>." -f $salti)
+            $script:ritmoDubbio = $true; $ritmo = $ritmoAvvio; $etichetta = "dell'ultimo avvio valido"
+        }
+    }
+}
 $crescita = ($null -ne $ritmo -and $ritmo -ge $RitmoMinimo)
 
 # --- 3. DETENTORE --------------------------------------------------------------
@@ -377,15 +401,25 @@ foreach($e in $kp | Select-Object -First 5){ Add-Sum ("  Kernel-Power 41: {0}  (
 Section '6. PROIEZIONE E VERDETTO'
 if($crescita){
     $giorni = ($ora.LimiteGB - $ora.VincolataGB) / $ritmo
-    Add-Sum ("Ritmo dell'ultimo avvio valido: {0} GB al giorno. Margine al limite: {1} GB." -f (F1 $ritmo),(F1 ($ora.LimiteGB - $ora.VincolataGB)))
+    Add-Sum ("Ritmo {2}: {0} GB al giorno. Margine al limite: {1} GB." -f (F1 $ritmo),(F1 ($ora.LimiteGB - $ora.VincolataGB)),$etichetta)
     Add-Sum ("Senza riavvio il limite si raggiunge fra circa {0} giorni, intorno al {1}." -f (F1 $giorni),((Get-Date).AddDays($giorni).ToString('yyyy-MM-dd')))
     Add-Sum '  Proiezione lineare: il carico di lavoro aggiunge vincolata propria, quindi la data vera e'' piu'' vicina.'
-} else { Add-Sum ("Nessuna crescita significativa: ultimo ritmo {0} GB al giorno, soglia {1}." -f (F1 $ritmo),$RitmoMinimo) }
-if($sospetto -and $crescita){
+} else {
+    Add-Sum ("Nessuna crescita significativa: ritmo {2} {0} GB al giorno, soglia {1}." -f (F1 $ritmo),$RitmoMinimo,$etichetta)
+    if($sospetto -and $script:ritmoDubbio){ Add-Sum "  Il ritmo recente e' falsato da un rilascio: non se ne puo' concludere che la crescita sia cessata." }
+    elseif($sospetto){ Add-Sum "  Il detentore della serie storica era ${sospetto}: se e' stato applicato un rimedio, la crescita risulta cessata." }
+}
+if($sospetto -and $crescita -and $proc.Count -eq 0){
+    Add-Sum ''
+    Add-Sum "Detentore identificato nella serie: $sospetto, che pero' adesso non e' in esecuzione."
+    Add-Sum '  Il ritmo indicato comprende il periodo in cui girava: se e'' stato fermato come rimedio non dice ancora niente sull''effetto.'
+    Add-Sum "  Rimisurare con -Dal <ora dell'arresto> quando dopo quell'ora ci sono almeno 8 campioni, cioe' due ore."
+}
+elseif($sospetto -and $crescita){
     Add-Sum ''
     Add-Sum "Detentore identificato: $sospetto."
     Add-Sum '  Conferma decisiva: .\scripts\Diagnostica-Vincolata.ps1 -VerificaRilascio (admin): termina il processo e misura il rilascio.'
-    Add-Sum '  Tampone finche'' non c''e'' un rimedio: riavviare il processo o la macchina prima della data stimata.'
+    Add-Sum '  Tampone finche'' non c''e'' un rimedio: riavviare il solo processo prima della data stimata (non serve riavviare la macchina).'
     Add-Sum '  Rimedi e loro rischi: docs\13_MEMORIA_VINCOLATA_HANDLE_LEAK.md.'
 }
 $exit = if(-not $crescita){ 0 } elseif($sospetto){ 2 } else { 1 }
