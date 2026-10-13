@@ -2,7 +2,7 @@
 
 Questo documento chiude l'indagine aperta nella sezione 2d di `07_SALUTE_E_STABILITA.md`: su questa macchina la memoria vincolata cresce di circa sette gigabyte al giorno senza che nessun processo la dichiari, finché dopo tre o quattro settimane senza riavvio il sistema arriva al limite e si blocca. Il detentore è stato identificato dalla serie di campioni e poi misurato direttamente: è `ArmourySocketServer.exe`, un componente del software ASUS per la scheda madre, che apre di continuo sezioni di memoria da circa 256 KB e non le chiude mai. Il documento spiega il meccanismo, il metodo con cui lo si è trovato, lo strumento che lo rifà da sé, `scripts\Diagnostica-Vincolata.ps1`, l'esperimento che lo conferma e le opzioni di rimedio, la cui scelta resta al proprietario.
 
-> Stato al 2026-10-13: causa accertata. Detentore identificato per correlazione su tre avvii, confermato dalla misura diretta delle sezioni che tiene aperte e poi dall'esperimento di rilascio: terminato il processo, la vincolata è scesa di 5,7 GB, il 98% di quanto le sezioni valevano. Resta da scegliere il rimedio.
+> Stato al 2026-10-13: causa accertata. Detentore identificato per correlazione su tre avvii, confermato dalla misura diretta delle sezioni che tiene aperte e poi dall'esperimento di rilascio: terminato il processo, la vincolata è scesa di 5,7 GB, il 98% di quanto le sezioni valevano. Rimedio, passo 1, applicato il 13/10 alle 13:34: attività pianificata disattivata e processo terminato (paragrafo 8). Il passo 2, sul firewall, attende la verifica del proprietario.
 
 ---
 
@@ -67,6 +67,14 @@ Il 99% degli handle del processo è di sezione, la dimensione media coincide con
 
 Il processo è `C:\Program Files (x86)\ASUS\ArmouryDevice\dll\ArmourySocketServer\ArmourySocketServer.exe`, versione del file 0.1.20.13, avviato dall'attività pianificata `\ASUS\ArmourySocketServer` con innesco all'accesso dell'utente, privilegi elevati e nessun riavvio automatico in caso di arresto. Sulla macchina sono installati i componenti AURA e i driver di astrazione per illuminazione e ventole della scheda madre ASUS, ma non l'applicazione Armoury Crate dello Store: chi usi il servizio di socket che questo processo offre è da verificare.
 
+### Che cosa fa il processo mentre perde memoria
+
+Osservazione del 13/10 sul processo appena riavviato. `ArmourySocketServer` resta in ascolto sulle porte TCP 9012 e 9013 di tutte le interfacce, e ogni tre secondi circa tenta una connessione a `127.0.0.1:1042`, dove non ascolta nessun processo: in 45 secondi i tentativi distinti, riconosciuti dalla porta locale sempre nuova, sono stati 15 e gli handle sono cresciuti di 14. Al ritmo di un tentativo ogni tre secondi si ottengono circa 1.200 tentativi l'ora, cioè il ritmo di crescita degli handle misurato nella serie. Ne inferisco, senza averlo verificato nel codice, che ogni tentativo fallito crei una sezione e non la chiuda: la perdita sarebbe un ciclo di riconnessione verso un interlocutore assente. Nessun processo è connesso alle due porte in ascolto.
+
+L'interlocutore mancante è plausibilmente l'applicazione Armoury Crate, che sulla macchina non c'è più: manca anche la cartella del suo servizio, mentre i componenti di `ArmouryDevice`, con eseguibile datato 13/08/2024, sono rimasti con le loro attività pianificate. L'illuminazione è gestita da un servizio distinto, `LightingService`, che non dipende da questo processo.
+
+Il processo ha anche un'esposizione di rete. Due regole del firewall in ingresso, `ArmourySocketServer` e `ArmouryHtmlDebugServer`, consentono qualunque protocollo, porta e indirizzo remoto ai due eseguibili della cartella, su tutti i profili: le porte 9012 e 9013 sono quindi raggiungibili dalla rete locale, da un componente che nessuno usa.
+
 ## 5. La proiezione, e un riavvio che non c'entra
 
 Al 13/10 la vincolata è 58,8 GB su 244 e cresce di 7,2 GB al giorno: senza riavvio il limite si raggiunge in circa 26 giorni, intorno all'8 novembre. La stima è lineare e ottimistica, perché il lavoro quotidiano aggiunge vincolata propria sopra la perdita: gli eventi 2004 del 02/10 e del 05/10 sono arrivati con la quota non attribuita fra 165 e 183 GB e il privato dei processi fra 50 e 66 GB.
@@ -91,6 +99,8 @@ Il report ha sei sezioni: lo stato attuale con la stessa formula del campionator
 | `-SogliaR` | 0,98 | correlazione minima in ogni avvio valido |
 | `-MinCampioni` | 24 | campioni minimi perché un avvio conti, circa sei ore |
 | `-RitmoMinimo` | 1 | GB al giorno sotto i quali la crescita non è significativa |
+| `-UltimeOre` | 6 | finestra del ritmo recente, calcolato sugli ultimi campioni dell'avvio corrente; quando ha almeno otto campioni guida proiezione e verdetto, così l'effetto di un rimedio si vede senza riavviare; se nella finestra c'è un calo di almeno 1 GB fra due campioni lo strumento lo segnala e non trae conclusioni |
+| `-Dal` | nessuno | misura il ritmo solo sui campioni successivi a un istante, nella forma `2026-10-13T13:35`, tipicamente l'ora di un rimedio |
 | `-Giorni` | 60 | finestra degli eventi |
 | `-Attesa` | 30 | secondi fra l'arresto del processo e la seconda misura |
 
@@ -117,17 +127,17 @@ La scelta spetta al proprietario dopo l'esperimento, e vale il paletto 3: una ca
 
 | Rimedio | Effetto | Rischio | Come si annulla |
 |---|---|---|---|
-| riavviare la macchina, o il solo processo, almeno ogni due settimane | azzera la perdita a ogni riavvio | nessuno; è un tampone che va ricordato | non serve |
+| riavviare il solo processo almeno ogni due settimane (su questa macchina il riavvio del PC è escluso dal proprietario) | azzera la perdita a ogni riavvio del processo | nessuno; è un tampone che va ricordato | non serve |
 | attività pianificata settimanale che termina e riavvia il processo | tampone automatico | interruzione momentanea dei servizi ASUS | rimuovere l'attività |
 | aggiornare i componenti ASUS e rimisurare con il campionatore | elimina la causa, se la versione nuova la corregge | aggiornamento di software con privilegi elevati | reinstallare la versione precedente |
 | disattivare l'attività `\ASUS\ArmourySocketServer` | il processo non parte più | perdita delle funzioni che lo usano, da verificare | `Enable-ScheduledTask` |
 | disinstallare il software ASUS con lo strumento di rimozione del produttore | toglie processo e attività | perdita del controllo software di illuminazione e ventole; le curve delle ventole del BIOS restano | reinstallazione dal sito del produttore |
 
-L'esperimento del paragrafo 7 informa anche la scelta fra la quarta e le altre: se con il processo fermo nulla di ciò che il proprietario usa smette di funzionare, disattivare l'attività è un rimedio a costo nullo e reversibile con un comando.
+Scelta del 13/10, dopo i rilievi della sezione 4 sul ciclo di riconnessione e sull'esposizione di rete: la quarta riga, in due passi di categoria diversa. Passo 1, stabilità: disattivata l'attività `\ASUS\ArmourySocketServer` e terminato il processo, senza punto di ripristino per scelta del proprietario; da subito le porte 9012 e 9013 non sono più in ascolto, la vincolata è scesa di 0,4 GB, cioè quanto il processo aveva accumulato dal riavvio di mezzogiorno, e `LightingService` e `AcPowerNotification` hanno continuato a girare. Passo 2, firewall, applicato il 13/10 alle 14:45 dopo che i primi quattro campioni successivi al passo 1 avevano dato una quota piatta: disattivate con `Disable-NetFirewallRule` le due regole in ingresso `ArmourySocketServer` e `ArmouryHtmlDebugServer`, che restano definite e si riattivano con `Enable-NetFirewallRule` sugli stessi nomi; serve nel caso in cui un aggiornamento ASUS riattivi l'attività, perché il processo tornerebbe a girare ma non sarebbe più raggiungibile dalla rete. Dopo il passo, nessun processo in ascolto su 9012 e 9013 e `LightingService` in esecuzione. La verifica si fa a macchina accesa, perché il proprietario non può riavviare il PC. L'esperimento del paragrafo 7 informa anche la scelta fra la quarta e le altre: se con il processo fermo nulla di ciò che il proprietario usa smette di funzionare, disattivare l'attività è un rimedio a costo nullo e reversibile con un comando.
 
 ## 9. Che cosa resta da verificare
 
-L'esperimento di rilascio è stato eseguito e ha confermato la causa (paragrafo 7). Restano due verifiche: che cosa smette di funzionare con il processo fermo, che decide il rimedio, da osservare durante un periodo con il processo fermo perché nei pochi minuti dell'esperimento nessuno ha usato le funzioni ASUS; e la causa del Kernel-Power 41 del 06/10, che non è questa. Resta infine da confermare, dopo il rimedio, che la quota non attribuita smetta di crescere: il campionatore continua a girare e la stessa diagnosi, rilanciata dopo un giorno, deve dare un ritmo vicino a zero e codice 0.
+L'esperimento di rilascio è stato eseguito e ha confermato la causa (paragrafo 7), e il passo 1 del rimedio è applicato (paragrafo 8). Va verificato sulla serie del campionatore, a macchina accesa, che la quota non attribuita smetta di crescere da quel momento: un ritmo prossimo a zero nelle ore successive basta, senza aspettare un nuovo avvio. Prima lettura, alle 14:41: i quattro campioni dalle 13:43 alle 14:28 danno 6,05, 6,12, 6,14 e 6,08 GB, contro una crescita di circa 0,07 GB ogni quarto d'ora prima dell'arresto, e gli handle totali sono scesi di circa 8.000 e da lì non crescono; lo strumento chiede otto campioni prima di misurare un ritmo, quindi la misura formale è dalle 15:30 in poi con `-Dal 2026-10-13T13:35`. Con il processo fermo lo strumento ora lo dichiara nel verdetto, invece di proporre l'esperimento di rilascio su un processo che non c'è. Restano poi due verifiche: che cosa smette di funzionare con il processo fermo, che decide il rimedio, da osservare durante un periodo con il processo fermo perché nei pochi minuti dell'esperimento nessuno ha usato le funzioni ASUS; e la causa del Kernel-Power 41 del 06/10, che non è questa. Resta infine da confermare, dopo il rimedio, che la quota non attribuita smetta di crescere: il campionatore continua a girare e la stessa diagnosi, rilanciata dopo un giorno, deve dare un ritmo vicino a zero e codice 0.
 
 ## 10. Raccordo
 
