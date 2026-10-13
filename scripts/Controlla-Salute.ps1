@@ -153,6 +153,7 @@ try {
         $topCons = $cons.GetEnumerator() | Sort-Object Value -Descending | Select-Object -First 6
         if($topCons){ Add-Sum '  Processi piu citati come consumatori:'; $topCons | ForEach-Object { Add-Sum "    $($_.Key)  (in $($_.Value) eventi)" } }
         $re | Select-Object TimeCreated, Message | Format-List | Out-String | Set-Content (Join-Path $outDir 'esaurimento_2004.txt') -Encoding UTF8
+        Add-Sum '  Per sapere chi trattiene la vincolata e quando si arriva al limite: scripts\Diagnostica-Vincolata.ps1 (docs\13).'
         if($re.Count -ge 20){ Add-Alert 'ALERT' 'OOM' "$($re.Count) eventi di memoria virtuale insufficiente: esaurimento ricorrente (probabile leak)" }
         else { Add-Alert 'WARN' 'OOM' "$($re.Count) eventi di memoria virtuale insufficiente" }
     }
@@ -190,6 +191,8 @@ try {
     if($hg.Count -gt 0){
         $hg | Group-Object {$_.Properties[0].Value} | Sort-Object Count -Descending | Select-Object -First 8 |
             ForEach-Object { Add-Sum ("  {0,-28} x{1}" -f $_.Name,$_.Count) }
+        $hPpt = @($hg | Where-Object { [string]$_.Properties[0].Value -ieq 'POWERPNT.EXE' }).Count
+        if($hPpt -gt 0){ Add-Alert 'WARN' 'HANG' "$hPpt hang di PowerPoint: lanciare scripts\Diagnostica-PowerPoint.ps1 (cache DocToIdMapping, docs\12)" }
     }
 } catch { Add-Sum "Lettura hang 1002 fallita: $_" }
 

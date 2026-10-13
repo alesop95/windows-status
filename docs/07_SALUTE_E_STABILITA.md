@@ -108,6 +108,8 @@ Per individuare il detentore serve una serie temporale da un riavvio in avanti, 
 .\scripts\Campiona-Vincolata.ps1 -Disinstalla  # rimuove l'attività (admin)
 ```
 
+Aggiornamento del 2026-10-13. La serie raccolta dal 05/10, 771 campioni su tre avvii, ha identificato il detentore: è `ArmourySocketServer.exe`, componente del software ASUS della scheda madre, i cui handle crescono insieme alla quota non attribuita con correlazione fra 0,998 e 0,9999 in tutti e tre gli avvii e con un costo stabile fra 259 e 274 KB per handle. La misura diretta lo conferma: il processo tiene aperte oltre 22.000 sezioni appoggiate al file di paging, da 261 KB in media, per 5,6 GB, pari all'86% della crescita della quota dall'avvio, e terminandolo la vincolata è scesa di 5,7 GB, il 98% delle sezioni misurate: la causa è accertata. Meccanismo, metodo, strumento di diagnosi (`scripts\Diagnostica-Vincolata.ps1`), esperimento di rilascio e rimedi stanno in `13_MEMORIA_VINCOLATA_HANDLE_LEAK.md`.
+
 ---
 
 ## 3. Come leggere il verdetto
@@ -123,4 +125,4 @@ Per individuare il detentore serve una serie temporale da un riavvio in avanti, 
 
 ## 4. Raccordo
 
-Gli `ALERT` di questo check alimentano la stessa logica di remediation degli alert del Compare (vedi `06_RACCORDO_CHECKLIST_VA.md`): ogni segnale è una voce da chiudere, con data, causa e azione. Il changelog vive nella mappa (`01_MAPPA_CONFIGURAZIONE.md`).
+Gli `ALERT` di questo check alimentano la stessa logica di remediation degli alert del Compare (vedi `06_RACCORDO_CHECKLIST_VA.md`): ogni segnale è una voce da chiudere, con data, causa e azione. Il changelog vive nella mappa (`01_MAPPA_CONFIGURAZIONE.md`). Quando fra le applicazioni bloccate della sezione 4 compare PowerPoint, il check rimanda a `scripts\Diagnostica-PowerPoint.ps1` e a `12_POWERPOINT_LENTO_DOCTOIDMAPPING.md`; quando ci sono eventi 2004, a `scripts\Diagnostica-Vincolata.ps1` e a `13_MEMORIA_VINCOLATA_HANDLE_LEAK.md`.
