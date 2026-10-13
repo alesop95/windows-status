@@ -46,7 +46,7 @@ Estensioni minori: font utente nello snapshot; firma SMB e Secure Boot (RIMANDAT
 
 ## Promemoria espliciti
 
-Memoria vincolata (2026-10-13, docs/13): causa accertata con l'esperimento di rilascio (5,7 GB liberati, 98% delle sezioni); passo 1 del rimedio applicato (attività `\ASUS\ArmourySocketServer` disattivata). Da fare: verificare con il campionatore che il ritmo scenda a zero, a macchina accesa; poi il passo 2 sul firewall. Il PC non si riavvia in automatico (vincolo del proprietario). Capire a parte il Kernel-Power 41 del 06/10 11:52, che non dipende dalla vincolata.
+Memoria vincolata (2026-10-13, docs/13): causa accertata con l'esperimento di rilascio (5,7 GB liberati, 98% delle sezioni); rimedio applicato (attività `\ASUS\ArmourySocketServer` disattivata, poi le due regole firewall in ingresso). Da fare: misurare con `-Dal 2026-10-13T13:35`, a macchina accesa, che il ritmo sia vicino a zero (prima lettura piatta su quattro campioni). Il PC non si riavvia in automatico (vincolo del proprietario). Capire a parte il Kernel-Power 41 del 06/10 11:52, che non dipende dalla vincolata.
 
 PowerPoint lento (2026-10-13, docs/12): la causa della crescita della cache sul caso della flotta resta ignota; sulla flotta, corsa periodica dello script RMM in `-ReportOnly`.
 
