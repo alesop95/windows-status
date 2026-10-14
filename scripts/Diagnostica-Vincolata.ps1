@@ -234,7 +234,7 @@ if(-not (Test-Path $fTot) -or -not (Test-Path $fPro)){
     Add-Sum 'Serie assente. Raccoglierla con: .\scripts\Campiona-Vincolata.ps1 -Installa (admin, un campione ogni 15 minuti).'
     $summary -join "`r`n" | Write-Host; exit 3
 }
-$tot = @(Import-Csv $fTot | ForEach-Object { [pscustomobject]@{ Ora=$_.Ora; Up=(ToD $_.UptimeOre); Vinc=(ToD $_.VincolataGB); Lim=(ToD $_.LimiteGB); NA=(ToD $_.NonAttribuitaGB); H=(ToD $_.HandleTotali); Priv=(ToD $_.PrivatoProcessiGB) } })
+$tot = @(Import-Csv $fTot | ForEach-Object { [pscustomobject]@{ Ora=$_.Ora; Up=(ToD $_.UptimeOre); Vinc=(ToD $_.VincolataGB); Lim=(ToD $_.LimiteGB); NA=(ToD $_.NonAttribuitaGB); H=(ToD $_.HandleTotali); Priv=(ToD $_.PrivatoProcessiGB); Pool=((ToD $_.PoolPGB) + (ToD $_.PoolNPGB)) } })
 $avvii = New-Object System.Collections.Generic.List[object]; $cur = New-Object System.Collections.Generic.List[object]
 foreach($t in $tot){ if($cur.Count -and $t.Up -lt $cur[$cur.Count-1].Up){ $avvii.Add($cur.ToArray()); $cur = New-Object System.Collections.Generic.List[object] }; $cur.Add($t) }
 if($cur.Count){ $avvii.Add($cur.ToArray()) }
@@ -271,6 +271,21 @@ if($rec.Count -ge 8){
         # Una perdita cresce col tempo e non col lavoro; la quota che segue il privato dei processi e' carico di lavoro (sezioni condivise, tabelle delle pagine).
         $script:rLavoro = Get-Pearson ([double[]]($rec | ForEach-Object Priv)) ([double[]]($rec | ForEach-Object NA))
         if($null -ne $script:rLavoro){ Add-Sum ("  Correlazione nella finestra fra quota non attribuita e privato dei processi: r = {0}; privato da {1} a {2} GB." -f $script:rLavoro.ToString('0.00',$inv),(F1 $rec[0].Priv),(F1 $rec[-1].Priv)) }
+        # I pool sono esclusi dalla quota non attribuita: una perdita di un driver si vede solo qui.
+        $rp = Get-Pendenza ([double[]]($rec | ForEach-Object Up)) ([double[]]($rec | ForEach-Object Pool))
+        if($null -ne $rp){
+            $script:ritmoPool = $rp*24
+            Add-Sum ("  Pool del kernel (paging + non di paging) nella finestra: da {0} a {1} GB, ritmo {2} GB al giorno." -f (F1 $rec[0].Pool),(F1 $rec[-1].Pool),(F1 $script:ritmoPool))
+            # Uno scalino seguito da un piano da' una retta in salita: si guarda la seconda meta' della finestra.
+            $meta = @($rec | Select-Object -Last ([int][math]::Floor($rec.Count/2)))
+            if($meta.Count -ge 8){
+                $rp2 = Get-Pendenza ([double[]]($meta | ForEach-Object Up)) ([double[]]($meta | ForEach-Object Pool))
+                if($null -ne $rp2){
+                    $script:ritmoPool2 = $rp2*24
+                    Add-Sum ("  Nella seconda meta' della finestra ({0} campioni): {1} GB al giorno." -f $meta.Count,(F1 $script:ritmoPool2))
+                }
+            }
+        }
         # Un calo brusco fra due campioni e' un rilascio (processo terminato, rimedio): la retta che lo attraversa non misura la crescita.
         $salti = 0; for($i=1; $i -lt $rec.Count; $i++){ if($rec[$i-1].NA - $rec[$i].NA -ge 1){ $salti++ } }
         if($salti -gt 0){
@@ -431,6 +446,16 @@ elseif($sospetto -and $crescita){
     Add-Sum '  Conferma decisiva: .\scripts\Diagnostica-Vincolata.ps1 -VerificaRilascio (admin): termina il processo e misura il rilascio.'
     Add-Sum '  Tampone finche'' non c''e'' un rimedio: riavviare il solo processo prima della data stimata (non serve riavviare la macchina).'
     Add-Sum '  Rimedi e loro rischi: docs\13_MEMORIA_VINCOLATA_HANDLE_LEAK.md.'
+}
+if($null -ne $script:ritmoPool -and $script:ritmoPool -ge $RitmoMinimo){
+    Add-Sum ''
+    if($null -ne $script:ritmoPool2 -and $script:ritmoPool2 -lt $RitmoMinimo){
+        Add-Sum ("I pool del kernel sono saliti nella finestra ma nella seconda meta' sono fermi ({0} GB al giorno): e' uno scalino, non una crescita continua." -f (F1 $script:ritmoPool2))
+        Add-Sum '  Uno scalino segue di solito un''attivita'' che ha percorso molti file (scansione, indicizzazione, manutenzione): da guardare solo se si ripete ogni giorno.'
+    } else {
+        Add-Sum ("I pool del kernel crescono di {0} GB al giorno nella finestra: e' memoria di driver, che questa diagnosi non attribuisce." -f (F1 $script:ritmoPool))
+    }
+    Add-Sum '  Si leggono per etichetta di allocazione (NtQuerySystemInformation, classe 22) e si cerca l''etichetta nei file .sys: metodo in docs\13, sezione 9.'
 }
 $exit = if(-not $crescita){ 0 } elseif($sospetto){ 2 } else { 1 }
 
