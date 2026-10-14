@@ -41,6 +41,7 @@ $voci = @(
   @{ N='6'; Titolo='Snapshot periodico: stato';                   Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Pianifica-Snapshot.ps1') } }
   @{ N='6i';Titolo='Snapshot periodico: INSTALLA (attivita pianif.)'; Tipo='MODIFICA';      Azione={ & (Join-Path $scripts 'Pianifica-Snapshot.ps1') -Installa } }
   @{ N='7'; Titolo='Check salute periodico: INSTALLA (attivita pianif.)'; Tipo='MODIFICA';  Azione={ & (Join-Path $scripts 'Controlla-Salute.ps1') -Installa } }
+  @{ N='8'; Titolo='Design system di account: verifica la propagazione'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Installa-DesignSystem.ps1') -Verifica } }
 )
 
 function Show-Menu {
