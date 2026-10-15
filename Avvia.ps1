@@ -51,6 +51,8 @@ $voci = @(
   @{ N='P'; Titolo='PC NUOVO: percorso guidato (dove sono arrivato)'; Tipo='sola lettura';   Azione={ Mostra-Percorso } }
   @{ N='12';Titolo='Monitoraggio: piano della macchina centrale';    Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Monitoraggio-Centrale.ps1') } }
   @{ N='12s';Titolo='Monitoraggio: scarica e verifica Prometheus e Grafana'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Monitoraggio-Centrale.ps1') -Scarica } }
+  @{ N='G'; Titolo='Guida: e'' allineata al progetto?';                Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Aggiorna-Guida.ps1') } }
+  @{ N='Ga';Titolo='Guida: riallinea GUIDA.md al progetto';           Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Aggiorna-Guida.ps1') -Applica } }
 )
 
 # Percorso guidato del PC nuovo: non esegue niente da se', dice a che punto
