@@ -58,6 +58,12 @@ param(
     # Argomenti passati tali e quali a RemoveWindowsAi.ps1. Senza, parte la sua UI.
     [string[]] $OpzioniAI,
 
+    # Profilo con le scelte gia' prese per i tre strumenti, cosi' che su ogni PC
+    # nuovo non si navighino a mano tre interfacce diverse. Toglie le interfacce,
+    # NON le conferme: il paletto 1 resta. Senza questo parametro, se esiste
+    # prima-installazione\profilo.json viene usato quello.
+    [string]   $Profilo,
+
     # Cartella di lavoro per il codice di terze parti. Fuori dal repository:
     # codice scaricato non sta accanto agli script del progetto.
     [string]   $Cartella = (Join-Path $env:TEMP 'windows-status-prima-installazione'),
@@ -76,7 +82,7 @@ $VERSIONE = '1.0'
 $Radice     = Split-Path $PSScriptRoot -Parent
 $Manifesto  = Join-Path $PSScriptRoot 'prima-installazione\strumenti.json'
 $PS51       = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$TUTTI      = @('SNAPSHOT','PARACADUTE','AI','DEBLOAT','CONTROLLO')
+$TUTTI      = @('SNAPSHOT','PARACADUTE','AI','DEBLOAT','MONITORAGGIO','CONTROLLO')
 
 if (-not $Passi -or $Passi.Count -eq 0) { $Passi = $TUTTI }
 $Passi = @($Passi | ForEach-Object { $_ -split '[,;\s]+' } |
@@ -115,6 +121,19 @@ function Leggi-Manifesto {
     if (-not (Test-Path $Manifesto)) { throw "Manifesto non trovato: $Manifesto" }
     $j = Get-Content $Manifesto -Raw -Encoding UTF8 | ConvertFrom-Json
     return $j.strumenti
+}
+
+function Leggi-Profilo {
+    $p = $Profilo
+    if (-not $p) {
+        $automatico = Join-Path $PSScriptRoot 'prima-installazione\profilo.json'
+        if (Test-Path $automatico) { $p = $automatico }
+    }
+    if (-not $p) { return $null }
+    if (-not (Test-Path $p)) { throw "Profilo non trovato: $p" }
+    $j = Get-Content $p -Raw -Encoding UTF8 | ConvertFrom-Json
+    $j | Add-Member -NotePropertyName '_percorso' -NotePropertyValue $p -Force
+    return $j
 }
 
 # --- prerequisiti ------------------------------------------------------------
@@ -167,7 +186,7 @@ function Mostra-Piano {
     Write-Host ''
 
     if ($S.Amministratore) { Ok 'eseguito da amministratore' }
-    else { Stop_ 'NON amministratore: nessuno dei due strumenti puo'' funzionare' }
+    else { Stop_ 'NON amministratore: nessuno dei tre strumenti puo'' funzionare' }
 
     if ($S.Edizione -match 'Home') {
         Avviso 'edizione Home: RemoveWindowsAI non garantisce la rimozione completa'
@@ -190,17 +209,37 @@ function Mostra-Piano {
     Write-Host ''
     Write-Host '  Strumenti appuntati nel manifesto:' -ForegroundColor Cyan
     foreach ($t in $Strumenti) {
-        $rev = if ($t.reversibile) { 'reversibile' } else { 'NON REVERSIBILE' }
-        Write-Host ("    {0,-18} {1}  commit {2}  [{3}]" -f $t.nome, $t.licenza, $t.commit.Substring(0,10), $rev)
+        # reversibile puo' valere true, false oppure la stringa 'parziale':
+        # un controllo di verita' secco direbbe che 'parziale' e' un si.
+        $rev = switch ("$($t.reversibile)") {
+            'True'     { 'reversibile' }
+            'parziale' { 'REVERSIBILE SOLO IN PARTE' }
+            default    { 'NON REVERSIBILE' }
+        }
+        $ver = if ($t.commit) { "commit $($t.commit.Substring(0,10))" } else { "versione $($t.versione)" }
+        Write-Host ("    {0,-18} {1,-8} {2,-22} [{3}]" -f $t.nome, $t.licenza, $ver, $rev)
+    }
+
+    Write-Host ''
+    if ($Prof) {
+        Ok "profilo in uso: $($Prof.nome)"
+        Info "  da $($Prof._percorso)"
+        Info '  toglie i menu dei tre strumenti, NON le conferme'
+    } else {
+        Info 'nessun profilo: i tre strumenti apriranno le loro interfacce.'
+        Info '  per evitarlo: copia profilo.esempio.json in profilo.json e adattalo'
     }
 
     Write-Host ''
     Write-Host '  Ordine della catena:' -ForegroundColor Cyan
-    Write-Host '    1 SNAPSHOT    fotografia della macchina vergine (Snapshot-Stato.ps1)'
-    Write-Host '    2 PARACADUTE  punto di ripristino, e conferma che esista un''immagine'
-    Write-Host '    3 AI          RemoveWindowsAI, il passo senza ritorno. Poi RIAVVIO manuale'
-    Write-Host '    4 DEBLOAT     Win11Debloat, reversibile. Poi RIAVVIO manuale'
-    Write-Host '    5 CONTROLLO   seconda fotografia e confronto: cosa e'' cambiato davvero'
+    Write-Host '    1 SNAPSHOT     fotografia della macchina vergine (Snapshot-Stato.ps1)'
+    Write-Host '    2 PARACADUTE   punto di ripristino, e conferma che esista un''immagine'
+    Write-Host '    3 AI           RemoveWindowsAI con -backupMode, passo quasi senza ritorno'
+    Write-Host '                   Poi RIAVVIO manuale'
+    Write-Host '    4 DEBLOAT      Win11Debloat, reversibile. Poi RIAVVIO manuale'
+    Write-Host '    5 MONITORAGGIO Netdata, solo se il profilo lo dice. Vedi docs/16: su'
+    Write-Host '                   Windows il cruscotto locale e'' bloccato nel piano gratuito'
+    Write-Host '    6 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
     Write-Host ''
     Write-Host "  Passi scelti: $($Passi -join ', ')"
     Write-Host ''
@@ -211,6 +250,31 @@ function Mostra-Piano {
 
 function Scarica-Strumento {
     param($T)
+
+    # Un MSI non e' un repository: si scarica il file e basta. Il suo digest non
+    # lo calcoliamo noi su una copia qualunque, lo prende il manifesto dal file
+    # sha256sums.txt che l'autore pubblica con la release.
+    if ($T.tipo -eq 'msi') {
+        if (-not (Test-Path $Cartella)) { New-Item -ItemType Directory -Path $Cartella -Force | Out-Null }
+        $file = Join-Path $Cartella $T.ingresso
+        if (-not (Test-Path $file)) {
+            Info "$($T.nome) $($T.versione): scarico l'installatore (circa $([math]::Round($T.byte/1MB)) MB)"
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $vecchio = $ProgressPreference; $ProgressPreference = 'SilentlyContinue'
+            try { Invoke-WebRequest -Uri $T.url -OutFile $file -UseBasicParsing }
+            finally { $ProgressPreference = $vecchio }
+        } else { Info "$($T.nome): gia' presente in $Cartella" }
+        $h = (Get-FileHash $file -Algorithm SHA256).Hash.ToLower()
+        if ($h -ne $T.sha256.ToLower()) {
+            Stop_ "$($T.nome): DIGEST DIVERSO da quello pubblicato nella release"
+            Info  "  atteso  : $($T.sha256)"
+            Info  "  trovato : $h"
+            throw "Digest non corrispondente per $($T.nome)."
+        }
+        Ok "$($T.nome): digest verificato ($($T.sha256.Substring(0,16))...)"
+        return $file
+    }
+
     $dest = Join-Path $Cartella ("{0}-{1}" -f $T.nome, $T.commit.Substring(0,10))
     $ingresso = Join-Path $dest $T.ingresso
 
@@ -313,7 +377,10 @@ function Passo-AI {
 
     if (-not (Conferma 'Eseguo RemoveWindowsAI adesso?')) { Avviso 'passo AI saltato'; return $false }
 
-    $arg = @('-NoProfile','-ExecutionPolicy','Bypass','-File',$Ingresso)
+    # -backupMode lo mette sempre la catena: esporta le chiavi dei servizi che
+    # cancella e crea un punto di ripristino. Costa pochi secondi, e senza di
+    # esso anche la parte reversibile dello strumento non lo sarebbe piu'.
+    $arg = @('-NoProfile','-ExecutionPolicy','Bypass','-File',$Ingresso,'-backupMode')
     if ($OpzioniAI) { $arg += $OpzioniAI }
     $p = Start-Process -FilePath $PS51 -ArgumentList $arg -Wait -PassThru -Verb RunAs
     Info "RemoveWindowsAI terminato con codice $($p.ExitCode)"
@@ -337,6 +404,68 @@ function Passo-Debloat {
     if ($OpzioniDebloat) { $arg += $OpzioniDebloat }
     $p = Start-Process -FilePath $PS51 -ArgumentList $arg -Wait -PassThru -Verb RunAs
     Info "Win11Debloat terminato con codice $($p.ExitCode)"
+    return $true
+}
+
+function Passo-Monitoraggio {
+    param($T, $Conf)
+    Titolo 'MONITORAGGIO - Netdata'
+    Info 'A differenza degli altri due non toglie: mette, e lascia acceso un'
+    Info 'servizio che raccoglie metriche al secondo. Si disinstalla come un MSI.'
+    Write-Host ''
+    Avviso 'Da sapere PRIMA, e viene dalla documentazione di Netdata:'
+    Avviso 'su Windows con il piano gratuito Community il cruscotto locale'
+    Avviso 'http://localhost:19999 e'' BLOCCATO. I dati si guardano su Netdata'
+    Avviso 'Cloud, cioe'' fuori dalla macchina. Senza token non si vede niente;'
+    Avviso 'con il token, le metriche di questa macchina escono verso un terzo.'
+    Write-Host ''
+
+    if (-not $Conf) {
+        Info 'Nessun profilo: il monitoraggio non si installa a caso.'
+        Info 'Si prepara un profilo (vedi profilo.esempio.json) con installa=true'
+        Info 'e il token, oppure si installa a mano dall''MSI gia'' verificato.'
+        return $false
+    }
+    if (-not $Conf.installa) {
+        Info 'profilo: monitoraggio.installa = false, passo saltato per scelta'
+        return $false
+    }
+
+    $ingresso = Scarica-Strumento $T
+    if (-not $Conf.token) {
+        Avviso 'profilo senza token: l''agente verrebbe installato e non mostrerebbe'
+        Avviso 'niente, ne'' qui ne'' altrove. Si installa lo stesso solo se e'' voluto.'
+        if (-not (Conferma 'Installo Netdata SENZA agganciarlo al Cloud?')) { return $false }
+    } else {
+        Info 'profilo con token: la macchina verra'' agganciata a uno spazio Netdata Cloud'
+        if (-not (Conferma 'Installo Netdata e lo aggancio al Cloud?')) { return $false }
+    }
+
+    $arg = @('/qn','/i',"`"$ingresso`"")
+    if ($Conf.token) { $arg += "TOKEN=$($Conf.token)" }
+    if ($Conf.rooms) { $arg += "ROOMS=$($Conf.rooms)" }
+    if ($Conf.proxy) { $arg += "PROXY=$($Conf.proxy)" }
+
+    $p = Start-Process -FilePath 'msiexec.exe' -ArgumentList $arg -Wait -PassThru
+    Info "msiexec terminato con codice $($p.ExitCode)"
+    if ($p.ExitCode -ne 0) { Avviso 'installazione non riuscita: vedi il registro eventi di Windows Installer'; return $true }
+
+    $svc = Get-Service -Name 'netdata' -ErrorAction SilentlyContinue
+    if ($svc) { Ok "servizio netdata presente, stato $($svc.Status)" } else { Avviso 'servizio netdata non trovato dopo l''installazione' }
+
+    # La porta 19999 e' superficie d'attacco: lo snapshot la vedra', e tanto vale
+    # chiuderla subito se il cruscotto si guarda dal Cloud e non dalla rete.
+    if ($Conf.chiudiFirewall) {
+        if (Conferma 'Blocco la porta 19999 in ingresso dalla rete (resta locale)?') {
+            try {
+                New-NetFirewallRule -DisplayName 'windows-status: blocca Netdata 19999 in ingresso' `
+                    -Direction Inbound -LocalPort 19999 -Protocol TCP -Action Block -Profile Any | Out-Null
+                Ok 'regola firewall creata'
+            } catch { Avviso "regola firewall non creata: $($_.Exception.Message)" }
+        }
+    } else {
+        Avviso 'porta 19999 lasciata come l''ha messa l''installatore: verificala nello snapshot'
+    }
     return $true
 }
 
@@ -383,6 +512,14 @@ function Passo-Controllo {
 
 $S = Stato-Macchina
 $Strumenti = Leggi-Manifesto
+$Prof = Leggi-Profilo
+
+# Il profilo decide le opzioni solo dove non le ha gia' decise la riga di
+# comando: un parametro scritto a mano vince sempre su un file.
+if ($Prof) {
+    if (-not $OpzioniAI      -and $Prof.ai.opzioni)      { $OpzioniAI      = @($Prof.ai.opzioni) }
+    if (-not $OpzioniDebloat -and $Prof.debloat.opzioni) { $OpzioniDebloat = @($Prof.debloat.opzioni) }
+}
 
 if ($Controlla) { Passo-Controllo; return }
 
@@ -445,6 +582,13 @@ if ($Passi -contains 'DEBLOAT') {
     if (Passo-Debloat $ing) {
         $eseguiti += 'Win11Debloat'
         Avviso 'Un riavvio rende effettive tutte le modifiche di interfaccia.'
+    }
+}
+
+if ($Passi -contains 'MONITORAGGIO') {
+    $conf = if ($Prof) { $Prof.monitoraggio } else { $null }
+    if (Passo-Monitoraggio ($Strumenti | Where-Object { $_.nome -eq 'Netdata' }) $conf) {
+        $eseguiti += 'Netdata'
     }
 }
 

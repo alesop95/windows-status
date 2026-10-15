@@ -47,7 +47,51 @@ $voci = @(
   @{ N='9a';Titolo='PC NUOVO: esegui la catena (AI + debloat)';     Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Prima-Installazione.ps1') -Applica } }
   @{ N='9c';Titolo='PC NUOVO: controlla i residui AI, dopo';        Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Prima-Installazione.ps1') -Controlla } }
   @{ N='10';Titolo='Censimento hardware di questa macchina (anonimo)'; Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'censimento\hw-report-windows.ps1') } }
+  @{ N='11';Titolo='Prepara la cartella per un PC nuovo (chiavetta)'; Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Prepara-Chiavetta.ps1') -Destinazione (Read-Host 'Destinazione (es. E:\)') } }
+  @{ N='P'; Titolo='PC NUOVO: percorso guidato (dove sono arrivato)'; Tipo='sola lettura';   Azione={ Mostra-Percorso } }
 )
+
+# Percorso guidato del PC nuovo: non esegue niente da se', dice a che punto
+# sei e qual e' la voce successiva. Lo stato lo deduce da cio' che e' verificabile
+# sulla macchina; cio' che non e' verificabile lo dichiara tale invece di fingere.
+function Mostra-Percorso {
+    $snapRoot = Join-Path $base 'snapshots'
+    $snapshot = @(Get-ChildItem $snapRoot -Directory -ErrorAction SilentlyContinue).Count
+    $strumenti = Test-Path (Join-Path $env:TEMP 'windows-status-prima-installazione')
+    $netdata  = [bool](Get-Service -Name 'netdata' -ErrorAction SilentlyContinue)
+    $profilo  = Test-Path (Join-Path $scripts 'prima-installazione\profilo.json')
+    $winget   = [bool](Get-ChildItem $snapRoot -Recurse -Filter 'software_winget.json' -ErrorAction SilentlyContinue)
+    $punti    = 0
+    try { $punti = @(Get-ComputerRestorePoint -ErrorAction Stop).Count } catch { }
+
+    function Riga($fatto, $testo, $voce) {
+        $segno = switch ($fatto) { 'si' {'[x]'} 'no' {'[ ]'} default {'[?]'} }
+        $col   = switch ($fatto) { 'si' {'Green'} 'no' {'Yellow'} default {'DarkGray'} }
+        Write-Host ("  {0} {1}" -f $segno, $testo) -NoNewline -ForegroundColor $col
+        if ($voce) { Write-Host ("   -> voce $voce") -ForegroundColor Cyan } else { Write-Host '' }
+    }
+
+    Write-Host ''
+    Write-Host '  PERCORSO DEL PC NUOVO' -ForegroundColor Cyan
+    Write-Host '  [x] fatto   [ ] da fare   [?] non verificabile da qui' -ForegroundColor DarkGray
+    Write-Host ''
+    Riga 'si'  'progetto presente su questa macchina'                         $null
+    Riga '?'   'immagine di sistema della macchina vergine (Veeam, docs\02)'  $null
+    Riga $(if($profilo){'si'}else{'no'})   'profilo delle scelte (profilo.json, togli i menu di terze parti)' $null
+    Riga $(if($punti -gt 0){'si'}else{'no'}) "punti di ripristino presenti: $punti"                  '9'
+    Riga $(if($snapshot -gt 0){'si'}else{'no'}) "fotografie nel progetto: $snapshot"                 '1 oppure 9a'
+    Riga $(if($strumenti){'si'}else{'no'}) 'strumenti di terze parti scaricati e verificati'         '9s'
+    Riga '?'   'RemoveWindowsAI eseguito (lo dice il controllo dei residui)'  '9c'
+    Riga '?'   'Win11Debloat eseguito'                                        '9a'
+    Riga $(if($netdata){'si'}else{'no'}) 'Netdata installato (opzionale, vedi docs\16)'              '9a'
+    Riga $(if($winget){'si'}else{'no'}) 'software_winget.json disponibile per la reinstallazione'    '11 sulla macchina VECCHIA'
+    Riga '?'   'baseline di sicurezza applicato'                              '3 poi 4'
+    Riga '?'   'identita git, SSH, Claude e Codex, dotfiles (docs\03,04,10)'  $null
+    Write-Host ''
+    Write-Host '  Ordine consigliato: immagine -> 9 -> 9s -> 9a -> RIAVVIO -> 9a -> RIAVVIO -> 9c -> 5 -> 3 -> 4' -ForegroundColor Cyan
+    Write-Host '  Dettagli e cautele: LEGGIMI-PC-NUOVO.md in radice, e docs\16.'
+    Write-Host '  I riavvii non sono mai automatici: li decidi tu.' -ForegroundColor Yellow
+}
 
 function Show-Menu {
     Write-Host ''
