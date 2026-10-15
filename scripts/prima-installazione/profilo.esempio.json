@@ -110,19 +110,23 @@
 
   "monitoraggio": {
     "_commento": [
-      "Netdata. installa=false e' il default voluto: va acceso solo dopo aver",
-      "deciso del cruscotto. Su Windows, con il piano gratuito Community, il",
-      "cruscotto locale su localhost:19999 e' bloccato e i dati si guardano su",
-      "Netdata Cloud: senza token l'agente raccoglie e non si vede, con il token",
-      "le metriche della macchina escono verso un servizio di terzi.",
-      "Il token e' un segreto: in profilo.json, mai qui, mai nel repository.",
-      "chiudiFirewall=true lascia la porta 19999 raggiungibile solo dalla",
-      "macchina stessa, che e' quello che serve quando si usa il Cloud."
+      "windows_exporter: 11 MB, un servizio, nessuna interfaccia e nessun",
+      "account. Espone le metriche su localhost:9182/metrics e si ferma li'.",
+      "I cruscotti NON stanno qui: stanno sulla macchina centrale, con",
+      "Prometheus e Grafana OSS. Vedi docs/17.",
+      "",
+      "centrale: indirizzo della macchina che interroga questo PC. La catena",
+      "apre la porta SOLO verso quell'indirizzo, non verso tutta la rete.",
+      "Lasciandolo vuoto la porta resta chiusa dall'esterno e l'agente serve",
+      "solo a chi sta davanti alla macchina.",
+      "",
+      "collettori: l'elenco passato a ENABLED_COLLECTORS. Quello predefinito",
+      "copre CPU, disco, memoria, rete, sistema, servizi e processi. Aggiungerne",
+      "costa risorse: si mettono quelli che si guarderanno davvero."
     ],
     "installa": false,
-    "token": "",
-    "rooms": "",
-    "proxy": "",
-    "chiudiFirewall": true
+    "porta": 9182,
+    "centrale": "",
+    "collettori": "cpu,cs,logical_disk,memory,net,os,service,system,process"
   }
 }
