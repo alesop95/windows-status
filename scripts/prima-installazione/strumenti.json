@@ -1,0 +1,63 @@
+{
+  "_commento": [
+    "Manifesto degli strumenti di terze parti usati dalla prima installazione.",
+    "Ogni voce e' APPUNTATA a un commit immutabile e al digest del suo file di",
+    "ingresso. Prima-Installazione.ps1 rifiuta di eseguire qualunque file il cui",
+    "digest non corrisponda. Aggiornare una versione e' un atto deliberato: si",
+    "cambiano qui commit e digest, si prova, e si annota nel changelog.",
+    "NON si usa mai la forma 'irm URL | iex' consigliata dai due progetti:",
+    "esegue codice remoto non verificato e non ripetibile."
+  ],
+  "aggiornato": "2026-10-15",
+  "strumenti": [
+    {
+      "nome": "RemoveWindowsAI",
+      "autore": "zoicware",
+      "licenza": "MIT",
+      "repo": "https://github.com/zoicware/RemoveWindowsAI",
+      "commit": "793e458f13b9162032f76a3d8a644184333d9780",
+      "commit_data": "2026-10-14",
+      "riferimento_mobile": "main",
+      "ingresso": "RemoveWindowsAi.ps1",
+      "sha256": "ca3b1a36277bfcee0824031846c4abf13f1d352356c7f9201b4288ba25624a70",
+      "byte": 438312,
+      "reversibile": false,
+      "richiede_ps51": true,
+      "note": [
+        "Rimuove Copilot, Recall, Click to Do e i pacchetti AI anche quando sono",
+        "marcati come non rimovibili: agisce sul CBS store, esegue codice come",
+        "TrustedInstaller e installa un pacchetto di aggiornamento fittizio per",
+        "impedire la reinstallazione. NON si torna indietro con un parametro:",
+        "il ritorno indietro e' l'immagine di sistema.",
+        "Non supporta PowerShell 7: va eseguito con Windows PowerShell 5.1.",
+        "Alcuni antivirus di terze parti lo segnalano come falso positivo."
+      ]
+    },
+    {
+      "nome": "Win11Debloat",
+      "autore": "Raphire",
+      "licenza": "MIT",
+      "repo": "https://github.com/Raphire/Win11Debloat",
+      "commit": "f431c56159bfd0b68822c583509126bab8cb94cc",
+      "commit_data": "2026-08-24",
+      "riferimento_mobile": "master",
+      "tag": "2026.08.24",
+      "ingresso": "Win11Debloat.ps1",
+      "sha256": "1ace81fc73c227f403d8f20a86d7eb0fa7f34985a017379bf141e04941d2caad",
+      "byte": 28155,
+      "reversibile": true,
+      "richiede_ps51": false,
+      "note": [
+        "Rimuove app preinstallate, disattiva telemetria e contenuti suggeriti,",
+        "pulisce barra applicazioni, menu Start, Esplora file e contesto.",
+        "Gli autori dichiarano reversibili tutte le modifiche e reinstallabili",
+        "quasi tutte le app dallo Store; esiste una pagina dedicata al rientro.",
+        "Appuntato al tag di rilascio, non alla punta del ramo: un rilascio e'",
+        "un artefatto che l'autore ha dichiarato stabile.",
+        "ATTENZIONE su macchina aziendale: alcune sue opzioni toccano Windows",
+        "Update, la telemetria e la cifratura automatica BitLocker, cioe' le",
+        "cose che il paletto 4 di questo progetto vieta di toccare senza ordine."
+      ]
+    }
+  ]
+}
