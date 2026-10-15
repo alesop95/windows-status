@@ -42,6 +42,11 @@ $voci = @(
   @{ N='6i';Titolo='Snapshot periodico: INSTALLA (attivita pianif.)'; Tipo='MODIFICA';      Azione={ & (Join-Path $scripts 'Pianifica-Snapshot.ps1') -Installa } }
   @{ N='7'; Titolo='Check salute periodico: INSTALLA (attivita pianif.)'; Tipo='MODIFICA';  Azione={ & (Join-Path $scripts 'Controlla-Salute.ps1') -Installa } }
   @{ N='8'; Titolo='Design system di account: verifica la propagazione'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Installa-DesignSystem.ps1') -Verifica } }
+  @{ N='9'; Titolo='PC NUOVO: piano della prima installazione';     Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Prima-Installazione.ps1') } }
+  @{ N='9s';Titolo='PC NUOVO: scarica e verifica gli strumenti';    Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Prima-Installazione.ps1') -Scarica } }
+  @{ N='9a';Titolo='PC NUOVO: esegui la catena (AI + debloat)';     Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Prima-Installazione.ps1') -Applica } }
+  @{ N='9c';Titolo='PC NUOVO: controlla i residui AI, dopo';        Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Prima-Installazione.ps1') -Controlla } }
+  @{ N='10';Titolo='Censimento hardware di questa macchina (anonimo)'; Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'censimento\hw-report-windows.ps1') } }
 )
 
 function Show-Menu {
