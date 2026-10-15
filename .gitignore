@@ -24,6 +24,9 @@ secrets*
 *token*
 *.secret
 
+# Output del censimento hardware (seriali, MAC, IP, utenti: dati reali di macchine)
+hw-*.txt
+
 # Copie "compilate" dei documenti con dati reali della macchina (mai nel repo pubblico)
 docs/*.compilata.md
 
