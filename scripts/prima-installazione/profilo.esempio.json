@@ -19,6 +19,44 @@
 
   "nome": "esempio - PC nuovo non aziendale",
 
+  "applicativi": {
+    "_commento": [
+      "Il software di base, messo sulla macchina vergine subito dopo il",
+      "paracadute. Due vie, e non sono equivalenti.",
+      "",
+      "winget: verifica l'hash di ogni pacchetto dal manifesto del suo",
+      "repository, e' gia' dentro Windows, ed e' quello che il progetto usa in",
+      "Reinstall-Software.ps1. Gli identificativi si trovano con 'winget search'.",
+      "",
+      "ninite: comodo e pratico, ma non segue le regole di questa catena. NON e'",
+      "appuntabile - due scaricamenti della stessa selezione hanno digest diversi,",
+      "misurato - e installa sempre le ultime versioni, quindi la stessa riga oggi",
+      "e fra un mese non produce lo stesso PC. E NON e' open source: servizio",
+      "chiuso, gratuito per uso personale, a pagamento in azienda (Ninite Pro).",
+      "Se lo si usa, la catena verifica almeno la firma Authenticode e scrive il",
+      "digest della copia eseguita, da annotare nel changelog.",
+      "I nomi delle voci ninite sono quelli dell'indirizzo del sito:",
+      "ninite.com/7zip-vlc-firefox/ninite.exe  ->  7zip, vlc, firefox",
+      "",
+      "strumento: winget | ninite | nessuno"
+    ],
+    "strumento": "winget",
+    "app": [
+      "7zip.7zip",
+      "VideoLAN.VLC",
+      "Mozilla.Firefox",
+      "Notepad++.Notepad++",
+      "Git.Git"
+    ],
+    "_app_se_ninite": [
+      "7zip",
+      "vlc",
+      "firefox",
+      "notepadplusplus",
+      "git"
+    ]
+  },
+
   "ai": {
     "_commento": [
       "RemoveWindowsAI. -backupMode lo mette la catena da sola e non va scritto",

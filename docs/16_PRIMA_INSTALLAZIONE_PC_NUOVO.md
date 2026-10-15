@@ -101,6 +101,22 @@ Quello che il profilo toglie sono le interfacce. **Non toglie le conferme**: ogn
 
 L'esempio e' tarato su un PC **non** aziendale e lascia fuori di proposito quattro opzioni di Win11Debloat - `-DisableTelemetry`, `-DisableUpdateASAP`, `-DisableDeliveryOptimization`, `-DisableBitlockerAutoEncryption` - e la voce `DisableDefenderAI` di RemoveWindowsAI: sono esattamente cio' che il paletto 4 vieta di toccare su una macchina del tenant.
 
+## Gli applicativi: Ninite o winget
+
+Il passo `APPLICATIVI` mette il software di base sulla macchina vergine, subito dopo il paracadute e prima della pulizia: e' il momento in cui non c'e' ancora niente da rompere e la fotografia iniziale e' gia' stata presa. Si sceglie nel profilo fra due vie che **non sono equivalenti**, e vale la pena sapere in cosa differiscono.
+
+**winget** e' la via che si accorda con il resto della catena. Verifica l'hash di ogni pacchetto dal manifesto del suo repository, e' gia' dentro Windows, e il progetto lo usa gia' in `Reinstall-Software.ps1`. Gli identificativi si trovano con `winget search`.
+
+**Ninite** e' comodo: una pagina, si spuntano i programmi, esce un installatore che li mette tutti senza chiedere niente e senza barre degli strumenti. Ma ha due proprieta' che lo mettono fuori dalle regole di questa catena, e il progetto non fa finta che le segua.
+
+*Non e' appuntabile.* Ninite costruisce l'eseguibile a ogni richiesta. Lo abbiamo misurato: due scaricamenti della stessa identica selezione, a pochi secondi di distanza, hanno la stessa dimensione (433.816 byte) e **digest SHA-256 diversi**. Non esiste quindi un digest da mettere nel manifesto, e non e' un difetto di Ninite: e' come funziona, e per giunta installa sempre le *ultime* versioni, quindi la stessa selezione oggi e fra un mese non produce lo stesso PC. Tutta la catena esiste per rendere ripetibile una prima installazione; questo passo, con Ninite, ripetibile non e'.
+
+*Non e' open source.* E' un servizio chiuso, gratuito per uso personale, mentre l'uso in azienda ricade sotto Ninite Pro, che si paga.
+
+Se lo si usa lo stesso - ed e' una scelta legittima su un PC personale - la catena fa le due cose che restano possibili: verifica la **firma Authenticode** dell'eseguibile e si ferma se non e' valida, e stampa il **digest della copia effettivamente eseguita**, da annotare nel changelog. Non e' un digest atteso, e' un digest testimoniato: dice almeno *cosa* e' stato eseguito quel giorno.
+
+Le voci di Ninite nel profilo sono i nomi che compaiono nel suo indirizzo: `ninite.com/7zip-vlc-firefox/ninite.exe` diventa `["7zip", "vlc", "firefox"]`.
+
 ## Netdata: perche' non si installa da solo
 
 Netdata e' il terzo strumento, e ha una natura diversa dagli altri due: non toglie, installa un servizio che resta acceso e raccoglie metriche al secondo. Si disinstalla come un normale MSI, quindi e' reversibile.
