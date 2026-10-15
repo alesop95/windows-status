@@ -6,7 +6,8 @@
 #  nessuna interfaccia. Qui sta il resto, UNA volta sola per tutto il parco:
 #
 #      Prometheus   Apache-2.0   interroga gli exporter, archivia, allarmi
-#      Grafana OSS  AGPL-3.0     i cruscotti, che leggono da Prometheus
+#      Loki         AGPL-3.0     riceve i log che gli agenti Alloy spingono
+#      Grafana OSS  AGPL-3.0     i cruscotti, che leggono da Prometheus e Loki
 #
 #  Nessun account, nessun token, nessuna chiave, nessun limite di nodi. Tutto
 #  sulle proprie macchine. Grafana OSS non e' Grafana Cloud: qui non si usa.
@@ -161,6 +162,55 @@ groups:
         annotations:
           descrizione: '{{ `$labels.instance }} meno del 10% di memoria libera'
 "@
+    # Loki vuole la barra in avanti anche su Windows. Si usa il metodo Replace
+    # e non l'operatore -replace, che interpreterebbe il modello come regex.
+    $datiLoki = (Join-Path $Percorso 'dati-loki').Replace([char]92, '/')
+    $loki = @"
+# loki-config.yaml - generato da windows-status
+# Configurazione a binario singolo, archivio su disco locale: per un parco di
+# ufficio basta e avanza, e non tira dentro nessun servizio esterno.
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: warn
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: $datiLoki
+  storage:
+    filesystem:
+      chunks_directory: $datiLoki/chunks
+      rules_directory: $datiLoki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  retention_period: $Ritenzione
+  reject_old_samples: false
+
+compactor:
+  working_directory: $datiLoki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+"@
+    $loki | Set-Content (Join-Path $Percorso 'loki-config.yaml') -Encoding UTF8
+    Ok "loki-config.yaml scritto (ritenzione $Ritenzione)"
+
     $yml    | Set-Content (Join-Path $Percorso 'prometheus.yml') -Encoding UTF8
     $regole | Set-Content (Join-Path $Percorso 'regole.yml') -Encoding UTF8
     Ok "prometheus.yml e regole.yml scritti in $Percorso"
@@ -247,6 +297,31 @@ if ($Installa) {
         Ok 'attivita'' creata e avviata: Prometheus su http://localhost:9090'
     }
 
+    $zipLoki = Prendi ($centrali | Where-Object { $_.nome -eq 'Loki' })
+    $dirLoki = Join-Path $Cartella 'loki'
+    if (-not (Test-Path $dirLoki)) { New-Item -ItemType Directory -Path $dirLoki -Force | Out-Null }
+    if (-not (Test-Path (Join-Path $dirLoki 'loki-windows-amd64.exe'))) {
+        Info 'estraggo Loki'
+        Expand-Archive -Path $zipLoki -DestinationPath $dirLoki -Force
+    }
+    Copy-Item (Join-Path $Cartella 'loki-config.yaml') $dirLoki -Force
+    Ok "Loki in $dirLoki"
+
+    Write-Host ''
+    Info 'Anche Loki, come Prometheus, non e'' un servizio di Windows.'
+    if (Conferma 'Creo l''attivita'' pianificata che avvia Loki all''avvio?') {
+        $exeLoki = Join-Path $dirLoki 'loki-windows-amd64.exe'
+        $azL = New-ScheduledTaskAction -Execute $exeLoki -Argument '-config.file=loki-config.yaml' -WorkingDirectory $dirLoki
+        $trL = New-ScheduledTaskTrigger -AtStartup
+        $prL = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+        $stL = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit ([TimeSpan]::Zero)
+        Register-ScheduledTask -TaskName 'windows-status Loki' -Action $azL -Trigger $trL -Principal $prL -Settings $stL -Force | Out-Null
+        Start-ScheduledTask -TaskName 'windows-status Loki'
+        Ok 'attivita'' creata e avviata: Loki su http://localhost:3100'
+        Info 'I PC devono poter RAGGIUNGERE la porta 3100 di questa macchina:'
+        Info 'sono loro a spingere i log, non e'' questa a chiederli.'
+    }
+
     Write-Host ''
     if (Conferma 'Installo Grafana OSS (servizio, circa 473 MB sul disco)?') {
         $p = Start-Process -FilePath 'msiexec.exe' -ArgumentList @('/qn','/i',"`"$msi`"") -Wait -PassThru
@@ -261,10 +336,15 @@ if ($Installa) {
     Info '   che va cambiata subito: e'' la prima cosa che chiede)'
     Info '2. Connections > Data sources > Add > Prometheus'
     Info '   URL: http://localhost:9090   e Save & test'
+    Info '2b. Connections > Data sources > Add > Loki'
+    Info '   URL: http://localhost:3100   e Save & test'
     Info '3. Dashboards > New > Import > ID 14694 (Windows Exporter Dashboard,'
     Info '   della comunita'') e scegli la fonte dati appena creata'
     Info '4. Verifica i bersagli: http://localhost:9090/targets  devono essere UP'
     Write-Host ''
-    Avviso 'Grafana ascolta su 3000 e Prometheus su 9090: se la macchina non e'''
-    Avviso 'isolata, chiudi le due porte verso la rete o mettile dietro a un proxy.'
+    Info '5. Esplora i log: Explore > fonte dati Loki > query  {sistema="windows"}'
+    Write-Host ''
+    Avviso 'Porte di questa macchina: Grafana 3000 (chi guarda), Prometheus 9090'
+    Avviso '(solo locale), Loki 3100 (raggiungibile DAI PC che spingono i log).'
+    Avviso 'Tutto il resto va chiuso verso la rete.'
 }

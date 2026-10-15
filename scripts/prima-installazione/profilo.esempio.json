@@ -128,5 +128,30 @@
     "porta": 9182,
     "centrale": "",
     "collettori": "cpu,cs,logical_disk,memory,net,os,service,system,process"
+  },
+
+  "log": {
+    "_commento": [
+      "Grafana Alloy: fa con i log quello che windows_exporter fa con le",
+      "metriche. Legge il registro eventi e lo SPINGE a Loki sulla macchina",
+      "centrale, quindi su questo PC non si apre nessuna porta in ingresso.",
+      "",
+      "loki: indirizzo della macchina centrale. La porta e' 3100 e la mette la",
+      "catena. Senza questo valore il passo non parte: un agente che non sa",
+      "dove mandare i log e' un servizio acceso per niente.",
+      "",
+      "etichetta: con che nome questa macchina comparira' in Grafana. Vuoto =",
+      "il nome della macchina. Conviene usare lo stesso nome del censimento.",
+      "",
+      "registri: System e Application bastano quasi sempre. Security contiene",
+      "chi accede a cosa ed e' voluminoso: aggiungerlo dev'essere una scelta.",
+      "",
+      "La catena installa sempre con /DISABLEREPORTING=yes, perche' per default",
+      "Alloy manda dati d'uso a Grafana Labs e qui non deve uscire niente."
+    ],
+    "installa": false,
+    "loki": "",
+    "etichetta": "",
+    "registri": ["System", "Application"]
   }
 }

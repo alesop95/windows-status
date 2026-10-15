@@ -82,7 +82,7 @@ $VERSIONE = '1.0'
 $Radice     = Split-Path $PSScriptRoot -Parent
 $Manifesto  = Join-Path $PSScriptRoot 'prima-installazione\strumenti.json'
 $PS51       = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$TUTTI      = @('SNAPSHOT','PARACADUTE','APPLICATIVI','AI','DEBLOAT','MONITORAGGIO','CONTROLLO')
+$TUTTI      = @('SNAPSHOT','PARACADUTE','APPLICATIVI','AI','DEBLOAT','MONITORAGGIO','LOG','CONTROLLO')
 
 if (-not $Passi -or $Passi.Count -eq 0) { $Passi = $TUTTI }
 $Passi = @($Passi | ForEach-Object { $_ -split '[,;\s]+' } |
@@ -242,7 +242,9 @@ function Mostra-Piano {
     Write-Host '    6 MONITORAGGIO windows_exporter, solo se il profilo lo dice: 11 MB, un'
     Write-Host '                   servizio, nessun account. I cruscotti stanno sulla'
     Write-Host '                   macchina centrale (Prometheus + Grafana OSS), vedi docs/17'
-    Write-Host '    7 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
+    Write-Host '    7 LOG          Grafana Alloy: registro eventi verso Loki sulla centrale.'
+    Write-Host '                   Spinge lui, quindi nessuna porta in ingresso su questo PC'
+    Write-Host '    8 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
     Write-Host ''
     Write-Host "  Passi scelti: $($Passi -join ', ')"
     Write-Host ''
@@ -257,7 +259,7 @@ function Scarica-Strumento {
     # Un MSI non e' un repository: si scarica il file e basta. Il suo digest non
     # lo calcoliamo noi su una copia qualunque, lo prende il manifesto dal file
     # sha256sums.txt che l'autore pubblica con la release.
-    if ($T.tipo -eq 'msi') {
+    if (@('msi','exe') -contains $T.tipo) {
         if (-not (Test-Path $Cartella)) { New-Item -ItemType Directory -Path $Cartella -Force | Out-Null }
         $file = Join-Path $Cartella $T.ingresso
         if (-not (Test-Path $file)) {
@@ -545,6 +547,92 @@ function Passo-Monitoraggio {
     return $true
 }
 
+function Passo-Log {
+    param($T, $Conf)
+    Titolo "LOG - Grafana Alloy"
+    Info "Fa con i log quello che windows_exporter fa con le metriche: legge il"
+    Info "registro eventi di Windows e lo spinge a Loki sulla macchina centrale."
+    Info "Spinge lui, quindi su questo PC NON si apre nessuna porta in ingresso."
+    Write-Host ""
+
+    if (-not $Conf -or -not $Conf.installa) {
+        Info "profilo: log.installa = false, passo saltato"
+        return $false
+    }
+    if (-not $Conf.loki) {
+        Avviso "profilo senza indirizzo di Loki: Alloy non saprebbe dove mandare i log"
+        return $false
+    }
+
+    $registri = if ($Conf.registri) { @($Conf.registri) } else { @("System","Application") }
+    $etichetta = if ($Conf.etichetta) { $Conf.etichetta } else { $env:COMPUTERNAME }
+    $url = "http://$($Conf.loki):3100/loki/api/v1/push"
+
+    Info "Loki        : $url"
+    Info "etichetta   : $etichetta"
+    Info "registri    : $($registri -join ", ")"
+    if ($registri -contains "Security") {
+        Avviso "il registro Security e' voluminoso e contiene chi accede a cosa:"
+        Avviso "assicurati che sia una scelta e non una svista."
+    }
+
+    if (-not (Conferma "Installo Alloy e gli faccio spingere questi registri?")) { Avviso "passo saltato"; return $false }
+
+    $ingresso = Scarica-Strumento $T
+
+    # Configurazione in sintassi Alloy. Le etichette stanno sulle sorgenti e non
+    # su loki.write: un'etichetta per sorgente si legge meglio in Grafana.
+    $blocchi = foreach ($r in $registri) {
+        $id = ($r -replace "[^A-Za-z0-9]", "").ToLower()
+        @"
+
+loki.source.windowsevent "$id" {
+  eventlog_name          = "$r"
+  use_incoming_timestamp = true
+  labels                 = { host = "$etichetta", registro = "$r", sistema = "windows" }
+  forward_to             = [loki.write.centrale.receiver]
+}
+"@
+    }
+
+    $config = @"
+// config.alloy - generato da windows-status\scripts\Prima-Installazione.ps1
+// $(Get-Date -Format "yyyy-MM-dd HH:mm")
+//
+// Alloy legge il registro eventi e spinge a Loki. Nessuna porta in ingresso.
+// Rigenerarlo: ripetere il passo LOG della catena.
+
+loki.write "centrale" {
+  endpoint {
+    url = "$url"
+  }
+}
+$($blocchi -join "")
+"@
+
+    $cartellaConf = Join-Path $env:ProgramData "windows-status"
+    if (-not (Test-Path $cartellaConf)) { New-Item -ItemType Directory -Path $cartellaConf -Force | Out-Null }
+    $fileConf = Join-Path $cartellaConf "config.alloy"
+    $config | Set-Content $fileConf -Encoding UTF8
+    Ok "configurazione scritta in $fileConf"
+
+    # /DISABLEREPORTING=yes non e' un di piu': per default Alloy manda dati
+    # d'uso a Grafana Labs, e la regola di questo monitoraggio e' che non esca
+    # niente dalla rete.
+    $arg = @("/S", "/CONFIG=$fileConf", "/DISABLEREPORTING=yes")
+    $p = Start-Process -FilePath $ingresso -ArgumentList $arg -Wait -PassThru
+    Info "installatore terminato con codice $($p.ExitCode)"
+
+    $svc = Get-Service -Name "Alloy" -ErrorAction SilentlyContinue
+    if (-not $svc) { $svc = Get-Service -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*lloy*" } | Select-Object -First 1 }
+    if ($svc) { Ok "servizio $($svc.Name) presente, stato $($svc.Status)" }
+    else { Avviso "servizio Alloy non trovato dopo l'installazione" }
+
+    Info "Da verificare sulla macchina centrale: in Grafana, Explore sulla fonte"
+    Info ("dati Loki, query  {host=" + [char]34 + $etichetta + [char]34 + "}  deve mostrare gli eventi.")
+    return $true
+}
+
 function Passo-Controllo {
     Titolo 'CONTROLLO - cosa e'' rimasto'
     $trovati = @()
@@ -672,6 +760,13 @@ if ($Passi -contains 'MONITORAGGIO') {
     $conf = if ($Prof) { $Prof.monitoraggio } else { $null }
     if (Passo-Monitoraggio ($Strumenti | Where-Object { $_.nome -eq 'windows_exporter' }) $conf) {
         $eseguiti += 'windows_exporter'
+    }
+}
+
+if ($Passi -contains 'LOG') {
+    $conf = if ($Prof) { $Prof.log } else { $null }
+    if (Passo-Log ($Strumenti | Where-Object { $_.nome -eq 'Grafana Alloy' }) $conf) {
+        $eseguiti += 'Grafana Alloy'
     }
 }
 

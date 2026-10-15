@@ -79,6 +79,41 @@ Dopo l'installazione la catena verifica da se' che l'agente risponda e conta le 
 
 Finita l'installazione restano quattro cose da fare a mano, che lo script elenca invece di fingere di aver fatto: cambiare la password di Grafana al primo accesso su `http://localhost:3000`; aggiungere Prometheus come fonte dati (`http://localhost:9090`); importare il cruscotto della comunita' per `windows_exporter`, che e' l'ID **14694** su grafana.com; e controllare che su `http://localhost:9090/targets` le macchine risultino `UP`.
 
+## I log: Alloy sui PC, Loki al centro
+
+Le metriche dicono *quanto*; i log dicono *cosa e' successo*. La seconda meta' del monitoraggio ha la stessa forma della prima, con due pezzi in piu' e lo stesso principio: l'agente sta sulla macchina, l'archivio e la console stanno al centro.
+
+| Pezzo | Licenza | Versione appuntata | Peso | Dove sta |
+|---|---|---|---|---|
+| [Grafana Alloy](https://github.com/grafana/alloy) | Apache-2.0 | v1.20.1 | installer 107 MB | su ogni PC Windows |
+| [Loki](https://github.com/grafana/loki) | AGPL-3.0 | v3.7.8 | zip 45 MB | macchina centrale |
+
+**Alloy** sta ad Alloy come `windows_exporter` sta alle metriche: legge il registro eventi di Windows con il componente `loki.source.windowsevent` e lo manda a Loki. La differenza che conta e' la direzione: Alloy **spinge**, mentre Prometheus **interroga**. Quindi sul PC il passo `LOG` non apre nessuna porta in ingresso - e' la macchina stessa a iniziare la conversazione.
+
+Due cose che la catena fa senza chiederle, perche' sono la regola di questo monitoraggio:
+
+- installa **sempre** con `/DISABLEREPORTING=yes`. Per default Alloy invia dati d'uso anonimi a Grafana Labs, e qui non deve uscire niente dalla rete;
+- scrive il file di configurazione da se', in `C:\ProgramData\windows-status\config.alloy`, generandolo dal profilo. Rigenerarlo significa ripetere il passo.
+
+Nel profilo:
+
+```json
+"log": {
+  "installa": true,
+  "loki": "192.0.2.10",
+  "etichetta": "PDL-07",
+  "registri": ["System", "Application"]
+}
+```
+
+`System` e `Application` bastano quasi sempre. `Security` registra chi accede a cosa, e' voluminoso, e la catena avvisa prima di includerlo: dev'essere una scelta, non una svista. L'etichetta e' il nome con cui la macchina comparira' in Grafana, e conviene sia la stessa usata nel censimento, cosi' che le due cose si parlino.
+
+**Loki** sta sulla macchina centrale, accanto a Prometheus, e `Monitoraggio-Centrale.ps1` lo installa insieme a lui: scarica, verifica, genera `loki-config.yaml` a binario singolo con archivio su disco locale, e lo avvia con un'attivita' pianificata, esattamente come Prometheus e per lo stesso motivo. Non indicizza il contenuto dei messaggi ma solo le etichette, quindi costa poco in spazio e in memoria: e' la ragione per cui sta bene sulla stessa macchina.
+
+In Grafana diventa una **seconda fonte dati** (`http://localhost:3100`), e i log si leggono da Explore con una query come `{sistema="windows"}` oppure `{host="PDL-07", registro="System"}`.
+
+Questa meta' chiude un cerchio che il progetto aveva gia' aperto: `Controlla-Salute.ps1` legge il registro eventi **a campione**, quando lo si lancia, cercando OOM, crash, BSOD e WHEA. Con Alloy e Loki quello stesso registro e' in continuo e ricercabile su tutte le macchine insieme, e la domanda "e' successo solo a questo PC o a tutti e quattro quella notte" ha finalmente una risposta.
+
 ## Sicurezza delle porte
 
 Tre porte nuove, e nessuna deve stare aperta piu' del necessario.
