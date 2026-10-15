@@ -82,7 +82,7 @@ $VERSIONE = '1.0'
 $Radice     = Split-Path $PSScriptRoot -Parent
 $Manifesto  = Join-Path $PSScriptRoot 'prima-installazione\strumenti.json'
 $PS51       = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$TUTTI      = @('SNAPSHOT','PARACADUTE','AI','DEBLOAT','MONITORAGGIO','CONTROLLO')
+$TUTTI      = @('SNAPSHOT','PARACADUTE','APPLICATIVI','AI','DEBLOAT','MONITORAGGIO','CONTROLLO')
 
 if (-not $Passi -or $Passi.Count -eq 0) { $Passi = $TUTTI }
 $Passi = @($Passi | ForEach-Object { $_ -split '[,;\s]+' } |
@@ -234,12 +234,14 @@ function Mostra-Piano {
     Write-Host '  Ordine della catena:' -ForegroundColor Cyan
     Write-Host '    1 SNAPSHOT     fotografia della macchina vergine (Snapshot-Stato.ps1)'
     Write-Host '    2 PARACADUTE   punto di ripristino, e conferma che esista un''immagine'
-    Write-Host '    3 AI           RemoveWindowsAI con -backupMode, passo quasi senza ritorno'
+    Write-Host '    3 APPLICATIVI  il software di base, con winget oppure con Ninite'
+    Write-Host '                   (Ninite non e'' appuntabile ne'' open source: vedi docs/16)'
+    Write-Host '    4 AI           RemoveWindowsAI con -backupMode, passo quasi senza ritorno'
     Write-Host '                   Poi RIAVVIO manuale'
-    Write-Host '    4 DEBLOAT      Win11Debloat, reversibile. Poi RIAVVIO manuale'
-    Write-Host '    5 MONITORAGGIO Netdata, solo se il profilo lo dice. Vedi docs/16: su'
+    Write-Host '    5 DEBLOAT      Win11Debloat, reversibile. Poi RIAVVIO manuale'
+    Write-Host '    6 MONITORAGGIO Netdata, solo se il profilo lo dice. Vedi docs/16: su'
     Write-Host '                   Windows il cruscotto locale e'' bloccato nel piano gratuito'
-    Write-Host '    6 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
+    Write-Host '    7 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
     Write-Host ''
     Write-Host "  Passi scelti: $($Passi -join ', ')"
     Write-Host ''
@@ -363,6 +365,83 @@ function Passo-Paracadute {
         throw 'Fermato: niente paracadute, niente passo senza ritorno.'
     }
     Ok 'paracadute confermato'
+}
+
+function Passo-Applicativi {
+    param($Conf)
+    Titolo 'APPLICATIVI - il software che serve davvero'
+    Info 'Su una macchina vergine i programmi di base si mettono adesso, mentre'
+    Info 'non c''e'' ancora niente da rompere e la fotografia iniziale e'' fatta.'
+
+    if (-not $Conf -or -not $Conf.strumento -or $Conf.strumento -eq 'nessuno') {
+        Info 'profilo: nessuno strumento scelto, passo saltato'
+        Info '  si sceglie in profilo.json: applicativi.strumento = ninite | winget'
+        return $false
+    }
+    $app = @($Conf.app)
+    if ($app.Count -eq 0) { Avviso 'elenco applicativi vuoto, passo saltato'; return $false }
+
+    switch ($Conf.strumento) {
+
+        'winget' {
+            Info "winget, $($app.Count) pacchetti: $($app -join ', ')"
+            Info 'winget verifica l''hash di ogni pacchetto dal manifesto del suo'
+            Info 'repository, quindi e'' la via che si accorda con il resto di questa'
+            Info 'catena. E'' anche quella che il progetto usa gia'' in Reinstall-Software.'
+            if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+                Avviso 'winget non disponibile su questa macchina (App Installer assente)'
+                return $false
+            }
+            if (-not (Conferma 'Installo i pacchetti con winget?')) { Avviso 'passo saltato'; return $false }
+            foreach ($id in $app) {
+                Info "installo $id"
+                & winget install --id $id --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
+                if ($LASTEXITCODE -ne 0) { Avviso "$id : winget ha restituito $LASTEXITCODE" } else { Ok $id }
+            }
+            return $true
+        }
+
+        'ninite' {
+            $url = 'https://ninite.com/' + ($app -join '-') + '/ninite.exe'
+            Info "Ninite, $($app.Count) voci: $($app -join ', ')"
+            Info "indirizzo: $url"
+            Write-Host ''
+            Avviso 'DUE COSE DA SAPERE, perche'' Ninite non segue le regole del resto'
+            Avviso 'di questa catena, e il progetto non finge che le segua:'
+            Avviso '  1. NON E'' APPUNTABILE. Ninite costruisce un eseguibile a ogni'
+            Avviso '     richiesta: due scaricamenti della stessa identica selezione'
+            Avviso '     hanno digest diversi (misurato). Non esiste un digest da'
+            Avviso '     mettere nel manifesto, e installa sempre le ULTIME versioni,'
+            Avviso '     quindi la stessa riga oggi e fra un mese non da'' lo stesso PC.'
+            Avviso '  2. NON E'' OPEN SOURCE. E'' un servizio chiuso, gratuito per uso'
+            Avviso '     personale; l''uso in azienda ricade sotto Ninite Pro, a pagamento.'
+            Info   'La via equivalente che resta aperta e verificabile e'' winget:'
+            Info   'si cambia applicativi.strumento in winget nel profilo.'
+            if (-not (Conferma 'Scarico ed eseguo Ninite lo stesso?')) { Avviso 'passo saltato'; return $false }
+
+            if (-not (Test-Path $Cartella)) { New-Item -ItemType Directory -Path $Cartella -Force | Out-Null }
+            $exe = Join-Path $Cartella ("ninite-{0}.exe" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            $vecchio = $ProgressPreference; $ProgressPreference = 'SilentlyContinue'
+            try { Invoke-WebRequest -Uri $url -OutFile $exe -UseBasicParsing }
+            finally { $ProgressPreference = $vecchio }
+
+            # Non potendo verificare un digest atteso, si registra almeno quello
+            # che si e' eseguito davvero: senza, non resta traccia di niente.
+            $h = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+            Info "scaricato: $exe"
+            Info "digest di QUESTA copia (da annotare nel changelog): $h"
+            $firma = Get-AuthenticodeSignature $exe
+            Info "firma Authenticode: $($firma.Status) - $($firma.SignerCertificate.Subject -replace ',.*','')"
+            if ($firma.Status -ne 'Valid') { Avviso 'firma non valida: non eseguire e capire perche''' ; return $false }
+
+            $p = Start-Process -FilePath $exe -Wait -PassThru
+            Info "Ninite terminato con codice $($p.ExitCode)"
+            return $true
+        }
+
+        default { Avviso "strumento non riconosciuto: $($Conf.strumento)"; return $false }
+    }
 }
 
 function Passo-AI {
@@ -561,6 +640,11 @@ if ($Passi -contains 'SNAPSHOT' -and -not $SenzaSnapshot) {
 }
 
 if ($Passi -contains 'PARACADUTE') { Passo-Paracadute; $eseguiti += 'paracadute' }
+
+if ($Passi -contains 'APPLICATIVI') {
+    $conf = if ($Prof) { $Prof.applicativi } else { $null }
+    if (Passo-Applicativi $conf) { $eseguiti += "applicativi ($($conf.strumento))" }
+}
 
 if ($Passi -contains 'AI') {
     $ing = Scarica-Strumento ($Strumenti | Where-Object { $_.nome -eq 'RemoveWindowsAI' })
