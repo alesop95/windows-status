@@ -1,0 +1,90 @@
+{
+  "_commento": [
+    "Profilo della prima installazione: le scelte gia' prese, una volta, invece",
+    "di navigare a mano i menu di tre strumenti diversi su ogni PC nuovo.",
+    "",
+    "COSA CAMBIA E COSA NO. Il profilo toglie le INTERFACCE di terze parti, non",
+    "le conferme: Prima-Installazione.ps1 continua a chiedere SI prima di ogni",
+    "passo che modifica, perche' quello e' il paletto 1 del progetto.",
+    "",
+    "COME SI USA. Si copia questo file in profilo.json nella stessa cartella, si",
+    "adatta, e si lancia con -Profilo. profilo.json e' IGNORATO DA GIT perche'",
+    "puo' contenere il token di Netdata, che e' un segreto (paletto 5): qui si",
+    "versiona solo l'esempio, come per baseline-eccezioni.json.",
+    "",
+    "I nomi dei parametri sono quelli veri dei due script, letti dal loro codice",
+    "alla versione appuntata nel manifesto. Se si aggiorna una versione, si",
+    "ricontrollano."
+  ],
+
+  "nome": "esempio - PC nuovo non aziendale",
+
+  "ai": {
+    "_commento": [
+      "RemoveWindowsAI. -backupMode lo mette la catena da sola e non va scritto",
+      "qui. -AllOptions fa tutto; in alternativa si elencano le voci con",
+      "-Options, oppure si escludono con -ExcludeOptions -Options <elenco>.",
+      "Voci ammesse: DisableRegKeys, PreventAIPackageReinstall,",
+      "DisableCopilotPolicies, RemoveAppxPackages, RemoveRecallFeature,",
+      "RemoveCBSPackages, RemoveAIFiles, HideAIComponents, DisableRewrite,",
+      "RemoveWindowsAITasks, UpdateCleanupCheck, DisableDefenderAI.",
+      "DisableDefenderAI tocca Defender: sulla macchina aziendale e' vietato dal",
+      "paletto 4, ed e' il motivo per cui l'esempio NON usa -AllOptions."
+    ],
+    "opzioni": [
+      "-nonInteractive",
+      "-Options",
+      "DisableRegKeys,PreventAIPackageReinstall,DisableCopilotPolicies,RemoveAppxPackages,RemoveRecallFeature,RemoveCBSPackages,RemoveAIFiles,HideAIComponents,DisableRewrite,RemoveWindowsAITasks,UpdateCleanupCheck"
+    ]
+  },
+
+  "debloat": {
+    "_commento": [
+      "Win11Debloat. -Silent evita le sue domande; -CreateRestorePoint e' suo e",
+      "si somma al punto che crea la catena, non fa danno.",
+      "Le quattro voci che il paletto 4 vieta su macchina aziendale, e che qui",
+      "sono deliberatamente ASSENTI: -DisableTelemetry, -DisableUpdateASAP,",
+      "-DisableDeliveryOptimization, -DisableBitlockerAutoEncryption.",
+      "Su un PC personale si possono aggiungere; su uno aziendale no."
+    ],
+    "opzioni": [
+      "-Silent",
+      "-RemoveApps",
+      "-DisableBing",
+      "-DisableSuggestions",
+      "-DisableLockscreenTips",
+      "-DisableSettings365Ads",
+      "-DisableCopilot",
+      "-DisableRecall",
+      "-DisableClickToDo",
+      "-DisableEdgeAI",
+      "-DisableNotepadAI",
+      "-DisablePaintAI",
+      "-DisableAISvcAutoStart",
+      "-DisableWidgets",
+      "-ShowKnownFileExt",
+      "-TaskbarAlignLeft",
+      "-RevertContextMenu",
+      "-DisableMouseAcceleration",
+      "-DisableFastStartup"
+    ]
+  },
+
+  "monitoraggio": {
+    "_commento": [
+      "Netdata. installa=false e' il default voluto: va acceso solo dopo aver",
+      "deciso del cruscotto. Su Windows, con il piano gratuito Community, il",
+      "cruscotto locale su localhost:19999 e' bloccato e i dati si guardano su",
+      "Netdata Cloud: senza token l'agente raccoglie e non si vede, con il token",
+      "le metriche della macchina escono verso un servizio di terzi.",
+      "Il token e' un segreto: in profilo.json, mai qui, mai nel repository.",
+      "chiudiFirewall=true lascia la porta 19999 raggiungibile solo dalla",
+      "macchina stessa, che e' quello che serve quando si usa il Cloud."
+    ],
+    "installa": false,
+    "token": "",
+    "rooms": "",
+    "proxy": "",
+    "chiudiFirewall": true
+  }
+}

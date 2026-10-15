@@ -24,6 +24,10 @@ secrets*
 *token*
 *.secret
 
+# Profilo della prima installazione: puo' contenere il token di Netdata
+# (segreto, paletto 5). Si versiona solo profilo.esempio.json.
+scripts/prima-installazione/profilo.json
+
 # Output del censimento hardware (seriali, MAC, IP, utenti: dati reali di macchine)
 hw-*.txt
 

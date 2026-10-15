@@ -1,12 +1,12 @@
 {
   "_commento": [
     "Manifesto degli strumenti di terze parti usati dalla prima installazione.",
-    "Ogni voce e' APPUNTATA a un commit immutabile e al digest del suo file di",
-    "ingresso. Prima-Installazione.ps1 rifiuta di eseguire qualunque file il cui",
-    "digest non corrisponda. Aggiornare una versione e' un atto deliberato: si",
-    "cambiano qui commit e digest, si prova, e si annota nel changelog.",
-    "NON si usa mai la forma 'irm URL | iex' consigliata dai due progetti:",
-    "esegue codice remoto non verificato e non ripetibile."
+    "Ogni voce e' APPUNTATA a una versione immutabile e al digest del suo file",
+    "di ingresso. Prima-Installazione.ps1 rifiuta di eseguire qualunque file il",
+    "cui digest non corrisponda. Aggiornare una versione e' un atto deliberato:",
+    "si cambiano qui versione e digest, si prova, si annota nel changelog.",
+    "NON si usa mai la forma 'irm URL | iex' consigliata dai progetti: esegue",
+    "codice remoto non verificato e non ripetibile."
   ],
   "aggiornato": "2026-10-15",
   "strumenti": [
@@ -14,6 +14,7 @@
       "nome": "RemoveWindowsAI",
       "autore": "zoicware",
       "licenza": "MIT",
+      "tipo": "git",
       "repo": "https://github.com/zoicware/RemoveWindowsAI",
       "commit": "793e458f13b9162032f76a3d8a644184333d9780",
       "commit_data": "2026-10-14",
@@ -21,14 +22,20 @@
       "ingresso": "RemoveWindowsAi.ps1",
       "sha256": "ca3b1a36277bfcee0824031846c4abf13f1d352356c7f9201b4288ba25624a70",
       "byte": 438312,
-      "reversibile": false,
+      "reversibile": "parziale",
       "richiede_ps51": true,
       "note": [
         "Rimuove Copilot, Recall, Click to Do e i pacchetti AI anche quando sono",
         "marcati come non rimovibili: agisce sul CBS store, esegue codice come",
         "TrustedInstaller e installa un pacchetto di aggiornamento fittizio per",
-        "impedire la reinstallazione. NON si torna indietro con un parametro:",
-        "il ritorno indietro e' l'immagine di sistema.",
+        "impedire la reinstallazione.",
+        "REVERSIBILITA' PARZIALE, misurata leggendo il codice: -backupMode esporta",
+        "nella cartella RemoveWindowsAI/Backup del profilo utente le chiavi dei",
+        "servizi che cancella, e crea un punto di ripristino; -revertMode le",
+        "reimporta e rimette i valori di registro su acceso. Quello che NON",
+        "torna sono i pacchetti rimossi: appx, CBS e file cancellati non vengono",
+        "salvati da nessuna parte. Per quelli il ritorno indietro e' l'immagine.",
+        "La catena passa sempre -backupMode: costa poco e vale molto.",
         "Non supporta PowerShell 7: va eseguito con Windows PowerShell 5.1.",
         "Alcuni antivirus di terze parti lo segnalano come falso positivo."
       ]
@@ -37,6 +44,7 @@
       "nome": "Win11Debloat",
       "autore": "Raphire",
       "licenza": "MIT",
+      "tipo": "git",
       "repo": "https://github.com/Raphire/Win11Debloat",
       "commit": "f431c56159bfd0b68822c583509126bab8cb94cc",
       "commit_data": "2026-08-24",
@@ -49,14 +57,51 @@
       "richiede_ps51": false,
       "note": [
         "Rimuove app preinstallate, disattiva telemetria e contenuti suggeriti,",
-        "pulisce barra applicazioni, menu Start, Esplora file e contesto.",
+        "pulisce barra applicazioni, menu Start, Esplora file e menu contestuale.",
         "Gli autori dichiarano reversibili tutte le modifiche e reinstallabili",
         "quasi tutte le app dallo Store; esiste una pagina dedicata al rientro.",
-        "Appuntato al tag di rilascio, non alla punta del ramo: un rilascio e'",
-        "un artefatto che l'autore ha dichiarato stabile.",
-        "ATTENZIONE su macchina aziendale: alcune sue opzioni toccano Windows",
-        "Update, la telemetria e la cifratura automatica BitLocker, cioe' le",
-        "cose che il paletto 4 di questo progetto vieta di toccare senza ordine."
+        "Ha parametri propri utili alla catena: -Silent, -CreateRestorePoint,",
+        "-RunDefaults, -RunDefaultsLite, -Config, -Sysprep, -User.",
+        "Appuntato al tag di rilascio, non alla punta del ramo.",
+        "ATTENZIONE su macchina aziendale: -DisableTelemetry, -DisableUpdateASAP,",
+        "-DisableDeliveryOptimization e -DisableBitlockerAutoEncryption toccano",
+        "esattamente cio' che il paletto 4 vieta di toccare senza ordine."
+      ]
+    },
+    {
+      "nome": "Netdata",
+      "autore": "netdata",
+      "licenza": "GPL-3.0",
+      "tipo": "msi",
+      "repo": "https://github.com/netdata/netdata",
+      "versione": "v2.12.1",
+      "versione_data": "2026-10-08",
+      "url": "https://github.com/netdata/netdata/releases/download/v2.12.1/netdata-v2.12.1-x64.msi",
+      "url_digest_ufficiale": "https://github.com/netdata/netdata/releases/download/v2.12.1/sha256sums.txt",
+      "ingresso": "netdata-v2.12.1-x64.msi",
+      "sha256": "94f12ed6710b9ccb29813c27b82bbef5f665b0a464c3f2c2baadf9548867b22b",
+      "byte": 181751808,
+      "reversibile": true,
+      "richiede_ps51": false,
+      "note": [
+        "Agente di monitoraggio in tempo reale: metriche di sistema al secondo,",
+        "allarmi, storico locale. A differenza degli altri due non toglie: mette,",
+        "e lascia acceso un servizio. Si disinstalla come un normale MSI.",
+        "DIGEST PRESO DAL FILE UFFICIALE sha256sums.txt della release, non",
+        "calcolato da noi su un file scaricato una volta.",
+        "VINCOLO DA SAPERE PRIMA, dalla documentazione Netdata: su Windows, con il",
+        "piano gratuito Community, il cruscotto locale http://localhost:19999 e'",
+        "BLOCCATO. L'agente raccoglie, ma i dati si guardano su Netdata Cloud,",
+        "cioe' fuori dalla macchina e fuori dall'azienda. Senza un token di",
+        "aggancio l'installazione serve a poco; con il token, le metriche della",
+        "macchina escono verso un servizio di terzi. E' una decisione, non un",
+        "passo automatico: la catena non installa niente senza che sia scritto.",
+        "Apre la porta 19999 in ascolto: va vista insieme alla sezione superficie",
+        "d'attacco dello snapshot e, se non serve da fuori, chiusa nel firewall.",
+        "Richiede Windows 10/11 o Server 2019+, 64 bit, amministratore.",
+        "Il download e' di circa 173 MB: su una macchina senza rete va portato",
+        "con la chiavetta preparata da Prepara-Chiavetta.ps1.",
+        "Installazione silenziosa: msiexec /qn /i <msi> TOKEN=... ROOMS=..."
       ]
     }
   ]

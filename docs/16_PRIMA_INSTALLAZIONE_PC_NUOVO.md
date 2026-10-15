@@ -2,18 +2,19 @@
 
 > Cosa si fa a un PC Windows appena acceso, prima che diventi la macchina di qualcuno. Due strumenti di terze parti fanno il lavoro sporco; questo progetto ci mette attorno la catena di custodia che a loro non compete: versioni appuntate e verificate, paracadute, conferma a ogni passo, e una fotografia prima e una dopo, confrontate.
 
-## Il problema, e perche' non basta lanciare i due strumenti
+## Il problema, e perche' non basta lanciare gli strumenti
 
-Un PC nuovo arriva con Copilot, Recall, Click to Do, le app preinstallate, i contenuti suggeriti e la telemetria accesa. Esistono due progetti aperti che risolvono bene la cosa, e non ha senso riscriverli:
+Un PC nuovo arriva con Copilot, Recall, Click to Do, le app preinstallate, i contenuti suggeriti e la telemetria accesa. E arriva anche senza nessuno che guardi come sta. Esistono progetti aperti che risolvono bene le due cose, e non ha senso riscriverli:
 
 | Strumento | Autore | Licenza | Cosa fa |
 |---|---|---|---|
 | [RemoveWindowsAI](https://github.com/zoicware/RemoveWindowsAI) | zoicware | MIT | rimuove Copilot, Recall, Click to Do e i pacchetti AI anche quando Windows li marca come non rimovibili |
 | [Win11Debloat](https://github.com/Raphire/Win11Debloat) | Raphire | MIT | app preinstallate, telemetria, contenuti suggeriti, barra applicazioni, menu Start, Esplora file |
+| [Netdata](https://github.com/netdata/netdata) | netdata | GPL-3.0 | agente di monitoraggio: metriche al secondo, allarmi, storico. A differenza degli altri due non toglie, **mette** |
 
-Il problema non e' quello che fanno: e' come si usano. Entrambi si presentano con un comando che scarica ed esegue codice remoto in un colpo solo, `irm <url> | iex`. Quella forma e' comoda e ha tre difetti che questo progetto non puo' accettare: esegue codice che nessuno ha guardato, prende *qualunque cosa* ci sia a quell'indirizzo nel momento in cui si preme invio, e non e' ripetibile, perche' domani quell'indirizzo servira' un file diverso. Inoltre nessuno dei due lascia un verbale di cosa ha cambiato davvero sulla macchina.
+Il problema non e' quello che fanno: e' come si usano. I primi due si presentano con un comando che scarica ed esegue codice remoto in un colpo solo, `irm <url> | iex`. Quella forma e' comoda e ha tre difetti che questo progetto non puo' accettare: esegue codice che nessuno ha guardato, prende *qualunque cosa* ci sia a quell'indirizzo nel momento in cui si preme invio, e non e' ripetibile, perche' domani quell'indirizzo servira' un file diverso. Inoltre nessuno di loro lascia un verbale di cosa ha cambiato davvero sulla macchina.
 
-Il progetto ha gia' la risposta a quest'ultimo punto - la fotografia e il confronto - e ha dei paletti che valgono anche qui. Da cui `scripts\Prima-Installazione.ps1`: non un terzo strumento di pulizia, ma la **catena di custodia** attorno ai due.
+Il progetto ha gia' la risposta a quest'ultimo punto - la fotografia e il confronto - e ha dei paletti che valgono anche qui. Da cui `scripts\Prima-Installazione.ps1`: non un terzo strumento di pulizia, ma la **catena di custodia** attorno ai tre.
 
 ## Cosa aggiunge la catena
 
@@ -27,13 +28,20 @@ Il progetto ha gia' la risposta a quest'ultimo punto - la fotografia e il confro
 
 **Niente riavvii automatici.** Dove serve un riavvio, lo script lo dice e si ferma, e spiega con quale comando riprendere. Il riavvio lo decide chi sta davanti alla macchina.
 
-## La cosa piu' importante: i due strumenti non sono reversibili allo stesso modo
+## La cosa piu' importante: gli strumenti non sono reversibili allo stesso modo
 
 Questa asimmetria decide tutto il resto, e va capita prima di premere invio.
 
 **Win11Debloat e' reversibile.** L'autore lo dichiara e documenta come tornare indietro; quasi tutte le app si reinstallano dallo Store. Agisce su chiavi di registro e pacchetti ordinari. Se una scelta non piace, si rifa'.
 
-**RemoveWindowsAI non lo e'.** Per togliere pacchetti che Windows marca come non rimovibili usa mezzi profondi: esegue codice come `TrustedInstaller`, rende visibili e rimuove voci del CBS store, cancella attivita' pianificate con i loro file, e installa un pacchetto di aggiornamento fittizio perche' Windows Update non rimetta cio' che ha tolto. Nessuna di queste cose ha un parametro per tornare indietro. **Il ritorno indietro e' l'immagine di sistema**, o la reinstallazione.
+**RemoveWindowsAI lo e' solo in parte**, e vale la pena dire esattamente quanto, perche' leggendo il suo codice si scopre che fa piu' di quanto prometta il titolo. Ha due interruttori che contano:
+
+- `-backupMode` esporta, nella cartella `RemoveWindowsAI\Backup` del profilo utente, le chiavi di registro dei servizi che sta per cancellare (`WSAIFabricSvc`, `AarSvc` e gli altri), e in modo non interattivo crea anche un punto di ripristino.
+- `-revertMode` rilegge quei file e rimette i valori di registro sullo stato acceso.
+
+Quindi la parte *di registro* del lavoro si disfa. Quello che **non** torna sono i pacchetti rimossi: appx, voci del CBS store e file cancellati non vengono salvati da nessuna parte, e il pacchetto di aggiornamento fittizio che impedisce la reinstallazione resta. Per quella meta' del lavoro **il ritorno indietro e' l'immagine di sistema**, o la reinstallazione.
+
+Per questo la catena gli passa **sempre** `-backupMode`, senza chiederlo: costa pochi secondi, e senza di esso anche la parte reversibile smetterebbe di esserlo.
 
 Da cui la regola operativa: RemoveWindowsAI si esegue **su una macchina nuova, prima che contenga dati di qualcuno**, e con un'immagine gia' fatta. Su una macchina in servizio non si esegue, e questo script fa di tutto per renderlo difficile.
 
@@ -64,20 +72,77 @@ Senza parametri non tocca niente: stampa chi e' la macchina, se e' aziendale, se
 | `-Scarica` | prende e verifica gli strumenti senza eseguirli; si puo' fare prima, anche altrove |
 | `-Applica` | esegue la catena |
 | `-Controlla` | verifica dopo: pacchetti AI, servizio `WSAIFabricSvc`, attivita' pianificate, funzionalita' Recall, piu' il confronto fra le due fotografie |
-| `-Passi <elenco>` | `SNAPSHOT`, `PARACADUTE`, `AI`, `DEBLOAT`, `CONTROLLO` |
+| `-Passi <elenco>` | `SNAPSHOT`, `PARACADUTE`, `AI`, `DEBLOAT`, `MONITORAGGIO`, `CONTROLLO` |
+| `-Profilo <percorso>` | le scelte gia' prese per i tre strumenti; senza, usa `prima-installazione\profilo.json` se esiste |
 | `-OpzioniAI <...>` | argomenti passati tali e quali a RemoveWindowsAi.ps1; senza, parte la sua interfaccia |
 | `-OpzioniDebloat <...>` | argomenti passati tali e quali a Win11Debloat.ps1; senza, parte il suo menu |
 | `-ForzaAziendale` | procede su macchina a dominio, tenant o MDM |
 | `-Cartella <percorso>` | dove mettere il codice di terze parti; per default una cartella temporanea, **fuori dal repository** |
 | `-SenzaSnapshot` | salta le fotografie, se sono gia' state fatte a mano |
 
-L'ordine e' `SNAPSHOT`, `PARACADUTE`, `AI`, riavvio, `DEBLOAT`, riavvio, `CONTROLLO`. Prima il passo senza ritorno, su un sistema ancora intatto, perche' cerca pacchetti e voci che un debloating precedente potrebbe avere gia' spostato; poi quello reversibile, che e' anche quello che si rifa' volentieri una seconda volta quando si cambia idea su un dettaglio dell'interfaccia.
+L'ordine e' `SNAPSHOT`, `PARACADUTE`, `AI`, riavvio, `DEBLOAT`, `MONITORAGGIO`, riavvio, `CONTROLLO`. Prima il passo senza ritorno, su un sistema ancora intatto, perche' cerca pacchetti e voci che un debloating precedente potrebbe avere gia' spostato; poi quello reversibile, che e' anche quello che si rifa' volentieri una seconda volta quando si cambia idea su un dettaglio dell'interfaccia.
 
 Il codice di terze parti viene scaricato in una cartella temporanea e non dentro il progetto: codice altrui non vive accanto agli script del progetto, e non finisce per sbaglio in un commit.
 
+## Il profilo: togliere i menu, non le conferme
+
+Senza profilo i tre strumenti aprono ciascuno la propria interfaccia, e su ogni PC nuovo si rifanno le stesse scelte a mano, con il rischio che la decima macchina non sia configurata come la prima. Il profilo le scrive una volta.
+
+```powershell
+copy .\scripts\prima-installazione\profilo.esempio.json .\scripts\prima-installazione\profilo.json
+# si adatta, poi la catena lo trova da sola
+```
+
+Il profilo contiene tre blocchi: `ai.opzioni` e `debloat.opzioni`, cioe' gli argomenti passati tali e quali ai due script, e `monitoraggio`, che decide di Netdata. I nomi dei parametri nell'esempio sono quelli **veri**, letti dal codice degli strumenti alla versione appuntata: se si aggiorna una versione si ricontrollano.
+
+Quello che il profilo toglie sono le interfacce. **Non toglie le conferme**: ogni passo che modifica continua a chiedere `SI`, perche' quello e' il paletto 1 e non e' una scomodita' da aggirare. Un parametro passato a mano sulla riga di comando vince sempre sul profilo.
+
+`profilo.json` e' **ignorato da git** perche' puo' contenere il token di Netdata, che e' un segreto: si versiona solo `profilo.esempio.json`, esattamente come per `baseline-eccezioni.json`.
+
+L'esempio e' tarato su un PC **non** aziendale e lascia fuori di proposito quattro opzioni di Win11Debloat - `-DisableTelemetry`, `-DisableUpdateASAP`, `-DisableDeliveryOptimization`, `-DisableBitlockerAutoEncryption` - e la voce `DisableDefenderAI` di RemoveWindowsAI: sono esattamente cio' che il paletto 4 vieta di toccare su una macchina del tenant.
+
+## Netdata: perche' non si installa da solo
+
+Netdata e' il terzo strumento, e ha una natura diversa dagli altri due: non toglie, installa un servizio che resta acceso e raccoglie metriche al secondo. Si disinstalla come un normale MSI, quindi e' reversibile.
+
+Il motivo per cui nel profilo sta a `installa: false` non e' tecnico, e' una decisione da prendere consapevolmente. Dalla documentazione di Netdata: **su Windows, con il piano gratuito Community, il cruscotto locale `http://localhost:19999` e' bloccato**. L'agente raccoglie, ma i dati si guardano su Netdata Cloud. Le conseguenze sono due, e sono entrambe importanti qui:
+
+- **senza token** di aggancio l'agente gira e non mostra niente, ne' in locale ne' altrove: si installa un servizio inutile;
+- **con il token** le metriche della macchina escono verso un servizio di terze parti, cosa che su una macchina aziendale e' una decisione di chi governa i dati, non di chi installa il PC.
+
+Per questo la catena non lo installa se il profilo non lo dice, e se il profilo non ha un token lo chiede una seconda volta prima di procedere.
+
+Due note operative. L'agente apre la **porta 19999 in ascolto**: compare nella sezione superficie d'attacco dello snapshot, e se il cruscotto si guarda dal Cloud non serve che sia raggiungibile dalla rete - `chiudiFirewall: true` nel profilo fa creare, a conferma, una regola in ingresso che la blocca. E l'installatore pesa circa 173 MB: su una macchina senza rete va portato con la chiavetta.
+
+Il digest di Netdata nel manifesto non e' calcolato da noi su una copia scaricata una volta: e' quello pubblicato dall'autore nel file `sha256sums.txt` della release. E' una differenza che conta, perche' un digest calcolato su cio' che si e' scaricato certifica solo che il file non e' cambiato *dopo*.
+
+## Portare tutto su un PC senza rete
+
+`scripts\Prepara-Chiavetta.ps1`, da lanciare **sulla macchina vecchia**, mette in una cartella sola le tre cose che al PC nuovo servono e che non si trovano la':
+
+```powershell
+.\scripts\Prepara-Chiavetta.ps1 -Destinazione E:\
+```
+
+Dentro ci finiscono il progetto senza cronologia git, senza `snapshots\` e senza `_notes\`; gli strumenti alle versioni appuntate, **gia' verificati**; e `software_winget.json`, cioe' l'elenco dei programmi della macchina vecchia, che nasce da uno snapshot e non puo' stare nel repository. Piu' un `LEGGIMI.txt` con la sequenza.
+
+Il profilo viene copiato solo con `-ConProfilo`, e se contiene un token lo script avvisa che da quel momento la chiavetta e' essa stessa un segreto.
+
+Sul PC nuovo si indica alla catena dove sono gli strumenti e la rete non serve:
+
+```powershell
+.\scripts\Prima-Installazione.ps1 -Applica -Cartella <percorso di strumenti\>
+```
+
+## Dove sono arrivato
+
+Su una macchina nuova si perde facilmente il conto, soprattutto fra i due riavvii. La voce `P` di `Avvia.ps1` - *PC NUOVO: percorso guidato* - stampa la sequenza con lo stato di ogni passo e la voce di menu che lo esegue.
+
+Distingue tre cose e non ne confonde nessuna: `[x]` fatto, `[ ]` da fare, `[?]` **non verificabile da qui**. L'immagine Veeam, per esempio, resta `[?]`: nessuno script puo' sapere se e' stata fatta, e fingere di saperlo sarebbe peggio che ammetterlo.
+
 ## Aggiornare le versioni appuntate
 
-I due progetti sono vivi e cambiano spesso. Appuntare una versione significa che la catena resta ripetibile, non che si resta indietro per sempre: l'aggiornamento e' un atto deliberato.
+I tre progetti sono vivi e cambiano spesso. Appuntare una versione significa che la catena resta ripetibile, non che si resta indietro per sempre: l'aggiornamento e' un atto deliberato.
 
 1. Si guarda cosa e' cambiato a monte, dal commit appuntato a quello nuovo.
 2. Si calcola il digest del nuovo file di ingresso: `(Get-FileHash .\Win11Debloat.ps1 -Algorithm SHA256).Hash`.
