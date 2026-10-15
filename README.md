@@ -4,6 +4,8 @@ Fotografia **completa e ripristinabile** di un PC Windows 11, e progetto vivo pe
 
 > Gli script sono **proprietari**: la cartella `snapshots/` (dati specifici della macchina) è ignorata da git; si versionano gli script e i documenti.
 
+**Da dove si comincia:** [`GUIDA.md`](GUIDA.md) per come si usa il progetto (metà generata dal progetto stesso, quindi non invecchia in silenzio), [`LEGGIMI-PC-NUOVO.md`](LEGGIMI-PC-NUOVO.md) per allestire un Windows da zero.
+
 ---
 
 ## Idea di fondo
