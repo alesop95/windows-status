@@ -239,8 +239,9 @@ function Mostra-Piano {
     Write-Host '    4 AI           RemoveWindowsAI con -backupMode, passo quasi senza ritorno'
     Write-Host '                   Poi RIAVVIO manuale'
     Write-Host '    5 DEBLOAT      Win11Debloat, reversibile. Poi RIAVVIO manuale'
-    Write-Host '    6 MONITORAGGIO Netdata, solo se il profilo lo dice. Vedi docs/16: su'
-    Write-Host '                   Windows il cruscotto locale e'' bloccato nel piano gratuito'
+    Write-Host '    6 MONITORAGGIO windows_exporter, solo se il profilo lo dice: 11 MB, un'
+    Write-Host '                   servizio, nessun account. I cruscotti stanno sulla'
+    Write-Host '                   macchina centrale (Prometheus + Grafana OSS), vedi docs/17'
     Write-Host '    7 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
     Write-Host ''
     Write-Host "  Passi scelti: $($Passi -join ', ')"
@@ -488,62 +489,58 @@ function Passo-Debloat {
 
 function Passo-Monitoraggio {
     param($T, $Conf)
-    Titolo 'MONITORAGGIO - Netdata'
-    Info 'A differenza degli altri due non toglie: mette, e lascia acceso un'
-    Info 'servizio che raccoglie metriche al secondo. Si disinstalla come un MSI.'
-    Write-Host ''
-    Avviso 'Da sapere PRIMA, e viene dalla documentazione di Netdata:'
-    Avviso 'su Windows con il piano gratuito Community il cruscotto locale'
-    Avviso 'http://localhost:19999 e'' BLOCCATO. I dati si guardano su Netdata'
-    Avviso 'Cloud, cioe'' fuori dalla macchina. Senza token non si vede niente;'
-    Avviso 'con il token, le metriche di questa macchina escono verso un terzo.'
-    Write-Host ''
+    Titolo "MONITORAGGIO - windows_exporter"
+    Info "Undici megabyte, un servizio, nessuna interfaccia e nessun account:"
+    Info "espone le metriche della macchina su http://localhost:9182/metrics e"
+    Info "si ferma li'. A guardarle ci pensa la macchina CENTRALE, con Prometheus"
+    Info "e Grafana OSS. Tutto aperto, tutto locale: niente cloud, niente token,"
+    Info "nessun limite di nodi. Vedi docs/17."
+    Write-Host ""
 
-    if (-not $Conf) {
-        Info 'Nessun profilo: il monitoraggio non si installa a caso.'
-        Info 'Si prepara un profilo (vedi profilo.esempio.json) con installa=true'
-        Info 'e il token, oppure si installa a mano dall''MSI gia'' verificato.'
-        return $false
-    }
-    if (-not $Conf.installa) {
-        Info 'profilo: monitoraggio.installa = false, passo saltato per scelta'
+    if (-not $Conf -or -not $Conf.installa) {
+        Info "profilo: monitoraggio.installa = false, passo saltato"
+        Info "  si accende in profilo.json, indicando anche quale macchina"
+        Info "  centrale potra' interrogare la porta"
         return $false
     }
 
     $ingresso = Scarica-Strumento $T
-    if (-not $Conf.token) {
-        Avviso 'profilo senza token: l''agente verrebbe installato e non mostrerebbe'
-        Avviso 'niente, ne'' qui ne'' altrove. Si installa lo stesso solo se e'' voluto.'
-        if (-not (Conferma 'Installo Netdata SENZA agganciarlo al Cloud?')) { return $false }
-    } else {
-        Info 'profilo con token: la macchina verra'' agganciata a uno spazio Netdata Cloud'
-        if (-not (Conferma 'Installo Netdata e lo aggancio al Cloud?')) { return $false }
-    }
+    $porta = if ($Conf.porta) { $Conf.porta } else { 9182 }
+    $coll  = if ($Conf.collettori) { $Conf.collettori } else { "cpu,cs,logical_disk,memory,net,os,service,system,process" }
 
-    $arg = @('/qn','/i',"`"$ingresso`"")
-    if ($Conf.token) { $arg += "TOKEN=$($Conf.token)" }
-    if ($Conf.rooms) { $arg += "ROOMS=$($Conf.rooms)" }
-    if ($Conf.proxy) { $arg += "PROXY=$($Conf.proxy)" }
+    Info "porta       : $porta"
+    Info "collettori  : $coll"
+    if ($Conf.centrale) { Info "centrale    : $($Conf.centrale) (solo questa potra' interrogare)" }
+    else { Avviso "nessuna macchina centrale indicata: la porta restera' chiusa verso la rete" }
 
-    $p = Start-Process -FilePath 'msiexec.exe' -ArgumentList $arg -Wait -PassThru
+    if (-not (Conferma "Installo windows_exporter?")) { Avviso "passo saltato"; return $false }
+
+    # Niente ADDLOCAL=FirewallException: quella apre la porta a tutta la rete.
+    # La regola la scriviamo noi, stretta sulla sola macchina centrale.
+    $arg = @("/qn","/i","`"$ingresso`"","ENABLED_COLLECTORS=$coll","LISTEN_PORT=$porta")
+    $p = Start-Process -FilePath "msiexec.exe" -ArgumentList $arg -Wait -PassThru
     Info "msiexec terminato con codice $($p.ExitCode)"
-    if ($p.ExitCode -ne 0) { Avviso 'installazione non riuscita: vedi il registro eventi di Windows Installer'; return $true }
+    if ($p.ExitCode -ne 0) { Avviso "installazione non riuscita: vedi il registro eventi di Windows Installer"; return $true }
 
-    $svc = Get-Service -Name 'netdata' -ErrorAction SilentlyContinue
-    if ($svc) { Ok "servizio netdata presente, stato $($svc.Status)" } else { Avviso 'servizio netdata non trovato dopo l''installazione' }
+    $svc = Get-Service -Name "windows_exporter" -ErrorAction SilentlyContinue
+    if ($svc) { Ok "servizio windows_exporter presente, stato $($svc.Status)" }
+    else { Avviso "servizio non trovato dopo l'installazione" }
 
-    # La porta 19999 e' superficie d'attacco: lo snapshot la vedra', e tanto vale
-    # chiuderla subito se il cruscotto si guarda dal Cloud e non dalla rete.
-    if ($Conf.chiudiFirewall) {
-        if (Conferma 'Blocco la porta 19999 in ingresso dalla rete (resta locale)?') {
+    try {
+        $r = Invoke-WebRequest -Uri "http://localhost:$porta/metrics" -UseBasicParsing -TimeoutSec 10
+        $n = ($r.Content -split "`n" | Where-Object { $_ -and $_[0] -ne "#" }).Count
+        Ok "l'agente risponde: $n metriche esposte"
+    } catch { Avviso "l'agente non risponde ancora su localhost:$porta ($($_.Exception.Message))" }
+
+    if ($Conf.centrale) {
+        if (Conferma "Apro la porta $porta SOLO verso $($Conf.centrale)?") {
             try {
-                New-NetFirewallRule -DisplayName 'windows-status: blocca Netdata 19999 in ingresso' `
-                    -Direction Inbound -LocalPort 19999 -Protocol TCP -Action Block -Profile Any | Out-Null
-                Ok 'regola firewall creata'
+                New-NetFirewallRule -DisplayName "windows-status: windows_exporter da macchina centrale" `
+                    -Direction Inbound -LocalPort $porta -Protocol TCP -Action Allow `
+                    -RemoteAddress $Conf.centrale -Profile Any | Out-Null
+                Ok "regola firewall creata, ristretta a $($Conf.centrale)"
             } catch { Avviso "regola firewall non creata: $($_.Exception.Message)" }
         }
-    } else {
-        Avviso 'porta 19999 lasciata come l''ha messa l''installatore: verificala nello snapshot'
     }
     return $true
 }
@@ -590,7 +587,9 @@ function Passo-Controllo {
 # --- esecuzione --------------------------------------------------------------
 
 $S = Stato-Macchina
-$Strumenti = Leggi-Manifesto
+$Strumenti = @(Leggi-Manifesto | Where-Object {
+    $_.piattaforma -eq 'windows' -and $_.ruolo -ne 'centrale'
+})
 $Prof = Leggi-Profilo
 
 # Il profilo decide le opzioni solo dove non le ha gia' decise la riga di
@@ -671,8 +670,8 @@ if ($Passi -contains 'DEBLOAT') {
 
 if ($Passi -contains 'MONITORAGGIO') {
     $conf = if ($Prof) { $Prof.monitoraggio } else { $null }
-    if (Passo-Monitoraggio ($Strumenti | Where-Object { $_.nome -eq 'Netdata' }) $conf) {
-        $eseguiti += 'Netdata'
+    if (Passo-Monitoraggio ($Strumenti | Where-Object { $_.nome -eq 'windows_exporter' }) $conf) {
+        $eseguiti += 'windows_exporter'
     }
 }
 

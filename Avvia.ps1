@@ -49,6 +49,8 @@ $voci = @(
   @{ N='10';Titolo='Censimento hardware di questa macchina (anonimo)'; Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'censimento\hw-report-windows.ps1') } }
   @{ N='11';Titolo='Prepara la cartella per un PC nuovo (chiavetta)'; Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Prepara-Chiavetta.ps1') -Destinazione (Read-Host 'Destinazione (es. E:\)') } }
   @{ N='P'; Titolo='PC NUOVO: percorso guidato (dove sono arrivato)'; Tipo='sola lettura';   Azione={ Mostra-Percorso } }
+  @{ N='12';Titolo='Monitoraggio: piano della macchina centrale';    Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Monitoraggio-Centrale.ps1') } }
+  @{ N='12s';Titolo='Monitoraggio: scarica e verifica Prometheus e Grafana'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Monitoraggio-Centrale.ps1') -Scarica } }
 )
 
 # Percorso guidato del PC nuovo: non esegue niente da se', dice a che punto
