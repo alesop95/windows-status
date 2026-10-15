@@ -109,6 +109,34 @@
       ]
     },
     {
+      "nome": "Grafana Alloy",
+      "autore": "grafana",
+      "licenza": "Apache-2.0",
+      "ruolo": "agente",
+      "piattaforma": "windows",
+      "tipo": "exe",
+      "repo": "https://github.com/grafana/alloy",
+      "versione": "v1.20.1",
+      "url": "https://github.com/grafana/alloy/releases/download/v1.20.1/alloy-installer-windows-amd64.exe",
+      "url_digest_ufficiale": "https://github.com/grafana/alloy/releases/download/v1.20.1/SHA256SUMS",
+      "ingresso": "alloy-installer-windows-amd64.exe",
+      "sha256": "23fcfe3755f02e8a6a83f27149851322ab2b66d584e76d239d9c031f50d3a8f0",
+      "byte": 112176448,
+      "reversibile": true,
+      "richiede_ps51": false,
+      "note": [
+        "Raccoglie i LOG e li manda a Loki sulla macchina centrale, come",
+        "windows_exporter fa con le metriche. Su Windows legge il registro",
+        "eventi (componente loki.source.windowsevent) e, volendo, file di testo.",
+        "Si installa in silenzio con /S e si configura con un file in sintassi",
+        "Alloy, che la catena genera a partire dal profilo.",
+        "IMPORTANTE: per default Alloy invia dati d'uso anonimi a Grafana Labs.",
+        "La catena installa SEMPRE con /DISABLEREPORTING=yes, perche' la regola",
+        "di questo monitoraggio e' che non esca niente dalla rete.",
+        "Gira come servizio Windows (LocalSystem) e si disinstalla normalmente."
+      ]
+    },
+    {
       "nome": "Netdata",
       "autore": "netdata",
       "licenza": "GPL-3.0",
@@ -188,6 +216,35 @@
         "serve e non si usa.",
         "Il pacchetto e' grosso, circa 473 MB: si scarica una volta sola, sulla",
         "macchina centrale, non su ogni PC."
+      ]
+    },
+    {
+      "nome": "Loki",
+      "autore": "grafana",
+      "licenza": "AGPL-3.0",
+      "ruolo": "centrale",
+      "piattaforma": "windows",
+      "tipo": "zip",
+      "repo": "https://github.com/grafana/loki",
+      "versione": "v3.7.8",
+      "url": "https://github.com/grafana/loki/releases/download/v3.7.8/loki-windows-amd64.exe.zip",
+      "url_digest_ufficiale": "https://github.com/grafana/loki/releases/download/v3.7.8/SHA256SUMS",
+      "ingresso": "loki-windows-amd64.exe.zip",
+      "sha256": "622efc553df799ebb022c2e6c4b45792f726c54b008cb65126b99ae67be3a827",
+      "byte": 47074788,
+      "reversibile": true,
+      "richiede_ps51": false,
+      "note": [
+        "Sta sulla macchina CENTRALE, accanto a Prometheus: e' l'archivio dei",
+        "LOG, come Prometheus lo e' delle metriche. Riceve da Alloy e si",
+        "interroga da Grafana, che lo aggiunge come seconda fonte dati.",
+        "Non indicizza il contenuto dei messaggi ma solo le etichette, quindi",
+        "costa poco in spazio e in memoria: e' la ragione per cui sta bene su una",
+        "macchina sola insieme al resto.",
+        "Ascolta sulla porta 3100, che deve essere raggiungibile DAI PC (sono",
+        "loro a spingere i log) e da nessun altro.",
+        "Come Prometheus, su Windows non e' un servizio: la catena lo avvia con",
+        "un'attivita' pianificata. Su Linux e' un pacchetto con il suo servizio."
       ]
     }
   ]
