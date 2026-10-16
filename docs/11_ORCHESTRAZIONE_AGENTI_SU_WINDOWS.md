@@ -4,7 +4,7 @@ Questa macchina ospita due flotte di agenti da terminale, censite nella scheda 1
 
 Il criterio di *quando* convenga farlo non sta qui: e' materia di disciplina di progetto e vive nel template. Qui sta solo cio' che impatta il setup di Windows.
 
-Rilievo del 2026-09-21.
+Rilievo del 2026-09-21, aggiornato il 2026-10-16 per Nimbalyst (sezione 2, installazione e uso).
 
 ---
 
@@ -41,7 +41,9 @@ E' il successore di Crystal. Applicazione desktop, **nativa Windows**, e fa gira
 | Piattaforme | Windows 10+, macOS, Linux |
 | Agenti | Claude Code, Codex, OpenCode (alpha), Copilot (alpha) |
 | Isolamento | worktree git per sessione |
-| Maturita' | circa 1.800 stelle, 575 issue aperte |
+| Maturita' | circa 1.800 stelle e 575 issue aperte al 2026-09-21; circa 1.900 stelle al 2026-10-16 |
+| Versione | 0.79.1 disponibile al 2026-10-16, rilascio del 30 settembre 2026; su questa macchina installata la 0.77.5 |
+| Pacchetto winget | `Nimbalyst.Nimbalyst`, editore Nimbalyst Inc. |
 
 Il numero di issue aperte va letto per quello che e': **e' un progetto giovane**, non uno strumento assestato. Va adottato sapendo che puo' rompersi, e mai come unico modo di arrivare al proprio lavoro.
 
@@ -51,24 +53,22 @@ Il client e' MIT, ma **il server di sincronizzazione della collaborazione e' un 
 
 Su una macchina che ospita repository di clienti, attivare la sincronizzazione significa **mandare materiale di terzi a un servizio esterno non governato da alcun accordo**. Vale la stessa disciplina applicata altrove in questo progetto: si usa in **modalita' locale**, senza collaborazione ne' companion mobile, e la scelta va verificata nelle impostazioni dopo l'installazione, non assunta.
 
-### Installazione
+### Installazione e aggiornamento
 
-L'eseguibile si scarica dalla pagina delle release ufficiali del repository `nimbalyst/nimbalyst`. Secondo la disciplina gia' applicata su questa macchina ad altri eseguibili presi da GitHub, **il digest va verificato prima dell'esecuzione** contro quello pubblicato dal repository, non dopo.
-
-```powershell
-$dir = "$env:USERPROFILE\Downloads"
-Start-Process 'https://github.com/nimbalyst/nimbalyst/releases/latest'
-```
-
-Scaricato l'installer, prima di eseguirlo:
+La via preferita e' winget, che verifica da se' l'impronta SHA-256 dell'installer contro quella del manifest prima di eseguirlo: e' la stessa catena di custodia che la prima stesura di questa scheda chiedeva di fare a mano, e la rende automatica. Il rilievo del 2026-10-16 ha trovato l'applicazione gia' installata in `%LOCALAPPDATA%\Programs\Nimbalyst`, versione 0.77.5, con la 0.79.1 disponibile.
 
 ```powershell
-Get-FileHash "$env:USERPROFILE\Downloads\Nimbalyst-Windows.exe" -Algorithm SHA256
+winget list --id Nimbalyst.Nimbalyst
+winget upgrade --id Nimbalyst.Nimbalyst
 ```
 
-Si confronta il risultato con il digest pubblicato nella release. Se non coincide, o se la release non pubblica digest, **non si esegue**: si apre invece la questione, perche' un eseguibile desktop che orchestra agenti con accesso ai repository e' esattamente il tipo di componente su cui una sostituzione silenziosa avrebbe l'effetto peggiore.
+Su una macchina dove non c'e', il primo comando non trova niente e l'installazione e' `winget install --id Nimbalyst.Nimbalyst`. Resta valida la via manuale dalla pagina delle release del repository `nimbalyst/nimbalyst`, con il confronto del digest prima dell'esecuzione: se non coincide, o se la release non pubblica digest, non si esegue.
 
-Dopo l'installazione, **prima di aprire un progetto reale**, si verificano tre cose: che la sincronizzazione della collaborazione sia disattivata, che i percorsi dei worktree cadano dove ci si aspetta, e che veda entrambe le flotte di agenti.
+Dopo l'installazione, prima di aprire un progetto reale, si verificano quattro cose: che i dati d'uso anonimi siano spenti in *Settings > Application > Advanced > Analytics*; che non ci sia un account Nimbalyst, ne' un team, ne' l'app mobile collegata, perche' la sincronizzazione passa dal servizio del produttore; che l'estensione *Crew*, agenti autonomi a turni entro un budget di token introdotti con la 0.79.1, resti spenta; e che i provider in *Settings > Application > AI Providers* usino l'account Claude e l'account Codex attesi, perche' il login dell'applicazione e' un asse distinto dalle radici della scheda 10.
+
+### Come si usa
+
+Il recap d'uso completo vive nel template di sistema, nel pacchetto `nimbalyst` (`.claude/templates/nimbalyst/README.md`), che e' la copia da aggiornare: qui ne resta l'essenziale. Un progetto e' una cartella aperta dal *Project Manager* (`Ctrl+P`). *Files* (`Ctrl+E`) lavora su un file con l'agente accanto e mostra le sue modifiche come differenze da accettare una per una; *Agent* (`Ctrl+K`) avvia e riprende le sessioni; `Ctrl+Shift+K` apre la bacheca delle sessioni. Una sessione isolata su un ramo nuovo si apre con *New Worktree* (`Ctrl+Alt+W`), che richiede la *Developer Mode* e un repository git, e si fonde nel ramo principale dal pannello della sessione. Il commit fatto dall'applicazione segue comunque l'identita' git locale del repository, come da paletto 8.
 
 ---
 
