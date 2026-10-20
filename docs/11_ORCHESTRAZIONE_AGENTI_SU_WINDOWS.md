@@ -18,6 +18,8 @@ Quasi tutti gli orchestratori di agenti nascono su Unix e si appoggiano a **`tmu
 
 **La regola corretta: su questa macchina si adottano solo strumenti che girano nativi, senza WSL.** Uno strumento che richiede `tmux` non e' escluso in partenza: e' condizionato all'adozione di `psmux`, che aggiunge una dipendenza da valutare per conto proprio.
 
+Il perimetro della regola va detto per intero, perche' dal 2026-10-20 il censimento registra un componente che dentro WSL ci vive davvero: colibri, il motore di inferenza su CPU descritto nella sezione 7 di `docs/09`. Non e' una contraddizione, perche' questa regola nasce dai percorsi dei progetti su `D:\` ed `E:\` e riguarda gli strumenti che quei progetti li aprono davvero, mentre colibri riceve lotti di lavoro e risponde su HTTP senza vedere nessun percorso di progetto. La formulazione esatta e' quindi che non si adotta WSL per gli strumenti che lavorano sui progetti; un servizio che gira per conto proprio dentro la distribuzione e' un'altra cosa, e si censisce in `docs/09`.
+
 ### Strumenti esaminati
 
 | Strumento | Esito |
