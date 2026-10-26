@@ -148,11 +148,35 @@ Sono catene di file orfane recuperate dopo una riparazione del file system, e ca
 
 ## 8. Che cosa resta aperto
 
-La causa a monte non è accertata. Il 13/10 alle 17:26:32 e 17:26:33, a un secondo di distanza, hanno registrato errori **due dispositivi diversi**: il disco di backup e una chiavetta, che non è quella poi morta il 23/10 ma una precedente, sostituita sei secondi dopo. Due supporti distinti che inciampano insieme, e due chiavette anonime guaste in dieci giorni nella stessa zona, indicano qualcosa di condiviso a monte: hub, cablaggio del pannello frontale, o alimentazione del bus. Il fatto che il livello USB non abbia mai segnalato nulla rende meno probabile un hub che stacca i dispositivi e più probabile un problema di alimentazione o di risveglio.
+La causa a monte non è accertata. Il 13/10 alle 17:26:32 e 17:26:33, a un secondo di distanza, hanno registrato errori **due dispositivi diversi**: il disco di backup e una chiavetta. L'attribuzione di quella chiavetta è stata corretta il 26/10 con il metodo del paragrafo 9: non è il supporto anonimo che poi prese `G:` e morì il 23/10, è quello che porta il materiale della CA aziendale, rimasto poi staccato fino a quel giorno. Non c'è quindi stata nessuna «sostituzione» a sei secondi: erano due supporti distinti, entrambi collegati quel pomeriggio, ed entrambi hanno poi ceduto, a tredici giorni di distanza l'uno dall'altro. Due dispositivi che inciampano a un secondo l'uno dall'altro, e due chiavette guaste nella stessa zona in due settimane, indicano qualcosa di condiviso a monte: hub, cablaggio del pannello frontale, o alimentazione del bus. Il fatto che il livello USB non abbia mai segnalato nulla rende meno probabile un hub che stacca i dispositivi e più probabile un problema di alimentazione o di risveglio.
 
 Non è stato verificato quale porta fisica corrisponda a quale hub, e finché non lo si fa il sospetto resta su una zona, non su un connettore. La porta che ospitava il supporto guasto è stata lasciata vuota in attesa.
 
-## 9. Per chi scrive strumenti che interrogano i dischi
+## 9. Leggere un supporto che sta cedendo senza congelare la macchina
+
+Un supporto che cede non si comporta come uno morto, e va trattato diversamente. Quello del paragrafo 1 non rispondeva nemmeno alla domanda «ci sei»: non si montava più e produceva la raffica di tentativi. Il supporto con il materiale della CA, ricollegato il 26/10 alle 16:53, si è invece **montato regolarmente** — eventi Kernel-PnP 400 «configurato» e 410 «avviato» — e poi ha congelato il sistema operativo entro un paio di minuti, **senza produrre un solo evento `disk`**. È lo stadio precedente dello stesso cedimento: il controller risponde ancora all'enumerazione, ma su certe zone non restituisce i dati e nemmeno un errore.
+
+Il punto che conta è che **il blocco non lo produce il dispositivo, lo producono i componenti di Windows che gli si buttano addosso da soli** nell'istante in cui compare una lettera di unità. Sono quattro, e nessuno di essi richiede un clic dell'utente: AutoPlay, che apre il volume per decidere che cosa proporre; la shell, che genera le anteprime delle cartelle; l'indicizzatore, che comincia a indicizzare il contenuto; e l'antivirus, che scansiona il supporto nuovo. Su un supporto sano finiscono in millisecondi e nessuno se ne accorge. Su uno che non risponde restano tutti in attesa, e poiché sono componenti di sistema si porta via la sessione interattiva.
+
+Ne discende la ricetta, verificata lo stesso giorno. Si spegne AutoPlay (`DisableAutoplay = 1` sotto `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers`, che è la chiave dietro l'interruttore delle Impostazioni). Si ferma l'indicizzatore e gli si mette l'avvio su `Manual`, altrimenti torna su da solo mentre si lavora. Non si apre Esplora risorse, per nessun motivo. E si lancia **prima** di collegare il supporto uno strumento che attende la comparsa della lettera e copia all'istante: l'attesa si fa con `fsutil fsinfo drives`, che non passa dal provider Storage e quindi non si appende, mai con `Get-Volume` o `Get-PSDrive`.
+
+La copia si fa con `robocopy /E /XJ /R:0 /W:0`, senza `/MT`. Zero tentativi di ripetizione è il cuore della cosa: su un supporto sano non cambia nulla, su uno che cede è la differenza fra saltare subito un settore illeggibile e restare appesi minuti su ciascuno. Niente multithread perché le letture parallele su un controller in difficoltà peggiorano le cose.
+
+Risultato misurato: lo stesso supporto che mezz'ora prima aveva congelato il sistema operativo si è montato in 6 secondi e ha consegnato tutti e dieci i suoi file in meno di un secondo. Gli unici due fallimenti erano `IndexerVolumeGuid` e `WPSettings.dat` dentro `System Volume Information`, accesso negato, irrilevanti. L'implementazione di riferimento è `Recupera-CA.ps1` del progetto `sync-dev`.
+
+### Quale supporto è, quando ce ne sono due simili
+
+Quando si indaga su chiavette anonime che si somigliano, l'identificativo del dispositivo non dice che cosa contengono. L'etichetta sì, e Windows la conserva: `HKLM\SOFTWARE\Microsoft\Windows Portable Devices\Devices` tiene una voce per ogni supporto mai montato, con il valore `FriendlyName` pari all'etichetta del volume e il nome della chiave che contiene fabbricante, prodotto, revisione e numero di serie.
+
+```powershell
+Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows Portable Devices\Devices' | ForEach-Object {
+    '{0,-24} {1}' -f (Get-ItemProperty $_.PSPath).FriendlyName, $_.PSChildName
+}
+```
+
+È in sola lettura, non tocca nessun dispositivo e funziona anche a supporto scollegato. Su questa macchina ha risolto in dieci secondi un'attribuzione sbagliata che aveva retto per tre giorni di indagine: il supporto con la CA è quello etichettato `ETICHETTA-RIMOSSA`, revisione 8.01, mentre quello che aveva preso `G:` ed era morto è un altro, senza etichetta propria. L'intera catena era partita da una frase detta a voce e mai verificata, mentre la verifica costava una query.
+
+## 10. Per chi scrive strumenti che interrogano i dischi
 
 La lezione trasversale è una sola: **una chiamata al provider Storage non ha un timeout proprio e può non tornare mai.** Uno script di manutenzione che la usa in una verifica preliminare non fallisce quando il provider si blocca, si ferma e basta, senza log, senza codice di uscita e senza niente da leggere. Su questa macchina un backup pianificato è rimasto così per 42 minuti, e il modo in cui lo si è scoperto è stato guardare l'elenco dei processi.
 
