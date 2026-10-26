@@ -35,6 +35,7 @@ $voci = @(
   @{ N='2e';Titolo='Bonifica cache PowerPoint (profilo corrente)'; Tipo='MODIFICA';         Azione={ & (Join-Path $scripts 'Diagnostica-PowerPoint.ps1') -Bonifica } }
   @{ N='2f';Titolo='Diagnostica memoria vincolata (detentore e proiezione)'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Diagnostica-Vincolata.ps1') } }
   @{ N='2g';Titolo='Verifica rilascio vincolata (termina il sospetto)'; Tipo='MODIFICA';    Azione={ & (Join-Path $scripts 'Diagnostica-Vincolata.ps1') -VerificaRilascio } }
+  @{ N='2h';Titolo='Recupera un supporto rimovibile che sta cedendo'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Recupera-Supporto.ps1') -Destinazione (Read-Host 'Cartella di destinazione') } }
   @{ N='3'; Titolo='Report baseline di sicurezza (divario)';      Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') } }
   @{ N='4'; Titolo='Applica baseline di sicurezza (guidato)';     Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') -Apply } }
   @{ N='5'; Titolo='Reinstalla software da winget export';        Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Reinstall-Software.ps1') } }

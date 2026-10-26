@@ -47,6 +47,7 @@ Questa tabella e' generata da `Avvia.ps1`: se una voce c'e' li', e' qui.
 | `2e` | Bonifica cache PowerPoint (profilo corrente) | **MODIFICA** | `Diagnostica-PowerPoint.ps1` |
 | `2f` | Diagnostica memoria vincolata (detentore e proiezione) | sola lettura | `Diagnostica-Vincolata.ps1` |
 | `2g` | Verifica rilascio vincolata (termina il sospetto) | **MODIFICA** | `Diagnostica-Vincolata.ps1` |
+| `2h` | Recupera un supporto rimovibile che sta cedendo | sola lettura | `Recupera-Supporto.ps1` |
 | `3` | Report baseline di sicurezza (divario) | sola lettura | `Allinea-BestPractice.ps1` |
 | `4` | Applica baseline di sicurezza (guidato) | **MODIFICA** | `Allinea-BestPractice.ps1` |
 | `5` | Reinstalla software da winget export | **MODIFICA** | `Reinstall-Software.ps1` |
@@ -66,7 +67,7 @@ Questa tabella e' generata da `Avvia.ps1`: se una voce c'e' li', e' qui.
 | `G` | Guida: e' allineata al progetto? | sola lettura | `Aggiorna-Guida.ps1` |
 | `Ga` | Guida: riallinea GUIDA.md al progetto | sola lettura | `Aggiorna-Guida.ps1` |
 
-Voci totali: 26, di cui 7 che modificano il sistema.
+Voci totali: 27, di cui 7 che modificano il sistema.
 <!-- FINE GENERATO: menu -->
 
 ## Gli strumenti
@@ -90,6 +91,7 @@ Tutti gli script del progetto, con la loro riga di sintesi presa dalla loro stes
 | `scripts/Pianifica-Snapshot.ps1` | Snapshot periodico (opt-in) per il rilevamento drift |
 | `scripts/Prepara-Chiavetta.ps1` | prepara la cartella da portare sul PC nuovo |
 | `scripts/Prima-Installazione.ps1` | prima installazione di un PC Windows nuovo |
+| `scripts/Recupera-Supporto.ps1` | Copia via un supporto rimovibile che sta cedendo |
 | `scripts/Reinstall-Software.ps1` | Reinstalla i programmi su un PC nuovo dal winget export |
 | `scripts/Snapshot-Stato.ps1` | Fotografia di SOLA LETTURA di un PC Windows 11 |
 | `scripts/censimento/hw-report.sh` | censimento hardware di UNA macchina Linux |

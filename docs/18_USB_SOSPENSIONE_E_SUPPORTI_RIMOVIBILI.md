@@ -132,7 +132,7 @@ Su questa macchina, oltre al controller Intel USB 3.20 e all'hub radice, ci sono
 
 **Lettere di unità e riservazioni.** Finché il dispositivo guasto resta collegato, `HKLM\SYSTEM\MountedDevices` continua a riservargli la sua lettera, e chi la vuole se la vede negare. Su questa macchina Google Drive chiedeva `G:`, se la vedeva rifiutare e ripiegava su `H:` a ogni avvio, con il sintomo visibile «Google Drive non si apre». Il nesso con la chiavetta non è affatto evidente.
 
-Una trappola dentro la trappola: il seriale di quella chiavetta era `SERIALE-RIMOSSO`, cioè il segnaposto che montano molti controller flash anonimi, non un numero univoco. Windows non sa distinguere un supporto così da qualunque altro dello stesso lotto, e riservargli una lettera «per identità» non è nemmeno un'operazione ben definita: una chiavetta diversa erediterebbe il posto. Per i dispositivi che contano si verifica che il seriale sia vero prima di fondarci sopra qualunque automatismo.
+Una trappola dentro la trappola: il seriale di quella chiavetta non era un numero univoco ma un segnaposto, cioè la sequenza ordinata di caratteri che molti controller flash anonimi espongono di fabbrica, uguale su tutti. Windows non sa distinguere un supporto così da qualunque altro dello stesso lotto, e riservargli una lettera «per identità» non è nemmeno un'operazione ben definita: una chiavetta diversa erediterebbe il posto. Per i dispositivi che contano si verifica che il seriale sia vero prima di fondarci sopra qualunque automatismo.
 
 Il volume del disco di backup, riservato invece per firma del volume e non per identità del dispositivo, ha ripreso la sua lettera da solo al ricollegamento, senza che si dovesse toccare niente.
 
@@ -148,13 +148,13 @@ Sono catene di file orfane recuperate dopo una riparazione del file system, e ca
 
 ## 8. Che cosa resta aperto
 
-La causa a monte non è accertata. Il 13/10 alle 17:26:32 e 17:26:33, a un secondo di distanza, hanno registrato errori **due dispositivi diversi**: il disco di backup e una chiavetta. L'attribuzione di quella chiavetta è stata corretta il 26/10 con il metodo del paragrafo 9: non è il supporto anonimo che poi prese `G:` e morì il 23/10, è quello che porta il materiale della CA aziendale, rimasto poi staccato fino a quel giorno. Non c'è quindi stata nessuna «sostituzione» a sei secondi: erano due supporti distinti, entrambi collegati quel pomeriggio, ed entrambi hanno poi ceduto, a tredici giorni di distanza l'uno dall'altro. Due dispositivi che inciampano a un secondo l'uno dall'altro, e due chiavette guaste nella stessa zona in due settimane, indicano qualcosa di condiviso a monte: hub, cablaggio del pannello frontale, o alimentazione del bus. Il fatto che il livello USB non abbia mai segnalato nulla rende meno probabile un hub che stacca i dispositivi e più probabile un problema di alimentazione o di risveglio.
+La causa a monte non è accertata. Il 13/10 alle 17:26:32 e 17:26:33, a un secondo di distanza, hanno registrato errori **due dispositivi diversi**: il disco di backup e una chiavetta. L'attribuzione di quella chiavetta è stata corretta il 26/10 con il metodo del paragrafo 9: non è il supporto anonimo che poi prese `G:` e morì il 23/10, è il secondo supporto rimovibile collegato quel pomeriggio, rimasto poi staccato fino a quel giorno. Non c'è quindi stata nessuna «sostituzione» a sei secondi: erano due supporti distinti, entrambi collegati quel pomeriggio, ed entrambi hanno poi ceduto, a tredici giorni di distanza l'uno dall'altro. Due dispositivi che inciampano a un secondo l'uno dall'altro, e due chiavette guaste nella stessa zona in due settimane, indicano qualcosa di condiviso a monte: hub, cablaggio del pannello frontale, o alimentazione del bus. Il fatto che il livello USB non abbia mai segnalato nulla rende meno probabile un hub che stacca i dispositivi e più probabile un problema di alimentazione o di risveglio.
 
 Non è stato verificato quale porta fisica corrisponda a quale hub, e finché non lo si fa il sospetto resta su una zona, non su un connettore. La porta che ospitava il supporto guasto è stata lasciata vuota in attesa.
 
 ## 9. Leggere un supporto che sta cedendo senza congelare la macchina
 
-Un supporto che cede non si comporta come uno morto, e va trattato diversamente. Quello del paragrafo 1 non rispondeva nemmeno alla domanda «ci sei»: non si montava più e produceva la raffica di tentativi. Il supporto con il materiale della CA, ricollegato il 26/10 alle 16:53, si è invece **montato regolarmente** — eventi Kernel-PnP 400 «configurato» e 410 «avviato» — e poi ha congelato il sistema operativo entro un paio di minuti, **senza produrre un solo evento `disk`**. È lo stadio precedente dello stesso cedimento: il controller risponde ancora all'enumerazione, ma su certe zone non restituisce i dati e nemmeno un errore.
+Un supporto che cede non si comporta come uno morto, e va trattato diversamente. Quello del paragrafo 1 non rispondeva nemmeno alla domanda «ci sei»: non si montava più e produceva la raffica di tentativi. Il secondo supporto, ricollegato il 26/10 alle 16:53, si è invece **montato regolarmente** — eventi Kernel-PnP 400 «configurato» e 410 «avviato» — e poi ha congelato il sistema operativo entro un paio di minuti, **senza produrre un solo evento `disk`**. È lo stadio precedente dello stesso cedimento: il controller risponde ancora all'enumerazione, ma su certe zone non restituisce i dati e nemmeno un errore.
 
 Il punto che conta è che **il blocco non lo produce il dispositivo, lo producono i componenti di Windows che gli si buttano addosso da soli** nell'istante in cui compare una lettera di unità. Sono quattro, e nessuno di essi richiede un clic dell'utente: AutoPlay, che apre il volume per decidere che cosa proporre; la shell, che genera le anteprime delle cartelle; l'indicizzatore, che comincia a indicizzare il contenuto; e l'antivirus, che scansiona il supporto nuovo. Su un supporto sano finiscono in millisecondi e nessuno se ne accorge. Su uno che non risponde restano tutti in attesa, e poiché sono componenti di sistema si porta via la sessione interattiva.
 
@@ -162,7 +162,7 @@ Ne discende la ricetta, verificata lo stesso giorno. Si spegne AutoPlay (`Disabl
 
 La copia si fa con `robocopy /E /XJ /R:0 /W:0`, senza `/MT`. Zero tentativi di ripetizione è il cuore della cosa: su un supporto sano non cambia nulla, su uno che cede è la differenza fra saltare subito un settore illeggibile e restare appesi minuti su ciascuno. Niente multithread perché le letture parallele su un controller in difficoltà peggiorano le cose.
 
-Risultato misurato: lo stesso supporto che mezz'ora prima aveva congelato il sistema operativo si è montato in 6 secondi e ha consegnato tutti e dieci i suoi file in meno di un secondo. Gli unici due fallimenti erano `IndexerVolumeGuid` e `WPSettings.dat` dentro `System Volume Information`, accesso negato, irrilevanti. L'implementazione di riferimento è `Recupera-CA.ps1` del progetto `sync-dev`.
+Risultato misurato: lo stesso supporto che mezz'ora prima aveva congelato il sistema operativo si è montato in 6 secondi e ha consegnato tutti e dieci i suoi file in meno di un secondo. Gli unici due fallimenti erano `IndexerVolumeGuid` e `WPSettings.dat` dentro `System Volume Information`, accesso negato, irrilevanti. L'implementazione di riferimento è `scripts\Recupera-Supporto.ps1`, voce `2h` di `Avvia.ps1`.
 
 ### Quale supporto è, quando ce ne sono due simili
 
@@ -174,7 +174,7 @@ Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Windows Portable Devices\Devices' | ForE
 }
 ```
 
-È in sola lettura, non tocca nessun dispositivo e funziona anche a supporto scollegato. Su questa macchina ha risolto in dieci secondi un'attribuzione sbagliata che aveva retto per tre giorni di indagine: il supporto con la CA è quello etichettato `ETICHETTA-RIMOSSA`, revisione 8.01, mentre quello che aveva preso `G:` ed era morto è un altro, senza etichetta propria. L'intera catena era partita da una frase detta a voce e mai verificata, mentre la verifica costava una query.
+È in sola lettura, non tocca nessun dispositivo e funziona anche a supporto scollegato. Su questa macchina ha risolto in dieci secondi un'attribuzione sbagliata che aveva retto per tre giorni di indagine: i due supporti si distinguono per etichetta e revisione, e quello cercato non era affatto quello che aveva preso `G:`, che risulta senza etichetta propria. L'intera catena era partita da una frase detta a voce e mai verificata, mentre la verifica costava una query.
 
 ## 10. Per chi scrive strumenti che interrogano i dischi
 
@@ -184,6 +184,6 @@ Ogni interrogazione va eseguita in un runspace o in un processo separato con un 
 
 Una trappola ulteriore, pagata sul campo: spostando la chiamata in un runspace separato, l'oggetto restituito da `Get-Volume` attraversa un confine. Le parole `Healthy`, `OK`, `exFAT` non stanno nell'oggetto, le produce l'adattatore di tipi del modulo Storage, che vive nel runspace dove il modulo è caricato. Se il chiamante non lo ha importato — e un processo che chiama il provider solo dentro il runspace figlio non lo importa — tornano i codici grezzi `0`, `2`, `16`, e un confronto con le stringhe boccia un volume perfettamente sano. I valori vanno proiettati in un oggetto semplice **dentro** il runspace, dove l'adattatore c'è.
 
-L'implementazione di riferimento di entrambe le cose è `Invoke-StorageQuery` e `Get-VolumeInfoFromProvider` nel progetto `sync-dev`, con le verifiche di regressione che le accompagnano.
+L'implementazione di riferimento di entrambe le cose è `Invoke-StorageQuery` e `Get-VolumeInfoFromProvider` nel progetto `sync-dev`, con le verifiche di regressione che le accompagnano. Lo strumento di recupero del paragrafo 9 vive invece qui, in `scripts\Recupera-Supporto.ps1`: tocca i supporti della macchina, non il backup dei progetti.
 
 [^1]: Gli orari e i conteggi di questo documento vengono dal registro eventi di sistema di questa macchina, dal `setupapi.dev.log` e dai log del progetto `sync-dev`, raccolti fra il 23/10 e il 26/10 del 2026.

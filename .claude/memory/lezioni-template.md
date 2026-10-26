@@ -26,7 +26,7 @@ setupapi.dev.log registra installazioni e rimozioni di dispositivo, ma non lo sc
 
 ## L-006 - 2026-10-26 - Un identificativo che sembra unico puo' essere un segnaposto di fabbrica
 
-Il numero di serie SERIALE-RIMOSSO di una chiavetta non identifica nulla: e' il valore predefinito di molti controller flash anonimi, e il sistema operativo non distingue quel supporto da qualunque altro dello stesso lotto. Ogni regola che lega configurazione a identita' di dispositivo, cioe' riservazioni di lettera, liste di consenso, criteri e licenze, appoggiata a un identificativo del genere non e' sbagliata: e' mal definita, perche' un altro dispositivo eredita il posto. L'unicita' si verifica prima di costruirci sopra, non dopo il primo comportamento strano.
+Il numero di serie di una chiavetta puo' non identificare nulla: molti controller flash anonimi espongono di fabbrica un segnaposto, una sequenza ordinata di caratteri uguale su tutti gli esemplari, e il sistema operativo non distingue quel supporto da qualunque altro dello stesso lotto. Ogni regola che lega configurazione a identita' di dispositivo, cioe' riservazioni di lettera, liste di consenso, criteri e licenze, appoggiata a un identificativo del genere non e' sbagliata: e' mal definita, perche' un altro dispositivo eredita il posto. L'unicita' si verifica prima di costruirci sopra, non dopo il primo comportamento strano.
 
 ## L-007 - 2026-10-26 - Chi e' escluso da una risorsa non sa niente, chi la tiene sa tutto
 
