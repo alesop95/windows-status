@@ -122,6 +122,7 @@ Tutti gli script del progetto, con la loro riga di sintesi presa dalla loro stes
 | `docs/15_CENSIMENTO_HARDWARE_MULTIPIATTAFORMA.md` | 15 - Censimento hardware multipiattaforma |
 | `docs/16_PRIMA_INSTALLAZIONE_PC_NUOVO.md` | 16 - Prima installazione di un PC nuovo |
 | `docs/17_MONITORAGGIO_APERTO_DEL_PARCO.md` | 17 - Monitoraggio aperto del parco |
+| `docs/18_USB_SOSPENSIONE_E_SUPPORTI_RIMOVIBILI.md` | 18 - Un supporto USB che non risponde blocca le interrogazioni sui dischi di tutta la macchina |
 <!-- FINE GENERATO: documenti -->
 
 ## I progetti di terze parti che il progetto usa
