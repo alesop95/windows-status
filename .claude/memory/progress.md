@@ -2,6 +2,32 @@
 
 > Append-only, in ordine cronologico inverso (la voce più recente in alto). Ogni passo significativo di codice e ogni intervento manuale rilevante lascia una voce con data, file toccati, motivo e commit di riferimento. Qui confluisce anche il log di riconciliazione dei documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento sopravvive a un clone.
 
+## 2026-10-27 - Tre voci aperte dell'incidente USB chiuse con verifiche in sola lettura
+
+Commit: modifiche preparate, commit manuale dell'utente. Innesco: richiesta dell'utente di chiudere le voci aperte invece di elencarle. Nessuna modifica al sistema.
+
+Lettera di Drive: `mount_point_path: "G"` in tutti i 98 log di DriveFS, da aprile 2026. La preferenza non è mai cambiata, il ricordo di `A:` era sbagliato. CHIUSA. Drive al momento non è in esecuzione: nessuna lettera montata.
+
+Innesco della potatura `vds.exe` del 23/10: espulsione del disco di backup rifiutata alle 17:59:36,695 (Kernel-PnP 225, `explorer.exe`), Esplora risorse appeso 138/169 s (Driver Watchdog 932), rimozione a sorpresa alle 18:01:04,355 (Device Management 1010), sezione `vds.exe` aperta alle 18:00:07,727, quindici nodi di volume eliminati entro le 18:01:08,914 (Configuration 420), shell riavviata alle 18:01:54 (Winlogon 1002). Corretto il rapporto, che parlava di quattro nodi. CHIUSA.
+
+Porta e hub: `DEVPKEY_Device_LocationPaths` dei nodi assenti dà lo stesso percorso `PCIROOT(0)#PCI(1400)#USBROOT(0)#USB(25)#USB(1)` per i due supporti guasti e per il lettore di schede, cioè porta 1 dell'hub ASMedia `VID_174C&PID_3074`; entrambi i supporti hanno controller Alcor Micro `VID_058F`. Il disco di backup (UAS) è oggi su `USB(25)#USB(2)`, porta accanto dello stesso hub. La causa è ristretta a un hub. Resta la prova fisica: spostare il disco su una porta del retro e verificare che il percorso non contenga `USB(25)#`.
+
+Aggiornati docs/18 (paragrafi 7, 8 e stato) e la riga della causa in `D:/network-design/docs/stato/pendenze-aperte.md`. Restano dell'utente il supporto nuovo per la CA con la decisione su ADR-025, l'UPS e la sospensione USB per la flotta.
+
+**Template:** nessuna.
+
+## 2026-10-27 - Rapporto d'incidente storage integrato nel documento 18, e guard-rail di anonimizzazione istanziato
+
+Commit: modifiche preparate, commit manuale dell'utente. Innesco: richiesta dell'utente di portare nel progetto, anonimizzato con gli strumenti del template, il rapporto congiunto del 26/10 delle due sessioni che hanno indagato il guasto USB, e di aggiornare di conseguenza il progetto di rete collegato.
+
+Il documento 18 copriva gia' gran parte del rapporto, che e' anteriore alle ultime correzioni del documento stesso: la domanda «sul supporto morto c'era il materiale della CA?» il documento l'aveva gia' chiusa (il materiale stava sull'altro supporto ed e' stato recuperato). Integrato cio' che mancava: paragrafo 5, il ricollegamento come costo noto con protocollo e non come divieto, che contraddiceva il paragrafo 9; paragrafo 7, i quattro secondi del 26/10 al millisecondo (distacco fisico e rimozione della voce in `MountedDevices` sono due cause di due effetti, e la riserva NON se ne va con il dispositivo, correzione di una frase precedente), i due tempi della lettera contesa (da vivo scritture deviate in silenzio, da morto accessi appesi) e la lettera alta e stabile per Drive; paragrafo 8, l'ordine dei dodici minuti del 13/10 e la potatura dei nodi fantasma di `vds.exe` come prova dello scollegamento che `setupapi.dev.log` non registra; paragrafo 11 nuovo, nota di metodo sulle due sessioni che si correggono via `SendMessage`. Corretti anche quattro trattini lunghi preesistenti con `fix-dashes.py`. Esclusi per anonimizzazione: seriali dei due supporti e del disco di backup, identita' di volume, nomi delle sessioni, cifre del backup personale.
+
+Istanziato il pacchetto `anonymization`: `tools/Test-Anonymization.py` (versione del template, autotest 21 casi verdi), `.claude/rules/anonymization.md` con sezione di progetto, pattern privati in `_notes/.anonymization-patterns.json` (ignorato, verificato con `git check-ignore` prima di scriverci) costruiti da `CLAUDE.local.md` piu' i nomi propri del progetto di rete; i blocchi segnaposto del progetto di rete sono elencati come prefissi reali, per non ricostruire la corrispondenza. Primo audit sull'intero perimetro (476 file, 474 tracciati): 20 bloccanti, tutti falsi positivi (nome di un repository del proprietario, URL del repository, autori terzi e caselle di prova nel materiale vendorizzato), governati con eccezioni di contesto puntuali; esito finale 0 bloccanti, 6 da valutare (numeri di versione). Paletto 7 di `CLAUDE.md` rimanda ora allo strumento. Aggiornata la copia vendorizzata del pacchetto (README, `BONIFICA-STORIA.md`).
+
+Progetto di rete: aggiunta alla scheda dell'autorita' una sezione del 27/10 (nessun ruolo AD CS, causa a monte, supporto nuovo con seriale vero, protocollo di rilettura) e una sezione in `docs/stato/pendenze-aperte.md`; suo guard-rail 0 bloccanti.
+
+**Template:** nessuna.
+
 ## 2026-10-27 — Identita' git della macchina: default rimosso, gancio globale, controllo nei due versi
 
 Commit: modifiche preparate, commit manuale dell'utente. Il default globale di git su questa macchina portava un'identita', quindi ogni repository privo di quella locale firmava con essa senza dirlo, e `user.useConfigOnly` non proteggeva: quell'impostazione vieta a git di DEDURRE un'identita', non di leggerne una configurata. Verificato in sandbox e poi rimosso il blocco `[user]` dalla configurazione globale: da adesso un commit in un repository che non dichiara la propria identita' viene rifiutato con `Author identity unknown`, provato su un repository nuovo. Nessun repository della macchina ne risente, perche' tutti hanno l'identita' locale; l'unica cartella che sembrava un repository senza identita' si e' rivelata un guscio `.git` vuoto, senza HEAD ne' config.

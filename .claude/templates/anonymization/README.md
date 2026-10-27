@@ -2,6 +2,8 @@
 
 > Guard-rail che passa i file del repository in cerca di *dati che identificano* persone, luoghi e infrastrutture reali, e che non devono finire in un file pubblicabile: indirizzi IP, indirizzi fisici di apparati, nomi propri, caselle di posta personali, numeri di telefono, importi, IBAN, partite IVA. È l'attuazione meccanica della regola `rules/anonymization.md` di questo pacchetto, che va istanziata insieme allo strumento perché è il criterio, e lo strumento da solo non decide nulla.
 
+Quando il dato che lo strumento trova e' **gia' stato pubblicato**, toglierlo dai file e' il primo passo di cinque: la procedura completa, dalla ricognizione sulle tre superfici fino al biglietto all'assistenza senza il quale i vecchi oggetti restano raggiungibili per SHA, sta in [BONIFICA-STORIA.md](BONIFICA-STORIA.md) accanto a questo file.
+
 ## Il problema, e perché non è il problema dei segreti
 
 Uno scanner di credenziali cerca stringhe con una *forma* riconoscibile: una chiave AWS comincia per `AKIA`, un blocco di chiave privata ha un'intestazione, un token di un servizio ha una lunghezza e un alfabeto noti. È il mestiere di `hooks-starter/hooks/secret-scan`, e funziona proprio perché la forma è universale.
