@@ -86,7 +86,18 @@ Esempio tipico: un repo dentro la cartella locale di Google Drive. **Tenere un r
   ```powershell
   git config --global user.useConfigOnly true
   ```
-  Da quel momento, in un repo senza identità locale, `git commit` si ferma e ti chiede di impostarla.
+  ⚠️ **Da sola non basta, ed è la trappola.** `useConfigOnly` vieta a git di *dedurre* un'identità da utente e nome host; non gli vieta di *leggerne* una configurata. Se il file globale contiene ancora un blocco `[user]` con nome ed email, quella soddisfa il controllo e il commit passa, firmato con essa. Perché la protezione morda davvero, il blocco globale va svuotato:
+  ```powershell
+  git config --global --unset user.name
+  git config --global --unset user.email
+  ```
+  Solo allora, in un repo senza identità locale, `git commit` si ferma con `Author identity unknown`. La verifica non è leggere la configurazione: si prova a committare in un repository usa e getta e si guarda se rifiuta. Prima di svuotare il globale, controlla che ogni repository della macchina abbia già la sua identità locale, altrimenti smetterà di poter committare.
+
+- **Un presidio pre-commit per tutta la macchina.** Un hook versionato in `.githooks` si installa per progetto, quindi la copertura resta parziale e manca proprio nei repository nati dopo. `core.hooksPath` si imposta anche a livello globale e vale per ogni repository, compresi quelli futuri:
+  ```powershell
+  git config --global core.hooksPath "<HOME>/.githooks"
+  ```
+  Un repository che imposta `core.hooksPath` in locale usa il suo e ignora quello globale: si collega aggiungendo in fondo al proprio `pre-commit` la riga `"$HOME/.githooks/pre-commit" || exit 1`, che delega e resta allineata da sola. Lo schema completo, con il gancio di esempio e i suoi limiti, sta nel pacchetto `gancio-globale` del template.
 
 - **(Opzionale) Identità automatica per cartella**, via include condizionale nel `~/.gitconfig` globale:
   ```gitconfig
