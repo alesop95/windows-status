@@ -25,7 +25,7 @@ Lo stato del progetto è interamente recuperabile su disco. Si legge per primo `
 4. Macchina **aziendale, registrata al tenant** (workplace join, senza Intune): NON toccare comunque senza ordine esplicito Windows Update, Microsoft Defender, attivazione Office, Microsoft Edge/WebView2, OneDrive, ne azzerare la telemetria. Sono cautele prudenziali, non imposte: se la macchina venisse in futuro aggiunta a Entra ID o a Intune, tornerebbero vincoli obbligatori. Nota correlata: NON essendo Entra-joined, la chiave BitLocker NON e archiviata in Entra ID di default — va custodita e annotata nella mappa.
 5. **Mai segreti nel repo.** Token, API key, password Veeam, chiavi private SSH, chiave BitLocker, `.credentials.json` di Claude: esclusi dagli snapshot (oscurati) e dal git (`.gitignore`). Nella mappa va solo *dove* sono custoditi.
 6. Ogni modifica effettiva → riga nel changelog (data, cosa, perche, come si annulla).
-7. Prima di un push (il repo e PUBBLICO), verifica che nessun file tracciato contenga segreti, email, hostname o altri identificativi reali: nei file tracciati si usano segnaposto tra parentesi angolari, la mappatura reale sta in `CLAUDE.local.md`.
+7. Prima di un push (il repo e PUBBLICO), verifica che nessun file tracciato contenga segreti, email, hostname o altri identificativi reali: nei file tracciati si usano segnaposto tra parentesi angolari, la mappatura reale sta in `CLAUDE.local.md`. La verifica si fa con `python tools/Test-Anonymization.py`, che esce 1 su un riscontro bloccante e 2 se manca il file dei pattern `_notes/.anonymization-patterns.json`; criterio e perimetro nella regola sempre attiva `.claude/rules/anonymization.md`.
 8. **Versionamento multi-account** (vedi `docs/04_GIT_VERSIONAMENTO_MULTIACCOUNT.md` e `.claude/rules/git-identity-and-repo.md`): per i repo personali NON usare mai l'identità globale di lavoro. Imposta sempre in `--local` `user.name`, `user.email` e `core.sshCommand` (OpenSSH di Windows), remote con l'alias `github-personal`, e dopo il primo commit verifica `git log -1 --format="%an <%ae>"`. Mai repo dentro cartelle di sync cloud.
 9. Le operazioni di `git add`, commit e push restano sempre manuali dell'utente: l'agente prepara i file, non committa.
 
@@ -94,7 +94,7 @@ Schede tecniche, sotto `.claude/context/`, con frontmatter di riconciliazione:
 .claude/context/current-work.md         feature attiva e definition of done
 .claude/context/roadmap.md              direzione e priorità
 ```
-Regole modulari sotto `.claude/rules/`, skill sotto `.claude/skills/` (`init-project-system`, `sync-context`, `git-sync`, `repo-status`). Lo standard completo è in `.claude/PROJECT-SYSTEM.md`.
+Regole modulari sotto `.claude/rules/` (fra quelle sempre attive `anonymization.md`, dal 2026-10-27), skill sotto `.claude/skills/` (`init-project-system`, `sync-context`, `git-sync`, `repo-status`). Lo standard completo è in `.claude/PROJECT-SYSTEM.md`.
 
 Norme caricate su richiesta, una riga per situazione con le parole con cui si presenta, così che il caricamento non dipenda dal ricordare che la norma esista.
 
