@@ -41,6 +41,17 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\scripts\Snapshot-Stato.ps1 -Scope User     # solo account corrente (ripetere per ogni account)
 ```
 
+**Canale verso il server di inferenza con GPU** (serve ai progetti che leggono corpora con un modello locale; l'inoltro SSH non appartiene a un progetto ma alla macchina, come una stampante o una unità di rete, e finché viveva dentro una sessione di lavoro moriva con essa e nessun altro progetto poteva usare la GPU):
+
+```powershell
+.\scripts\Canale-GPU.ps1 -Stato       # dice se il canale è aperto e se il server risponde
+.\scripts\Canale-GPU.ps1 -Avvia       # lo apre se manca; idempotente, chiamabile a ogni sessione
+.\scripts\Canale-GPU.ps1 -Installa    # attività pianificata al logon, lo risorveglia da sé
+.\scripts\Canale-GPU.ps1 -Disinstalla # rimuove l'attività, lascia aperto il canale in corso
+```
+
+L'attività gira come l'utente e non come SYSTEM, e la ragione è vincolante: il canale si autentica con la chiave SSH e con l'alias dichiarati nel profilo di quell'utente, che SYSTEM non ha, quindi un'installazione come SYSTEM si registra senza errore e poi non apre mai niente. Il controllo non guarda il socket ma interroga il servizio, perché un inoltro SSH accetta la connessione locale prima di sapere se l'altro capo risponda, e un canale aperto verso un servizio morto ha lo stesso aspetto di uno funzionante.
+
 **Confronto tra i due snapshot più recenti** (diff + sezione ALERT DI SICUREZZA in coda; confrontare snapshot presi con gli stessi privilegi, altrimenti il diff è rumore di visibilità):
 
 ```powershell
