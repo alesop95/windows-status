@@ -53,6 +53,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 | 11 | Reinstallare i programmi della macchina vecchia | `5` | variabile | serve `software_winget.json` |
 | 12 | Baseline di sicurezza: prima il report, poi applicarlo | `3` poi `4` | 15 min | guidato |
 | 13 | Identita' git, chiavi SSH, Claude e Codex, dotfiles | — | 15 min | no, per scelta |
+| 14 | Ripristinare gli strumenti dei progetti clonati, per ora `retrogame-mod-pok-dev` con `tools\ripristina-ambiente.ps1` | — | 10 min | si, per progetto, vedi `docs/09` sezione 8 |
 
 La voce `P` stampa questa sequenza con lo stato di ogni passo, cosi' non si perde il conto fra i due riavvii. Distingue tre cose: `[x]` fatto, `[ ]` da fare, `[?]` **non verificabile da qui** — l'immagine Veeam resta sempre `[?]`, perche' nessuno script puo' sapere se l'hai fatta.
 

@@ -104,3 +104,20 @@ Ne discende la procedura di ripristino, che è manuale e lunga. Su una macchina 
 Resta aperta una verifica che questa voce non chiude: se il backup Veeam in modalità "Intero computer" catturi davvero il disco virtuale della distribuzione, che è un file in uso dentro il profilo utente, e in quale stato lo restituisca. Finché non è misurata, il ripristino dei 47 GB di modelli si considera a carico del riscaricamento e non del backup, ed è così che va pianificato il tempo di una re-immagine.
 
 Una conseguenza riguarda la regola enunciata in `docs/11`, secondo cui su questa macchina si adottano soltanto strumenti che girano nativi, senza WSL. La regola resta valida nel suo perimetro, che è l'orchestrazione di agenti sui progetti di `D:\` ed `E:\`, dove WSL trasformerebbe i percorsi reali in mount `/mnt/d` e `/mnt/e` e farebbe divergere sandbox e prefissi dai percorsi veri. colibri non vi ricade, perché non apre i progetti: riceve lotti di lavoro e risponde su HTTP, e i suoi modelli stanno apposta fuori da `/mnt/c` per non pagare il livello di traduzione del disco. La macchina ha quindi oggi un componente che vive in WSL, e il censimento deve dirlo invece di lasciarlo dedurre.
+
+---
+
+## 8. Il ripristino degli strumenti di un progetto, a partire da `retrogame-mod-pok-dev`
+
+Aggiunta il 2026-11-03, su richiesta del proprietario, che vuole ogni strumento di quel progetto ripristinabile su questa macchina e su qualunque macchina Windows su cui il progetto si sposti. Fino a quel giorno non lo era. I venti strumenti `tools\pkhex-*` puntano a una libreria compilata dentro `_notes\` del progetto, che Git esclude. Le dipendenze Python non erano scritte da nessuna parte. E l'hook di apertura della sessione porta il percorso assoluto della radice.
+
+Il progetto ha ora `tools\ripristina-ambiente.ps1`, con le versioni fissate in due file tracciati: `tools\requirements.txt` per Python e `tools\pkhex-versione.txt` per la libreria, oggi la release 26.10.18 al commit `bfe89c7`. Lo script controlla git, Python 3.11 o più, l'SDK .NET 10, e come facoltativi `gh` e `ffmpeg`. Installa le dipendenze Python, ricrea il clone della libreria alla versione fissata e la compila, poi compila gli strumenti. Riporta il percorso dell'hook alla radice corrente ed esegue le prove interne. Con `-SoloVerifica` controlla senza installare né compilare. Il 2026-11-03 è stato provato su una copia dei soli file tracciati, senza `_notes\`: ha clonato e compilato tutto, 11 passi su 11. Le dipendenze Python erano però già installate, quindi la loro installazione da zero resta da provare su una macchina che non le ha.
+
+La copia di riferimento dello script resta nel progetto, e qui si registra soltanto come chiamarlo, perché due copie dello stesso script prima o poi divergono. Il passo si fa dopo il passo 13 di `LEGGIMI-PC-NUOVO.md`, cioè con l'identità git e le chiavi già al loro posto e il progetto clonato:
+
+```powershell
+cd "E:/retrogame-mod-pok-dev"
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/ripristina-ambiente.ps1
+```
+
+Lo script non ripristina i dati privati del progetto in `_notes\`, cioè salvataggi, lotti, copie per HOME e fonti scaricate, che per decisione non sono in Git e tornano dall'immagine Veeam o dal backup. I programmi di sistema che richiede sono quelli già censiti nella sezione 2 di questo documento.

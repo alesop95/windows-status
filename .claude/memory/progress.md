@@ -2,6 +2,14 @@
 
 > Append-only, in ordine cronologico inverso (la voce più recente in alto). Ogni passo significativo di codice e ogni intervento manuale rilevante lascia una voce con data, file toccati, motivo e commit di riferimento. Qui confluisce anche il log di riconciliazione dei documenti `.docx`, con il nome del documento sorgente e l'esito, così la data di allineamento sopravvive a un clone.
 
+## 2026-11-03 - Ripristino degli strumenti di retrogame-mod-pok-dev registrato
+
+Commit: modifiche preparate, commit manuale dell'utente. Innesco: richiesta del proprietario, da una sessione di `retrogame-mod-pok-dev`, di portare qui lo script di ripristino per Windows di quel progetto e di aggiornare il version control di questo. Nessuna modifica al sistema.
+
+Il progetto ha ora `tools\ripristina-ambiente.ps1`, con le versioni fissate in `tools\requirements.txt` e `tools\pkhex-versione.txt`, provato su una copia dei soli file tracciati: 11 passi su 11. Qui si registra come chiamarlo, non una seconda copia, perché due copie divergono. Aggiunte la sezione 8 di `docs/09_TOOLCHAIN_DA_ALTRI_PROGETTI.md` e il passo 14 della tabella di `LEGGIMI-PC-NUOVO.md`.
+
+File toccati: `docs/09_TOOLCHAIN_DA_ALTRI_PROGETTI.md`, `LEGGIMI-PC-NUOVO.md`, `.claude/memory/progress.md`.
+
 ## 2026-10-27 - Tre voci aperte dell'incidente USB chiuse con verifiche in sola lettura
 
 Commit: modifiche preparate, commit manuale dell'utente. Innesco: richiesta dell'utente di chiudere le voci aperte invece di elencarle. Nessuna modifica al sistema.
