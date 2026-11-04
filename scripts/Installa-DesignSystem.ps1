@@ -26,8 +26,11 @@
     con -Applica, salvo che il pacchetto sia gia' nel magazzino.
 
 .PARAMETER Deposito
-    Magazzino di macchina che ospita la copia reale. Default: .design-systems
-    nel profilo utente. Il pacchetto finisce in <Deposito>\<Nome>.
+    Magazzino di macchina che ospita la copia reale. Il pacchetto finisce in
+    <Deposito>\<Nome>. Senza questo parametro vale il magazzino registrato in
+    scripts\design-system-deposito.txt dall'ultimo -Applica, e in mancanza di
+    quello .design-systems nel profilo utente, che e' il caso di una macchina
+    nuova. Un -Deposito esplicito vince sempre e viene registrato a sua volta.
 
 .PARAMETER Nome
     Nome breve con cui la skill compare nelle radici. Default: il campo name del
@@ -75,6 +78,24 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Il magazzino non sta per forza nel profilo utente: il 2026-11-04 e' stato spostato su un disco
+# dati, perche' li' sopravvive a una reinstallazione di Windows. Da quel momento ogni invocazione
+# avrebbe dovuto portarsi dietro -Deposito, e il primo che se ne fosse dimenticato avrebbe visto
+# lo script fermarsi senza capire perche'. La scelta si ricorda quindi su file accanto allo script
+# invece che nella testa di chi lo lancia. Un -Deposito esplicito vince sempre; senza record si
+# torna al profilo utente, che e' la condizione di una macchina nuova, dove un percorso cablato
+# verso un disco che non esiste sarebbe stato il difetto peggiore.
+$RICORDO_DEPOSITO = Join-Path $PSScriptRoot 'design-system-deposito.txt'
+if (-not $PSBoundParameters.ContainsKey('Deposito') -and (Test-Path -LiteralPath $RICORDO_DEPOSITO)) {
+    $ricordato = (Get-Content -LiteralPath $RICORDO_DEPOSITO -Raw -ErrorAction SilentlyContinue)
+    if ($ricordato) { $ricordato = $ricordato.Trim() }
+    if ($ricordato -and (Test-Path -LiteralPath $ricordato -PathType Container)) {
+        $Deposito = $ricordato
+    } elseif ($ricordato) {
+        Write-Host ("Magazzino ricordato ma irraggiungibile, si usa il profilo utente: {0}" -f $ricordato) -ForegroundColor Yellow
+    }
+}
 
 $MARCATORE_INIZIO = '<!-- DESIGN-SYSTEM-DI-ACCOUNT:INIZIO -->'
 $MARCATORE_FINE   = '<!-- DESIGN-SYSTEM-DI-ACCOUNT:FINE -->'
@@ -258,6 +279,8 @@ if ($Applica -and -not $Rimuovi) {
         Write-Host ''
         Write-Host 'Il magazzino contiene gia'' il pacchetto: non viene sovrascritto.' -ForegroundColor DarkGray
     }
+    # Si registra il magazzino appena usato, cosi' le invocazioni successive non devono ripeterlo.
+    Set-Content -LiteralPath $RICORDO_DEPOSITO -Value $Deposito -Encoding UTF8
 }
 
 $depositoPronto = Test-Path -LiteralPath $destinazioneDeposito
