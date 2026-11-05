@@ -1,10 +1,12 @@
 # Anonimizzazione della documentazione tecnica
 
-> Regola modulare, da caricare sempre nei progetti che la istanziano. Vale per ogni contenuto scritto d'ora in avanti nei file tracciati. Da istanziare in `.claude/rules/anonymization.md` sostituendo i segnaposto tra parentesi angolari con i valori del progetto, e da estendere man mano che emergono categorie nuove.
+> Regola modulare, da caricare sempre nei progetti che la istanziano. Vale per ogni contenuto scritto d'ora in avanti nei file tracciati. Da istanziare in `.claude/rules/anonymization.md` sostituendo i segnaposto tra parentesi angolari con i valori del progetto, e da estendere man mano che emergono categorie nuove. I casi osservati che giustificano queste prescrizioni, con le misure e le date, stanno in `norme/anonymization.md` di questo pacchetto, da istanziare in `.claude/norme/anonymization.md`: quel file non si carica all'avvio e non serve per applicare la regola.
 
 ## Quando questa regola serve, e quando non serve
 
 Serve quando il repository è pubblico, oppure condiviso più largamente della cerchia che lo scrive, e la materia che documenta appartiene a qualcun altro: un'infrastruttura aziendale, un cliente, un fornitore, delle persone fisiche. Le due condizioni valgono insieme. Un repository pubblico che documenta soltanto codice proprio non ne ha bisogno; un repository privato che documenta l'infrastruttura di un cliente ne ha bisogno comunque, perché la cerchia di chi vi accede cambia nel tempo e la storia git conserva tutto.
+
+Prima di scrivere verificare la visibilità del repository e dichiararla in `CLAUDE.md` con data ed esito. Il guard-rail vale per la materia di terzi anche in un repository oggi privato: un cambio di visibilità espone anche la storia. `tools/check-visibilita.py` confronta dichiarato e osservato alla chiusura; dettagli e casi sono nel riferimento `.claude/norme/anonymization.md`.
 
 La ragione per cui la regola è vincolante e non consigliata sta nella durata: ciò che entra in un file tracciato resta visibile anche dopo una correzione successiva, perché la storia git è consultabile finché non viene riscritta, e riscrivere una storia condivisa è un'operazione pianificata e non un rimedio a valle di una svista.
 
@@ -38,36 +40,19 @@ La traduzione da segnaposto a valore reale non si scrive mai in un file tracciat
 
 Va detto perché quel file merita più attenzione di ogni altro: è l'unico che rende reversibile ogni altra anonimizzazione. Nel progetto in cui questa regola è nata, il riscontro più grave di tutto il primo audit non era un indirizzo né un nome, ma una voce di registro che pubblicava la corrispondenza fra un segnaposto e la persona reale. Un singolo accoppiamento pubblicato vale più di cento valori nascosti.
 
-## Il controllo automatico, e perché non basta la buona volontà
+## Controllo prima della pubblicazione
 
-Lo strumento `tools/Test-Anonymization.py` di questo pacchetto passa i file del repository e riporta indirizzi reali, indirizzi fisici reali, nomi propri di persona, caselle di posta personali, importi, numeri di telefono, IBAN, partite IVA e i segreti letterali già noti. Esce con codice diverso da zero se trova qualcosa nelle categorie bloccanti, e va eseguito prima di ogni commit che tocchi documentazione.
+Prima di ogni commit documentale eseguire `python tools/Test-Anonymization.py` sull'intero insieme dei file tracciati e dei nuovi non ignorati, non sui soli file della sessione. I riscontri bloccanti impediscono la chiusura. Lo script non contiene valori reali: pattern e mappa restano nel livello privato ignorato, si aggiornano insieme e il controllo deve fermarsi se i pattern mancano. Con `--tutti` si esamina anche il materiale ignorato: contiene valori reali per decisione e i suoi riscontri non bloccano. Un file privato che viene tracciato rientra nel perimetro bloccante. Comandi, motivazioni e casi sono conservati in `.claude/norme/anonymization.md`.
 
-```
-python tools/Test-Anonymization.py
-python tools/Test-Anonymization.py --tutti    # include il layer privato, non bloccante
-```
-
-Lo script è versionato e non contiene nessun valore reale: ciò che deve cercare vive nel file dei pattern del layer privato, la cui forma è dichiarata in `patterns.example.json`. Se quel file manca, lo script si ferma e lo dichiara invece di restituire un esito verde che non ha calcolato. Quando cresce la mappa dei segnaposto cresce anche il file dei pattern: sono due facce dello stesso dato.
-
-La ragione per cui il controllo esiste, e va usato invece che ricordato, è un numero. Il primo audit nel progetto di origine ha trovato centoquarantotto riscontri su ottantanove file tracciati, di cui una trentina erano valori reali veri: indirizzi cablati dentro gli script, indirizzi fisici di apparati dentro gli script di scrittura, indirizzi pubblici di macchine virtuali, caselle di posta personali, importi contrattuali, e la voce di registro citata sopra. Nessuno di quei residui era stato introdotto di proposito, e nessuno apparteneva alla sessione che li ha scoperti.
-
-Ne discende la regola operativa: il controllo si fa sull'*intero perimetro*, non sui soli file toccati dalla sessione. Un residuo non si introduce, si eredita, e restare puliti sui propri file non dice niente sul repository.
-
-## Il perimetro del controllo, e perché non è l'insieme dei file tracciati
-
-Il perimetro predefinito è ciò che sta per essere pubblicato, cioè i file tracciati più quelli non tracciati e non ignorati, che sono esattamente i candidati al prossimo commit. I riscontri di entrambi i gruppi sono bloccanti, perché entrambi i gruppi finiscono in pubblico, e quelli del secondo gruppo vengono marcati a video con un avviso esplicito.
-
-Questa definizione nasce da un difetto misurato, e vale la pena conoscerlo perché è controintuitivo. Definire il perimetro come l'insieme dei file tracciati sembra la scelta naturale ed è sbagliata: un file nuovo, scritto e non ancora aggiunto all'indice, resta invisibile al controllo proprio nel momento in cui serve guardarlo, cioè prima di pubblicarlo. Nel progetto di origine tre file nuovi sono passati puliti per fortuna e non per verifica, e il difetto è stato scoperto per caso qualche giorno dopo.
-
-Con `--tutti` entrano anche i file *ignorati*, cioè il layer narrativo locale e gli output degli strumenti. Quei file contengono valori reali per costruzione e per decisione, ed è il motivo per cui git li ignora. I loro riscontri vengono perciò elencati a parte, aggregati per file, e *non sono bloccanti*. La distinzione non è una comodità: nel progetto di origine la misura dice 10.844 riscontri nel layer privato contro zero bloccanti nel perimetro pubblico, e fra i file più densi c'è proprio la mappa dei segnaposto, che per definizione contiene tutti i valori reali. Se quei riscontri fossero bloccanti il controllo fallirebbe per il solo fatto di esistere, e un controllo che fallisce sempre smette di essere letto.
-
-Ne discende la proprietà che rende il perimetro corretto senza manutenzione: un percorso del layer privato diventa un problema nell'istante in cui viene tracciato, e in quel momento non compare più fra i riscontri privati ma fra i bloccanti, con la marca di file non tracciato. Il controllo cambia da solo la propria valutazione quando cambia lo stato del file, e nessuno deve ricordarsi di aggiornare una lista.
-
-## Due cose che lo strumento non può fare, e restano umane
+## Quattro cose che lo strumento non può fare, e restano umane
 
 Non distingue un falso positivo da una fuga quando il valore è ambiguo, per esempio un numero di versione che somiglia a un indirizzo: quei riscontri finiscono nelle categorie non bloccanti e vanno guardati uno per uno.
 
 E non conosce il contesto: un nome dentro una ragione sociale legale è ammesso, lo stesso nome in una frase narrativa no, e la lista delle eccezioni di contesto va tenuta aggiornata a mano nel file dei pattern e tenuta *corta*, perché più è lunga meno il controllo dice.
+
+Non vede la regola, vede i valori, e questa è la terza. Le due difese abituali, cioè proteggere il file della mappatura e cercare i valori reali nei file pubblicabili, guardano entrambe il valore e nessuna guarda la convenzione che lo sostituisce, che da sola rende reversibile ogni sostituzione senza che un valore sia mai uscito. Ne discendono tre cose. La convenzione con cui un progetto pseudonimizza non si spiega fuori da quel progetto, nemmeno per giustificare perché un dato è assente, e un rimando generico basta sempre allo scopo. Nei progetti che condividono la stessa macchina o lo stesso autore il controllo va esteso a cercare la forma della relazione, cioè la compresenza di una classe reale e della sua sostituta nella stessa riga. E la frase che spiega perché si sta togliendo qualcosa si scrive senza nominare né ciò che si toglie né dove viveva.
+
+La quarta è che un verde misura i pattern, non il repository: un controllo a elenchi dichiara pulito un perimetro che contiene tutto ciò per cui nessuno ha scritto un pattern. L'audit di un perimetro pubblico si fa quindi periodicamente leggendo per categorie chiuse e non rilanciando il controllo, e ciò che l'audit trova si aggiunge ai pattern nello stesso giro e si prova rilanciando il controllo, che deve trovare i residui sfuggiti alla correzione a mano. Il confronto per sottostringa non accetta parole brevi, che combaciano dentro parole comuni: quelle restano un controllo a lettura, dichiarato come tale.
 
 ## Cosa fare quando si trova un valore reale già pubblicato
 

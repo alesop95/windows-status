@@ -1,0 +1,13 @@
+{
+  ".claude/norme/anonymization.md": {
+    "testa": "4be51e0f1ce1914f52c4ba4bb488927e12c95ec7",
+    "locale_sha256_lf": "4a455c16cec0ff94d81aaf8ff8b6571d62f71cb214ac7f86d8fa4a83cdc8329c",
+    "il": "2026-11-05",
+    "motivo": "Delta pubblicato 3443d6c integrato e provato sui confini dei nomi; estensioni e cronaca locali conservate. La firma certifica il contenuto revisionato, non la parita di tutte le categorie."
+  },
+  ".claude/rules/anonymization.md": {
+    "testa": "558e96e2b9d86a73fd445dd3644b1e67ae518fad",
+    "locale_sha256_lf": "75c61ef8adfc36b61390000862469d231208b60b77a463b075e97fe3399e226b",
+    "il": "2026-11-05"
+  }
+}
