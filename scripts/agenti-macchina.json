@@ -1,0 +1,7 @@
+{
+  "riserva": { "settimanale": 80, "cinqueOre": 80, "azione": "nega" },
+  "plugin": {
+    "claude": ["superpowers@claude-plugins-official"],
+    "codex": ["superpowers@openai-curated-remote"]
+  }
+}

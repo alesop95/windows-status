@@ -150,3 +150,26 @@ Dentro una sessione, `/instradamento` scrive il modo corrente, la tabella, quant
 ### Ripristino su macchina nuova
 
 Come per i server MCP, questi file non entrano nello snapshot perché contengono percorsi specifici della macchina. Al ripristino: clonare `template-claude-developing`, poi lanciare `installa-instradamento.ps1` una volta per profilo, che scrive la configurazione di partenza (modo `osserva`) e registra il percorso della mod nel `settings.json` di quel profilo; poi portare il modo a `instrada` e riscrivere la tabella; infine ricopiare nel `CLAUDE.md` di ogni profilo la sezione che autorizza la delega. Per tornare indietro basta rimettere `"modo": "osserva"`, che misura senza instradare, oppure `"spento"`.
+
+## I. Riserva dei subagent e plugin, per tutte le radici dei due agenti
+
+Dal 2026-11-16 due scelte valgono per tutte le radici di account della macchina, tre di Claude Code e tre di Codex, e sono scritte in un file solo di questo repository, `scripts/agenti-macchina.json`: la riserva dei subagent e i plugin da avere installati.
+
+La riserva è la percentuale del limite del piano oltre la quale i subagent non partono più, così che il resto della finestra resti al lavoro in prima persona. Su questa macchina è l'ottanta per cento della finestra settimanale, e, dal pomeriggio del 2026-11-16, l'ottanta per cento anche della finestra delle cinque ore, con azione `nega`. La seconda soglia è entrata dopo che sette subagent avviati insieme hanno esaurito proprio quella finestra, che la riserva non guardava. In Claude Code la attua la mod di instradamento della sezione H, che legge la percentuale dal motore dentro la sessione e nega lo spawn con il motivo: il valore sta nel campo `riservaAgenti` di `instradamento-modelli.json` di ogni profilo. In Codex la attua il wrapper `Avvia-Codex.ps1`: all'uscita registra l'ultima lettura dei limiti dalle sessioni, prima che la pulizia le cancelli, e all'avvio successivo, se la soglia è passata e la finestra non si è ancora azzerata, parte con `--disable multi_agent`. Il valore sta in `riserva-agenti.json` di ogni radice Codex e la lettura in `riserva-ultima-lettura.json`. Una sessione Codex avviata senza il wrapper non ha riserva.
+
+Il plugin è `superpowers`, installato il 2026-11-16 nelle sei radici: versione 7.0.2 dal marketplace ufficiale in Claude Code, 7.0.1 dal catalogo curato in Codex. La mappa fra le sue skill e il sistema di progetto, con i tre punti in cui prevale la regola del progetto, sta nel template, in `.claude/templates/superpowers/README.md`.
+
+Lo stato si legge e si riapplica con i comandi della catena degli agenti, lanciati dalla radice di questo repository perché è da qui che il file dei valori viene trovato:
+
+```powershell
+.\scripts\Agenti.ps1 verifica
+.\scripts\Agenti.ps1 installa
+```
+
+Il primo non scrive niente e mostra, in fondo, soglie, ultima lettura per radice Codex e plugin presenti o mancanti. Il secondo riscrive la soglia dove manca e installa i plugin dove mancano; rieseguirlo non cambia niente. Per cambiare la soglia si cambia il file dei valori e si rilancia.
+
+Durante l'installazione è emerso un difetto del profilo `claude-account3`: il suo `known_marketplaces.json` puntava alla cartella dei marketplace del profilo 2, e il gestore dei plugin rifiutava di aggiornare il catalogo. È stato sanato come il gestore stesso indica, togliendo e riaggiungendo il marketplace ufficiale in quel profilo e reinstallando il plugin; la copia del file precedente è accanto, con il suffisso `.prima-del-16-11`.
+
+### Che cosa non è stato osservato
+
+La riserva di Claude Code è provata contro il motore simulato dalle prove della mod, non in una sessione oltre soglia. Quella di Codex è stata provata sulle letture reali delle tre radici, e il 2026-11-16 dichiarava i subagent spenti per `codex-account1`, la cui ultima lettura portava la finestra settimanale al cento per cento; non è stato osservato dall'interno di una sessione che con `--disable multi_agent` Codex non apra altri agenti, oltre a ciò che dice `codex features list`.
