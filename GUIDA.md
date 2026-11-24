@@ -31,6 +31,7 @@ Molte voci danno molto di piu' da **amministratore**: senza, allo snapshot manca
 | ritrovare i log di tutte le macchine insieme | Loki sull'hub e il passo `LOG` sui PC, vedi `docs/17` |
 | reinstallare i programmi su una macchina nuova | voce `5`, con il `software_winget.json` della vecchia |
 | fotografare da solo, ogni giorno | voce `6i` (attivita' pianificata, opt-in) |
+| riprendere le sessioni degli agenti dopo un crash dei terminali | `docs/19`, poi voci `14` e `14s`; la copia si fa da riga di comando con `-Applica` |
 
 ## Il menu, voce per voce
 
@@ -65,10 +66,12 @@ Questa tabella e' generata da `Avvia.ps1`: se una voce c'e' li', e' qui.
 | `12` | Monitoraggio: piano della macchina centrale | sola lettura | `Monitoraggio-Centrale.ps1` |
 | `12s` | Monitoraggio: scarica e verifica Prometheus e Grafana | sola lettura | `Monitoraggio-Centrale.ps1` |
 | `13` | Scorciatoia Ctrl+Alt+Q (terminale admin): stato | sola lettura | `Scorciatoia-TerminaleAdmin.ps1` |
+| `14` | Crash dei terminali: copie shadow utilizzabili | sola lettura | `Recupera-DaShadow.ps1` |
+| `14s` | Crash dei terminali: sessioni recuperate | sola lettura | `Riapri-Sessione.ps1` |
 | `G` | Guida: e' allineata al progetto? | sola lettura | `Aggiorna-Guida.ps1` |
 | `Ga` | Guida: riallinea GUIDA.md al progetto | sola lettura | `Aggiorna-Guida.ps1` |
 
-Voci totali: 28, di cui 7 che modificano il sistema.
+Voci totali: 30, di cui 7 che modificano il sistema.
 <!-- FINE GENERATO: menu -->
 
 ## Gli strumenti
@@ -93,8 +96,10 @@ Tutti gli script del progetto, con la loro riga di sintesi presa dalla loro stes
 | `scripts/Pianifica-Snapshot.ps1` | Snapshot periodico (opt-in) per il rilevamento drift |
 | `scripts/Prepara-Chiavetta.ps1` | prepara la cartella da portare sul PC nuovo |
 | `scripts/Prima-Installazione.ps1` | prima installazione di un PC Windows nuovo |
+| `scripts/Recupera-DaShadow.ps1` | Copia le trascrizioni degli agenti da una copia shadow |
 | `scripts/Recupera-Supporto.ps1` | Copia via un supporto rimovibile che sta cedendo |
 | `scripts/Reinstall-Software.ps1` | Reinstalla i programmi su un PC nuovo dal winget export |
+| `scripts/Riapri-Sessione.ps1` | Rimette una trascrizione recuperata e riapre la sessione |
 | `scripts/Scorciatoia-TerminaleAdmin.ps1` | Ctrl+Alt+Q apre PowerShell da amministratore |
 | `scripts/Snapshot-Stato.ps1` | Fotografia di SOLA LETTURA di un PC Windows 11 |
 | `scripts/censimento/hw-report.sh` | censimento hardware di UNA macchina Linux |
@@ -128,6 +133,7 @@ Tutti gli script del progetto, con la loro riga di sintesi presa dalla loro stes
 | `docs/16_PRIMA_INSTALLAZIONE_PC_NUOVO.md` | 16 - Prima installazione di un PC nuovo |
 | `docs/17_MONITORAGGIO_APERTO_DEL_PARCO.md` | 17 - Monitoraggio aperto del parco |
 | `docs/18_USB_SOSPENSIONE_E_SUPPORTI_RIMOVIBILI.md` | 18 - Un supporto USB che non risponde blocca le interrogazioni sui dischi di tutta la macchina |
+| `docs/19_RECUPERO_DOPO_CRASH_DEI_TERMINALI.md` | 19 - Recupero delle sessioni degli agenti dopo un crash dei terminali |
 <!-- FINE GENERATO: documenti -->
 
 ## I progetti di terze parti che il progetto usa

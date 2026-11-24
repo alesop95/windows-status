@@ -53,6 +53,8 @@ $voci = @(
   @{ N='12';Titolo='Monitoraggio: piano della macchina centrale';    Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Monitoraggio-Centrale.ps1') } }
   @{ N='12s';Titolo='Monitoraggio: scarica e verifica Prometheus e Grafana'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Monitoraggio-Centrale.ps1') -Scarica } }
   @{ N='13';Titolo='Scorciatoia Ctrl+Alt+Q (terminale admin): stato'; Tipo='sola lettura';  Azione={ & (Join-Path $scripts 'Scorciatoia-TerminaleAdmin.ps1') } }
+  @{ N='14';Titolo='Crash dei terminali: copie shadow utilizzabili';  Tipo='sola lettura';  Azione={ & (Join-Path $scripts 'Recupera-DaShadow.ps1') -Prima ([datetime](Read-Host 'Ora del crash (aaaa-mm-gg hh:mm)')) } }
+  @{ N='14s';Titolo='Crash dei terminali: sessioni recuperate';      Tipo='sola lettura';  Azione={ & (Join-Path $scripts 'Riapri-Sessione.ps1') -Recupero (Read-Host 'Cartella del recupero') } }
   @{ N='G'; Titolo='Guida: e'' allineata al progetto?';                Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Aggiorna-Guida.ps1') } }
   @{ N='Ga';Titolo='Guida: riallinea GUIDA.md al progetto';           Tipo='sola lettura';   Azione={ & (Join-Path $scripts 'Aggiorna-Guida.ps1') -Applica } }
 )
