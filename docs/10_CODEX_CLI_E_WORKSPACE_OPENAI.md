@@ -1,5 +1,53 @@
 # 10 — Codex CLI e workspace OpenAI
 
+
+## 13/11/2026 - Roadmap canonica con collegamento Desktop ed export ISO mantenuto
+
+Quando una pagina HTML locale è generata da un progetto, il Desktop può conservarne soltanto un Internet Shortcut verso il file canonico. Il generatore deve aggiornare il file del progetto e verificare il target del collegamento; una copia Desktop precedente va conservata prima della rimozione. Un collegamento omonimo verso un altro target non viene sovrascritto. Eventuali export di archivio restano una scelta distinta e dichiarata. La procedura è stata provata con sette casi isolati e tre mutazioni; percorsi e contenuti reali rimangono nel progetto proprietario.
+
+Per una nuova unità di rete richiesta all’utente, il preflight RMM ha confermato una console elevata nella stessa sessione dell’Explorer dell’utente. La creazione e la verifica devono avvenire nel contesto standard reale; l’assenza della lettera nelle liste del token elevato non autorizza a sostituire connessioni esistenti. La mappatura richiesta rimane da eseguire e collaudare. Questo progetto non conserva nomi, share o credenziali dell’organizzazione.
+
+
+## 13/11/2026 - Archivio storico confermato e richiesta una nuova unità visibile
+
+Per rendere una nuova unità di rete visibile nella sessione della persona non basta creare la connessione come SYSTEM o nel token elevato del terminale RMM. Prima si rilevano elevazione, sessione del processo, proprietario/sessione di Explorer e lettere occupate; la mappatura persistente deve poi essere eseguita e verificata nel contesto della persona. Una lettera proposta non viene usata senza verificare che sia libera. Le unità esistenti restano la baseline da preservare.
+
+La procedura di esecuzione non è ancora collaudata: è in corso il preflight dell’endpoint nel progetto proprietario della rete. Non sono stati creati mapping globali, attività pianificate, credenziali o nuove connessioni sulle postazioni. Questo documento conserva soltanto il metodo; nomi, percorsi, lettere e risultati aziendali rimangono nel dossier privato del progetto di rete. Riferimenti: [separazione delle mappature fra token](https://learn.microsoft.com/en-us/troubleshoot/windows-client/networking/mapped-drives-not-available-from-elevated-command), [New-SmbMapping](https://learn.microsoft.com/en-us/powershell/module/smbshare/new-smbmapping) e [principal interattivi delle attività Windows](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtaskprincipal). La scelta di un’attività temporanea è soltanto un’alternativa tecnica studiata, non una modifica eseguita.
+
+
+## 13/11/2026 - Pilota SMB via NinjaOne e ricaricamento delle sessioni agenti
+
+Il ricaricamento di un nuovo strumento MCP riguarda il processo Claude Code o Codex CLI già aperto sul progetto. Quando si torna a quel progetto si apre una nuova sessione dal launcher abituale; non occorre rifare il login di un account già autenticato. Il login personale è un passaggio distinto, necessario quando si crea un account nuovo. Il riavvio dei client non è un requisito per proseguire una conversazione che non deve usare subito il nuovo strumento.
+
+Per il censimento delle cartelle di rete via RMM si distinguono mappature persistenti, connessioni SMB attive e viste dei token. La console NinjaOne Logged-in user è elevata secondo la documentazione del prodotto e può non vedere le unità della sessione standard. Una lettura di Get-SmbConnection restituisce UserName e Credential, che possono differire: il campo Credential identifica l’account usato, senza contenere la sua password. Un risultato vuoto non certifica assenza di uso o di permessi. Nessun dato delle postazioni o dei NAS viene copiato qui; fonti e procedura operativa rimangono nel progetto proprietario.
+
+Fonti: [console NinjaOne e contesto elevato](https://www.ninjaone.com/docs/endpoint-management/scripting-and-automation/command-line-interface-cli/using-command-line-interface-cli/), [Get-SmbConnection e identità distinte](https://learn.microsoft.com/en-us/powershell/module/smbshare/get-smbconnection), [mappature e sessioni elevate](https://learn.microsoft.com/en-us/troubleshoot/windows-client/networking/mapped-drives-not-available-from-elevated-command).
+
+
+## 13/11/2026 - QuLog e HBS interrogabili e nuovi account predisposti
+
+Gli installatori del pacchetto agenti-terminale consultano ora il registro privato opzionale `%LOCALAPPDATA%/agenti-terminale/progetti.json`. Il registro contiene percorsi di progetti già autorizzati e nomi dei server attesi, senza token o identità aziendali. Vale sia per la catena del template sia per scripts/Agenti.ps1 di questa macchina. Codex riceve la fiducia per i soli progetti registrati; Claude verifica le definizioni e le abilitazioni condivise del progetto. Un conflitto di fiducia blocca l’aggiunta. Login per account e dialogo iniziale del client restano distinti. Nessuna credenziale viene copiata fra radici.
+
+Il punto d’ingresso della macchina accetta ora -Claude e -Codex come liste tipizzate indipendenti. Per esempio, scripts/Agenti.ps1 verifica -Claude 4 -Codex 4 prepara il riscontro per due nuove radici; installa con gli stessi parametri esegue la creazione e il provisioning. Questi sono esempi, non account aggiunti alla macchina durante il collaudo. Se il registro esiste serve Python 3.11 o successivo. Il registro reale è stato configurato privatamente e ne è conservata una copia di consegna in _notes/configurazione-agenti/. Le radici esistenti non sono state reinstallate con Forza.
+
+La capacità NAS di progetto comprende ora QuLog e HBS: configurazione dei log, eventi, accessi, sessioni, destinazioni, elenco dei job e dettaglio/storico tramite getter revisionati. Credenziali di lettura e manutenzione rimangono separate. Elenco completo dei job, storico completo e backup ripristinabile sono tre verifiche diverse; nomi, destinazioni, risultati e prove restano nel progetto proprietario. Nessun valore aziendale viene conservato qui.
+
+Sessantasette prove offline e 23 sottoprove passano con Ruff verde. Una prova esegue l’installatore Codex reale su profilo temporaneo senza creare auth.json; un’altra verifica la selezione degli account dal punto d’ingresso della macchina. Le mutazioni rilevano la mancata eredità del progetto e due regressioni del lettore NAS. Le definizioni MCP di progetto sono documentate da [Claude](https://code.claude.com/docs/en/mcp) e [Codex](https://developers.openai.com/codex/mcp); il registro e la sua applicazione sono capacità interne del template. Resta necessario il ripristino separato dei progetti e dei relativi segreti dopo una formattazione.
+
+
+## 13/11/2026 - Seconda credenziale NAS di manutenzione acquisita
+
+Acquisita nel progetto proprietario una seconda credenziale NAS di manutenzione, distinta da quella di lettura, e verificato il relativo catalogo HTTPS. Le definizioni di progetto già collaudate nei tre account Claude e nei tre Codex non richiedono di copiare il token nelle radici account.
+
+Il numero di funzioni può differire fra apparati: si confrontano le definizioni effettivamente restituite senza dedurre dalla sola quantità pacchetti installati, categorie scelte o diritti esercitabili. La modalità di manutenzione dichiarata dall’operatore resta distinta dalla verifica del catalogo; nessuna scrittura reale è stata collaudata. Il completamento delle credenziali rimane in corso nel progetto proprietario, che conserva valori, identità e prove. Nessun dato aziendale aggiunto qui.
+
+
+## 13/11/2026 - Connessione Claude verificata nelle tre radici account
+
+La verifica nativa del collegamento MCP di progetto risulta Connected nelle tre radici Claude Code. Copre avvio e handshake del server stdio locale, senza interrogare gli apparati. Rimane distinta dalla verifica dei dati reali già raccolti attraverso il server risolto dalle configurazioni dei tre account Codex.
+
+Un errore EPERM di uv_spawn nel sandbox indica che il processo figlio non è partito: non dimostra da solo un difetto del server o delle credenziali remote. La verifica autorizzata fuori sandbox ha funzionato con la stessa definizione. Gli hook di fine sessione sono stati disabilitati soltanto nel processo diagnostico tramite impostazione temporanea, senza cambiare la configurazione salvata o eseguire la pulizia degli store. Le sessioni già aperte devono ricaricare il server di progetto. Token di lettura e di manutenzione restano separati; una modifica reale rimane da collaudare. Dati e prove degli apparati rimangono nel progetto proprietario.
+
 Questa macchina usa piu' agenti da terminale, e finora solo uno di essi era censito. Questa scheda copre il secondo: **Codex CLI**, il client ufficiale che porta un abbonamento ChatGPT dentro il terminale, e la **configurazione del workspace** che lo governa dalla console di amministrazione.
 
 Il documento e' scritto per essere **riapplicabile su qualunque macchina Windows 11**, quindi non contiene nessun valore reale: identificativi, nomi e caselle di posta compaiono come segnaposto fra parentesi angolari e vivono nella copia locale `10_CODEX_CLI_E_WORKSPACE_OPENAI.compilata.md`, ignorata da git come le altre compilate.
@@ -648,3 +696,29 @@ Quindi la procedura per un lotto: `/model`, si sceglie il modello economico, si 
 | Setup complessivo | **sei account attivi**, tre per agente |
 | Sandbox Windows | installata alla prima sessione, variante con privilegi di amministratore |
 | `scripts\Pulisci-Codex.ps1` | **operativo**: prefissi compilati, tre guardie verificate su dati reali |
+
+## 13/11/2026 - NAS QNAP e agenti multiaccount: configurazione per progetto
+
+La macchina può rendere disponibile una fonte QNAP a tutti gli account Claude Code e Codex CLI che aprono il progetto proprietario della rete. L’identità dell’agente, selezionata da `CLAUDE_CONFIG_DIR` o `CODEX_HOME`, rimane separata dall’identità usata dal NAS. Si condividono definizione della connessione e deposito locale privato del progetto; non si copiano token nei repository o nei file globali di ogni account.
+
+La registrazione Claude vive nella `.mcp.json` del progetto, con l’abilitazione locale dei soli server scelti. Codex legge `.codex/config.toml` per un progetto fidato: se contiene percorsi della postazione si genera localmente e si ignora insieme ai backup. Un adattatore stdio comune permette ai due agenti e agli script di consumare lo stesso lettore senza esporre segreti nelle definizioni MCP. Le nuove radici account ereditano la capacità quando aprono quel progetto; le sessioni già in esecuzione vanno riaperte con i launcher previsti. La fiducia nel progetto resta distinta dall’installazione del collegamento.
+
+Ogni NAS ha URL, certificato e credenziale propri. Occorre verificare supporto dell’app sul modello e firmware, modalità di sola lettura, categorie permesse e catalogo reale. Un NAS legacy senza app compatibile resta dichiarato non coperto. Il token di un apparato non si riusa su un altro. Una connessione definita non dimostra una lettura riuscita o un inventario completo.
+
+Per il ripristino si ricostruiscono Python, launcher e radici account dal template, si recupera il progetto di rete, si rigenerano le configurazioni private e si acquisiscono nuove credenziali per ciascun NAS. Non si trasferiscono login degli agenti o chiavi NAS attraverso Git. Si controllano stato locale, collegamento HTTPS, catalogo e una lettura autorizzata separatamente per entrambi gli agenti. La rete resta proprietaria del codice, delle prove e dei valori; questo progetto conserva soltanto la ricetta astratta.
+
+Il pilota ha evidenziato un certificato autofirmato senza un nome valido per la verifica ordinaria. La soluzione circoscritta nel progetto di rete confronta l’impronta esatta prima dell’invio del token e non modifica il trust store Windows; il primo rilievo è fiducia al primo uso, da distinguere da una verifica fuori banda. Nessuna disattivazione globale di TLS. Rollback: rimuovere il solo server QNAP dalle configurazioni del progetto e revocare sul NAS la credenziale se necessario. Nessun servizio Windows, registro, firewall o account del sistema modificato.
+
+Fonti: [Claude MCP](https://code.claude.com/docs/en/mcp), [Codex MCP](https://developers.openai.com/codex/mcp), [QNAP MCP Assistant](https://www.qnap.com/en-us/software/mcp-assistant). Stato operativo e valori reali si verificano nel progetto proprietario; la ricetta non certifica che tutti gli apparati siano connessi.
+
+## 13/11/2026 - NAS multiaccount: lettura e manutenzione da script
+
+La stessa macchina può offrire l’integrazione NAS a tre radici Claude Code e tre radici Codex CLI dello stesso utente Windows, usando le definizioni del progetto proprietario. La ricetta resta generica: endpoint, nomi degli apparati, utenti, token e prove dell’infrastruttura vivono soltanto nel livello privato di quel progetto. Questa condivisione fra radici degli agenti non concede accesso ad altri utenti Windows.
+
+Per ogni NAS compatibile si preparano due credenziali: censimento in sola lettura e manutenzione con categorie limitate. I token non entrano nei file globali di ciascun account; restano in depositi privati distinti. Claude e Codex caricano lo stesso lettore di progetto. Lo script di manutenzione richiede un piano completo, la sua impronta approvata, destinazione e certificato coincidenti, lettura dello stato prima e dopo e diario scritto prima della modifica. Un timeout richiede riconciliazione e non un nuovo tentativo automatico. Il catalogo di manutenzione è stato acquisito sul pilota della nuova funzione; una modifica reale rimane da collaudare. I cataloghi non attestano da soli privilegi effettivi, copertura completa o continuità operativa.
+
+Per ricostruire la capacità si ripristinano i launcher e le radici previste dal template, si recupera il progetto proprietario, si rigenerano le configurazioni private di progetto e si acquisiscono credenziali nuove per ogni NAS. Si verificano separatamente scoperta della definizione in ogni account, handshake locale, collegamento HTTPS, catalogo e letture autorizzate. Un apparato legacy può restare nell’inventario e nel controllo degli accessi anche se non supporta MCP. Nessun riferimento all’organizzazione o a utenti e host reali appartiene a questa ricetta. Non è necessario replicare segreti in ciascuna radice account.
+
+## 13/11/2026 - Configurazione multiaccount riscontrata con letture reali
+
+La definizione NAS di progetto è stata risolta nei tre account Codex e il relativo server stdio ha acquisito dati reali di sistema, utenti e gruppi da tre apparati, tramite HTTPS. La verifica riguarda configurazione e protocollo del server, senza avviare un’altra sessione agente. La stessa definizione resta condivisa con le tre radici Claude. Credenziali di manutenzione distinte e script di piani sono disponibili; il primo collaudo di una modifica reale resta aperto. Dati, conteggi, identità, endpoint e prove restano nel progetto proprietario: questa ricetta non conserva riferimenti dell’organizzazione. Un NAS legacy escluso da MCP rimane nell’inventario per gli accessi.

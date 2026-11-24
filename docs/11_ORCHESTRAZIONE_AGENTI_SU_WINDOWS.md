@@ -1,5 +1,54 @@
 # 11 — Orchestrazione di piu' agenti da terminale su Windows 11
 
+
+## 16/11/2026 - Unita recuperate e sessione NAS corroborata, verifica senza ricollegamenti
+
+Il recupero di unità persistenti e il collaudo dei diritti sono passaggi separati. Dopo un recupero riuscito, verificare sulle connessioni correnti senza scollegarle nuovamente: il modo di verifica deve rifiutare unità non attive e non deve mai chiamare cancellazione o recupero. Corroborare dal servizio remoto identità e ora della sessione quando disponibile. Una prova di accesso alla radice non equivale a lettura/scrittura/rimozione o al rifiuto delle altre risorse. Tutti i valori e riscontri restano nel progetto proprietario; nessuna credenziale nella ricetta di macchina.
+
+
+## 16/11/2026 - Recupero delle unita salvate ma Unavailable, senza disconnessioni
+
+Una voce SMB persistente può esistere con stato Unavailable: non equivale a una connessione ripristinata. Provare la funzione di recupero con questo stato reale e verificare connessione, radice e profilo. Un ripristino fallito non va ripetuto automaticamente nel finally: registrare il codice Windows e preservare le altre unità. Separare il recupero senza disconnessioni dal collaudo positivo/negativo. Distinguere anche account del processo padre, elevazione del figlio e privilegi dell’apparato remoto: il nome utente da solo non decide quale token stia eseguendo la prova. Nessuna credenziale viene acquisita o copiata nella ricetta di macchina.
+
+
+## 16/11/2026 - Enumerazione connessioni nel logon standard dopo Accesso negato
+
+Una query di gestione SMB può essere negata nel token standard mentre la mappatura resta disponibile. Verificare realmente ogni capacità nel contesto in cui sarà usata. WNetOpenEnum con RESOURCE_CONNECTED enumera soltanto le connessioni del logon corrente: non sostituirlo con RESOURCE_GLOBALNET o con una query amministrativa. Errori o omissioni rispetto alle unità attive bloccano il collaudo; non vanno trattati come assenza di connessioni. Le prove sulle cartelle restano nel token della persona, senza elevazione; dati e policy degli apparati restano nel progetto proprietario.
+
+
+## 16/11/2026 - Corretto il preflight UNC dopo il rifiuto sulla postazione
+
+Un controllo UNC è fallito in esercizio benché la suite fosse verde: le prove usavano un elenco vuoto di mappature e saltavano il riconoscimento del server. Le prove devono includere percorsi della destinazione e di altri apparati, casi con sottocartelle e nomi simili, e verificare il motivo del rifiuto. Il parser PowerShell non verifica le regex compilate a runtime. Per il confronto degli host UNC è sufficiente separare i componenti e confrontare il nome esatto. Il rifiuto precedente alle disconnessioni va distinto da una verifica degli accessi riuscita; dopo la correzione serve ancora il rapporto della postazione.
+
+
+## 16/11/2026 - Collaudo SMB nel token standard preparato per il pilota
+
+Il collaudo SMB dalla console RMM deve usare il token standard del desktop. Prima di ricollegare si confermano file chiusi, identità, unità vive e salvate; si esclude ogni connessione di servizio o di altri apparati. WNetCancelConnection2 con flag zero mantiene il profilo e Force false rifiuta file o lavori aperti. Verificare lettura/scrittura/rimozione con file temporanei univoci e distinguere accesso negato da errori di rete. Una sequenza fallita non viene ripetuta automaticamente; mappature previste e diagnosi devono rimanere recuperabili. Il progetto proprietario conserva strumenti, policy e riscontri; qui resta soltanto la procedura astratta.
+
+
+## 16/11/2026 - Declassamento pilota e otto divieti verificati sul NAS
+
+Il primo collaudo reale del percorso nativo conferma due operazioni dipendenti con diari separati e logout: diritto personale e rimozione di una sola appartenenza. Una rilettura indipendente delle API conferma lo stato finale e la conservazione degli altri principali. Questo non chiude da solo il collaudo SMB sulla postazione: una sessione già autenticata può conservare il contesto precedente. Prima di ricollegare si coordina la chiusura dei file, si opera nel token standard della persona e si conservano connessioni degli altri apparati e identità di servizio. Nessun dato organizzativo o credenziale viene trasferito nella ricetta di macchina.
+
+
+## 16/11/2026 - Lettura nativa collaudata e sette restrizioni personali verificate
+
+Un successo puntuale dell’API non dimostra che gli altri permessi siano rimasti invariati: rileggere e confrontare l’intera lista dei principali e l’accesso guest. Un marcatore di conversione ACL in corso richiede una nuova lettura dopo il completamento, senza ripetere la scrittura. Se una modifica parziale MCP fallisce su una voce preesistente non risolvibile, non eliminarla per sbloccare il comando: conservare prima/dopo e verificare un metodo nativo che operi sul solo principale richiesto. Operazioni dipendenti hanno piani, digest e diari distinti e la seconda parte soltanto se la prima è verificata. Password effimera in console e sessioni proprie da chiudere; nessuna copia di credenziali nelle diverse radici agente. Questa è una procedura astratta: i valori e i rapporti degli apparati restano nel progetto proprietario.
+
+
+## 16/11/2026 - Lettura nativa QTS predisposta, login operativo da collaudare
+
+Per integrare API native di un apparato quando un server MCP non espone una funzione, verificare la copertura del catalogo prima di dedurla dai privilegi della credenziale. Un client diverso non aggiunge funzioni al server. Il primo collaudo autenticato deve essere una lettura: URL HTTPS esplicito e certificato verificato prima delle credenziali, nessun redirect, password chiesta in console con input nascosto e sessione propria da chiudere. Password e SID non entrano in file, argomenti o rapporti. Il progetto tecnico conserva strumenti e prove; il progetto di macchina documenta soltanto il metodo generale. Le radici multiple degli agenti non richiedono di copiare password tra account. Nessuna configurazione di un nuovo apparato o di account viene dichiarata eseguita da questa nota.
+
+
+## 16/11/2026 - Mappatura dalla console RMM nel token standard, senza desktop remoto
+
+Per creare un’unità visibile all’utente da una console RMM elevata si usa un’attività a richiesta con LogonType Interactive e RunLevel Limited. Computer, SID e sessione del processo devono corrispondere al desktop attivo; non basta eseguire il comando come SYSTEM o come amministratore dello stesso account. Nessuna password memorizzata nell’attività. Verificare lettera, mappature vive e salvate prima di cambiare rete.
+
+Il caso è stato collaudato con diciassette prove offline, tre mutazioni e una ispezione locale reale nel token standard, senza creare unità. I rapporti contengono campi primitivi selezionati, senza serializzare interi oggetti dei provider. Questa nota descrive il metodo generale e non installa strumenti o mappature su questa macchina. Nessun endpoint, account o percorso aziendale è riportato.
+
+Fonti: [contesto di sicurezza delle attività](https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks), [principal Interactive/Limited](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtaskprincipal), [mappatura SMB persistente](https://learn.microsoft.com/en-us/powershell/module/smbshare/new-smbmapping), [contesto elevato della CLI RMM](https://www.ninjaone.com/docs/endpoint-management/scripting-and-automation/command-line-interface-cli/using-command-line-interface-cli/). Il collaudo locale dimostra il passaggio al token; non sostituisce la prova della mappatura sul pilota.
+
 Questa macchina ospita due flotte di agenti da terminale, censite nella scheda 10: tre radici Claude Code e tre radici Codex, isolate e ripristinabili. Questa scheda copre il livello sopra: **quali strumenti permettono di far lavorare piu' agenti in parallelo**, quali sono compatibili con questa macchina e quali no, e come si installano.
 
 Il criterio di *quando* convenga farlo non sta qui: e' materia di disciplina di progetto e vive nel template. Qui sta solo cio' che impatta il setup di Windows.

@@ -44,6 +44,9 @@ param(
 
   [string]$Template = 'E:\template-claude-developing',
 
+  [ValidateRange(1, 99)][int[]]$Claude,
+  [ValidateRange(1, 99)][int[]]$Codex,
+
   [Parameter(ValueFromRemainingArguments = $true)]
   [string[]]$Resto
 )
@@ -80,13 +83,16 @@ if (-not (Test-Path -LiteralPath $pacchetto)) {
 
 $argomenti = @()
 if ($Resto) { $argomenti += $Resto }
+$selezione = @{}
+if ($PSBoundParameters.ContainsKey('Claude')) { $selezione['Claude'] = $Claude }
+if ($PSBoundParameters.ContainsKey('Codex')) { $selezione['Codex'] = $Codex }
 
 switch ($Azione) {
   'installa' {
-    & (Join-Path $pacchetto 'Installa-Agenti.ps1') -Template $Template -NienteDaPreservare -PrefissiImpostazioni $prefissiImpostazioni @argomenti
+    & (Join-Path $pacchetto 'Installa-Agenti.ps1') -Template $Template -NienteDaPreservare -PrefissiImpostazioni $prefissiImpostazioni @selezione @argomenti
   }
   'verifica' {
-    & (Join-Path $pacchetto 'Installa-Agenti.ps1') -Template $Template -NienteDaPreservare -PrefissiImpostazioni $prefissiImpostazioni -Verifica @argomenti
+    & (Join-Path $pacchetto 'Installa-Agenti.ps1') -Template $Template -NienteDaPreservare -PrefissiImpostazioni $prefissiImpostazioni -Verifica @selezione @argomenti
   }
   'consumo' {
     & (Join-Path $pacchetto 'Consumo-Agenti.ps1') @argomenti

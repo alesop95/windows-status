@@ -81,6 +81,7 @@ Tutti gli script del progetto, con la loro riga di sintesi presa dalla loro stes
 | `scripts/Aggiorna-Guida.ps1` | tiene GUIDA.md allineata al progetto |
 | `scripts/Allinea-BestPractice.ps1` | Allinea un PC Windows 11 al baseline di sicurezza |
 | `scripts/Campiona-Vincolata.ps1` | Campionatore di SOLA LETTURA della memoria vincolata |
+| `scripts/Canale-GPU.ps1` | Tiene aperto il canale verso il server di inferenza con GPU, a livello di macchina. |
 | `scripts/Compare-Snapshot.ps1` | Confronta due snapshot e mostra COSA E' CAMBIATO |
 | `scripts/Controlla-Salute.ps1` | Check di SOLA LETTURA di salute e stabilita' del PC |
 | `scripts/Diagnostica-PowerPoint.ps1` | Diagnosi di PowerPoint lento (cache identità Office) |

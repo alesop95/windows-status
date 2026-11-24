@@ -1,5 +1,29 @@
 # 09 — Toolchain aggiunta dagli altri progetti della macchina
 
+## 19/11/2026 - Visualizzazione del promemoria locale confermata
+
+L’attività singola con utente interattivo e privilegi limitati ha richiesto una notifica Windows all’ora prevista; l’utente conferma di averla vista. Il diario tecnico prova la richiesta, la risposta dell’utente ne conferma la visualizzazione: sono evidenze distinte. La scomparsa del pop-up non annulla il lavoro remoto e non richiede di ricreare l’attività. Il promemoria resta separato dall’esecuzione e dalle notifiche del servizio ricordato. Nessun dettaglio di progetto, account remoto o credenziale trasferito qui. **Template:** nessuna.
+
+## 18/11/2026 - Promemoria temporanei legati all’utente Windows
+
+Per un promemoria esplicitamente richiesto è stata usata un’attività Windows singola, Interactive e Limited, senza password, con StartWhenAvailable e senza WakeToRun. L’azione mostra una notifica locale; dipende dalla disponibilità del PC e della sessione dell’utente, distinta da un promemoria cloud. Non esegue connessioni o controlli sul servizio remoto.
+
+Il codice e i dettagli della singola attività appartengono al progetto che la richiede; qui resta soltanto la ricetta. La creazione di un nuovo account Claude/Codex non duplica queste attività: le radici agente dello stesso utente Windows condividono la sessione, mentre un altro utente Windows richiede una propria configurazione autorizzata. Nel ripristino non ricreare scadenze già passate. Annullamento: eliminare soltanto l’attività nominata nel registro privato del progetto proprietario, mai usare cancellazioni per prefisso. Nessun pacchetto, credenziale cloud o profilo agente installati.
+
+Riferimento: [impostazioni delle attività pianificate Microsoft](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtasksettingsset?view=windowsserver2025-ps). La registrazione è stata riletta; l’avviso è futuro e la visualizzazione non è ancora confermata.
+
+## 17/11/2026 - Microsoft 365 da PowerShell: amministrazione e identità di servizio
+
+Un PC Windows può preparare un’applicazione Microsoft 365 per un servizio che gira anche su un altro sistema operativo. Sono identità distinte: utente Windows, radice di account dell’agente, client amministrativo Microsoft Graph PowerShell e app del servizio. Il login interattivo del client serve a configurare il tenant; il servizio si autentica con la propria chiave e il certificato. Il consenso concesso per conto dell’organizzazione resta in Entra dopo la chiusura della console; ContextScope Process limita la cache locale e Disconnect non revoca il consenso. I permessi del client non sono quelli dell’app creata.
+
+Il 17/11 sono stati rilevati nel profilo corrente Microsoft.Graph.Authentication 2.39.0, Microsoft.Graph.Applications 2.39.0 ed ExchangeOnlineManagement 3.9.2; presenti anche versioni precedenti. È una lettura dei moduli già disponibili, non una nuova installazione né una verifica su tutti gli utenti Windows. Gli script di preparazione possono usare il solo modulo Authentication e richieste Graph esplicite; ExchangeOnlineManagement serve per l’autorizzazione della posta. Una nuova macchina o un altro utente Windows deve verificare i moduli nel proprio profilo e autenticarsi quando necessario.
+
+Per una notifica automatica: app e certificato propri del servizio, permesso Exchange Application Mail.Send limitato alla casella prevista, prova su casella consentita e su una esclusa, quindi ricezione effettiva. Un grant Mail.Send non limitato in Entra si somma ai ruoli Exchange e può superarne il limite. App registrata, invio autorizzato e messaggio ricevuto sono tre stati da verificare separatamente. Il certificato pubblico può essere usato dalla postazione di amministrazione; la chiave privata resta sull’host del servizio. Registrare scadenza e rinnovo nel progetto proprietario.
+
+Nel ripristino si recuperano toolchain e documentazione generiche; riferimenti del tenant, ID delle app, caselle, certificati operativi, report e autorizzazioni appartengono al progetto del servizio. Non distribuirli nelle radici di ogni agente né registrarli nel repository di macchina. La creazione di un nuovo account Claude o Codex non deve creare app cloud, copiare la chiave del servizio o ereditare automaticamente privilegi Microsoft 365. Una definizione MCP condivisa nel progetto non equivale a queste autorizzazioni. Questo aggiornamento aggiunge soltanto documentazione: nessun servizio, registro, pacchetto o profilo modificato.
+
+Fonti: [autenticazione Graph PowerShell](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands?view=graph-powershell-1.0), [RBAC applicativo Exchange](https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac), [consenso amministrativo](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent).
+
 Questa macchina ospita molti progetti su `D:\` ed `E:\`, e ciascuno installa ciò che gli serve. Il rischio, per un progetto che esiste per **ristabilire la stessa configurazione altrove**, è che quelle aggiunte non siano registrate da nessuna parte: al momento del ripristino mancherebbero componenti che nessun manifesto di pacchetti conosce, e che si riscoprono rompendosi.
 
 Questo documento è il censimento anonimo di quelle aggiunte, ricavato il **2026-08-26** dai progetti citati e **verificato sulla macchina**, non dedotto dalle loro schede. Le versioni della toolchain dell'account corrente sono state ricontrollate il **2026-10-05** con uno snapshot `-Scope User`; non rappresentano automaticamente gli altri account.
