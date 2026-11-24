@@ -64,10 +64,11 @@ Questa tabella e' generata da `Avvia.ps1`: se una voce c'e' li', e' qui.
 | `P` | PC NUOVO: percorso guidato (dove sono arrivato) | sola lettura | (interno al menu) |
 | `12` | Monitoraggio: piano della macchina centrale | sola lettura | `Monitoraggio-Centrale.ps1` |
 | `12s` | Monitoraggio: scarica e verifica Prometheus e Grafana | sola lettura | `Monitoraggio-Centrale.ps1` |
+| `13` | Scorciatoia Ctrl+Alt+Q (terminale admin): stato | sola lettura | `Scorciatoia-TerminaleAdmin.ps1` |
 | `G` | Guida: e' allineata al progetto? | sola lettura | `Aggiorna-Guida.ps1` |
 | `Ga` | Guida: riallinea GUIDA.md al progetto | sola lettura | `Aggiorna-Guida.ps1` |
 
-Voci totali: 27, di cui 7 che modificano il sistema.
+Voci totali: 28, di cui 7 che modificano il sistema.
 <!-- FINE GENERATO: menu -->
 
 ## Gli strumenti
@@ -94,6 +95,7 @@ Tutti gli script del progetto, con la loro riga di sintesi presa dalla loro stes
 | `scripts/Prima-Installazione.ps1` | prima installazione di un PC Windows nuovo |
 | `scripts/Recupera-Supporto.ps1` | Copia via un supporto rimovibile che sta cedendo |
 | `scripts/Reinstall-Software.ps1` | Reinstalla i programmi su un PC nuovo dal winget export |
+| `scripts/Scorciatoia-TerminaleAdmin.ps1` | Ctrl+Alt+Q apre PowerShell da amministratore |
 | `scripts/Snapshot-Stato.ps1` | Fotografia di SOLA LETTURA di un PC Windows 11 |
 | `scripts/censimento/hw-report.sh` | censimento hardware di UNA macchina Linux |
 | `scripts/censimento/hw-report-windows.ps1` | censimento hardware di UNA macchina Windows |

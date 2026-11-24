@@ -50,6 +50,9 @@ _notes/
 CLAUDE.local.md
 .claude/settings.local.json
 
+# Cache di Python
+__pycache__/
+
 # Estratti temporanei dei .docx (cartelle scratch)
 .tmp-docx-*/
 _notes/.tmp-docx-*/
