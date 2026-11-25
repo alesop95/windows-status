@@ -83,7 +83,16 @@
       "Le quattro voci che il paletto 4 vieta su macchina aziendale, e che qui",
       "sono deliberatamente ASSENTI: -DisableTelemetry, -DisableUpdateASAP,",
       "-DisableDeliveryOptimization, -DisableBitlockerAutoEncryption.",
-      "Su un PC personale si possono aggiungere; su uno aziendale no."
+      "Su un PC personale si possono aggiungere; su uno aziendale no. Lo stesso",
+      "vale per -DisableDriverUpdates, nuovo nel rilascio 2026.10.30, che agisce",
+      "su Windows Update.",
+      "Aggiunte con il rilascio 2026.10.30, tutte reversibili e fuori dal",
+      "paletto 4: -DisableChromeAI (nuova), -DisableStartRecommended,",
+      "-DisableStartPhoneLink, -DisableStoreSearchSuggestions, -EnableEndTask",
+      "(Termina attivita' nel menu della barra) e -HideDupliDrive, che toglie",
+      "dal riquadro di Esplora la seconda voce dei dischi esterni.",
+      "Restano fuori di proposito -DisableEdgeAds e -ForceRemoveEdge: Edge e'",
+      "nel paletto 4."
     ],
     "opzioni": [
       "-Silent",
@@ -96,6 +105,7 @@
       "-DisableRecall",
       "-DisableClickToDo",
       "-DisableEdgeAI",
+      "-DisableChromeAI",
       "-DisableNotepadAI",
       "-DisablePaintAI",
       "-DisableAISvcAutoStart",
@@ -104,9 +114,32 @@
       "-TaskbarAlignLeft",
       "-RevertContextMenu",
       "-DisableMouseAcceleration",
-      "-DisableFastStartup"
+      "-DisableFastStartup",
+      "-DisableStartRecommended",
+      "-DisableStartPhoneLink",
+      "-DisableStoreSearchSuggestions",
+      "-EnableEndTask",
+      "-HideDupliDrive"
     ]
   },
+
+  "supporti": [
+    {
+      "_commento": [
+        "Dischi esterni che devono avere sempre la stessa lettera, perche' gli",
+        "script di backup li cercano per lettera. Il passo SUPPORTI la assegna",
+        "una volta e Windows la ricorda per quel volume.",
+        "modello: confronto -like sul nome del disco (Get-Disk, FriendlyName).",
+        "seriale: facoltativo ma consigliato, distingue due dischi dello stesso",
+        "modello. E' un identificativo reale: va solo in profilo.json, che git",
+        "ignora, mai in questo esempio (paletto 7)."
+      ],
+      "nome": "disco di backup",
+      "modello": "*<modello del disco>*",
+      "seriale": "",
+      "lettera": "J"
+    }
+  ],
 
   "monitoraggio": {
     "_commento": [

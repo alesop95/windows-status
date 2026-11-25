@@ -49,6 +49,8 @@ Questa tabella e' generata da `Avvia.ps1`: se una voce c'e' li', e' qui.
 | `2f` | Diagnostica memoria vincolata (detentore e proiezione) | sola lettura | `Diagnostica-Vincolata.ps1` |
 | `2g` | Verifica rilascio vincolata (termina il sospetto) | **MODIFICA** | `Diagnostica-Vincolata.ps1` |
 | `2h` | Recupera un supporto rimovibile che sta cedendo | sola lettura | `Recupera-Supporto.ps1` |
+| `2i` | Disco USB occupato: chi lo blocca | sola lettura | `Espelli-Supporto.ps1` |
+| `2j` | Disco USB: espelli (chiude anteprime e Esplora) | **MODIFICA** | `Espelli-Supporto.ps1` |
 | `3` | Report baseline di sicurezza (divario) | sola lettura | `Allinea-BestPractice.ps1` |
 | `4` | Applica baseline di sicurezza (guidato) | **MODIFICA** | `Allinea-BestPractice.ps1` |
 | `5` | Reinstalla software da winget export | **MODIFICA** | `Reinstall-Software.ps1` |
@@ -71,7 +73,7 @@ Questa tabella e' generata da `Avvia.ps1`: se una voce c'e' li', e' qui.
 | `G` | Guida: e' allineata al progetto? | sola lettura | `Aggiorna-Guida.ps1` |
 | `Ga` | Guida: riallinea GUIDA.md al progetto | sola lettura | `Aggiorna-Guida.ps1` |
 
-Voci totali: 30, di cui 7 che modificano il sistema.
+Voci totali: 32, di cui 8 che modificano il sistema.
 <!-- FINE GENERATO: menu -->
 
 ## Gli strumenti
@@ -90,7 +92,9 @@ Tutti gli script del progetto, con la loro riga di sintesi presa dalla loro stes
 | `scripts/Controlla-Salute.ps1` | Check di SOLA LETTURA di salute e stabilita' del PC |
 | `scripts/Diagnostica-PowerPoint.ps1` | Diagnosi di PowerPoint lento (cache identità Office) |
 | `scripts/Diagnostica-Vincolata.ps1` | Chi trattiene la memoria vincolata che cresce |
+| `scripts/Espelli-Supporto.ps1` | chi tiene occupato un disco USB, e poi l'espulsione |
 | `scripts/Genera-Report.ps1` | Report HTML autoconsistente da uno snapshot |
+| `scripts/Imposta-LetteraSupporto.ps1` | lettera fissa per un disco esterno |
 | `scripts/Installa-DesignSystem.ps1` | Propaga UN design system, confezionato come pacchetto skill, a tutte le radici |
 | `scripts/Monitoraggio-Centrale.ps1` | la macchina che guarda le altre |
 | `scripts/Pianifica-Snapshot.ps1` | Snapshot periodico (opt-in) per il rilevamento drift |
@@ -144,7 +148,7 @@ Nessuno di questi vive nel repository: il manifesto `scripts\prima-installazione
 | Progetto | Licenza | Versione appuntata | Ruolo | Piattaforma |
 |---|---|---|---|---|
 | RemoveWindowsAI | MIT | commit `793e458f13` | pulizia | windows |
-| Win11Debloat | MIT | commit `f431c56159` | pulizia | windows |
+| Win11Debloat | MIT | commit `5d88bfe9ef` | pulizia | windows |
 | windows_exporter | MIT | `v0.31.9` | agente | windows |
 | Grafana Alloy | Apache-2.0 | `v1.20.1` | agente | windows |
 | Netdata | GPL-3.0 | `v2.12.1` | agente | linux |

@@ -36,6 +36,8 @@ $voci = @(
   @{ N='2f';Titolo='Diagnostica memoria vincolata (detentore e proiezione)'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Diagnostica-Vincolata.ps1') } }
   @{ N='2g';Titolo='Verifica rilascio vincolata (termina il sospetto)'; Tipo='MODIFICA';    Azione={ & (Join-Path $scripts 'Diagnostica-Vincolata.ps1') -VerificaRilascio } }
   @{ N='2h';Titolo='Recupera un supporto rimovibile che sta cedendo'; Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Recupera-Supporto.ps1') -Destinazione (Read-Host 'Cartella di destinazione') } }
+  @{ N='2i';Titolo='Disco USB occupato: chi lo blocca';              Tipo='sola lettura'; Azione={ & (Join-Path $scripts 'Espelli-Supporto.ps1') -Lettera (Read-Host 'Lettera del disco (es. J)') } }
+  @{ N='2j';Titolo='Disco USB: espelli (chiude anteprime e Esplora)'; Tipo='MODIFICA';     Azione={ & (Join-Path $scripts 'Espelli-Supporto.ps1') -Lettera (Read-Host 'Lettera del disco (es. J)') -Espelli -ChiudiInnocui } }
   @{ N='3'; Titolo='Report baseline di sicurezza (divario)';      Tipo='sola lettura';      Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') } }
   @{ N='4'; Titolo='Applica baseline di sicurezza (guidato)';     Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Allinea-BestPractice.ps1') -Apply } }
   @{ N='5'; Titolo='Reinstalla software da winget export';        Tipo='MODIFICA';          Azione={ & (Join-Path $scripts 'Reinstall-Software.ps1') } }
@@ -92,6 +94,7 @@ function Mostra-Percorso {
     Riga '?'   'RemoveWindowsAI eseguito (lo dice il controllo dei residui)'  '9c'
     Riga '?'   'Win11Debloat eseguito'                                        '9a'
     Riga $(if($netdata){'si'}else{'no'}) 'Netdata installato (opzionale, vedi docs\16)'              '9a'
+    Riga '?'   'dischi esterni con la loro lettera (passo SUPPORTI, disco collegato)' '9a'
     Riga $(if($winget){'si'}else{'no'}) 'software_winget.json disponibile per la reinstallazione'    '11 sulla macchina VECCHIA'
     Riga '?'   'baseline di sicurezza applicato'                              '3 poi 4'
     Riga '?'   'identita git, SSH, Claude e Codex, dotfiles (docs\03,04,10)'  $null

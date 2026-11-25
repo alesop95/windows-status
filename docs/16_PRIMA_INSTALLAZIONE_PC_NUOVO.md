@@ -72,7 +72,7 @@ Senza parametri non tocca niente: stampa chi e' la macchina, se e' aziendale, se
 | `-Scarica` | prende e verifica gli strumenti senza eseguirli; si puo' fare prima, anche altrove |
 | `-Applica` | esegue la catena |
 | `-Controlla` | verifica dopo: pacchetti AI, servizio `WSAIFabricSvc`, attivita' pianificate, funzionalita' Recall, piu' il confronto fra le due fotografie |
-| `-Passi <elenco>` | `SNAPSHOT`, `PARACADUTE`, `AI`, `DEBLOAT`, `MONITORAGGIO`, `CONTROLLO` |
+| `-Passi <elenco>` | `SNAPSHOT`, `PARACADUTE`, `APPLICATIVI`, `AI`, `DEBLOAT`, `MONITORAGGIO`, `LOG`, `SUPPORTI`, `CONTROLLO` |
 | `-Profilo <percorso>` | le scelte gia' prese per i tre strumenti; senza, usa `prima-installazione\profilo.json` se esiste |
 | `-OpzioniAI <...>` | argomenti passati tali e quali a RemoveWindowsAi.ps1; senza, parte la sua interfaccia |
 | `-OpzioniDebloat <...>` | argomenti passati tali e quali a Win11Debloat.ps1; senza, parte il suo menu |
@@ -93,13 +93,21 @@ copy .\scripts\prima-installazione\profilo.esempio.json .\scripts\prima-installa
 # si adatta, poi la catena lo trova da sola
 ```
 
-Il profilo contiene tre blocchi: `ai.opzioni` e `debloat.opzioni`, cioe' gli argomenti passati tali e quali ai due script, e `monitoraggio`, che decide di Netdata. I nomi dei parametri nell'esempio sono quelli **veri**, letti dal codice degli strumenti alla versione appuntata: se si aggiorna una versione si ricontrollano.
+Il profilo contiene i blocchi `ai.opzioni` e `debloat.opzioni`, cioe' gli argomenti passati tali e quali ai due script, `applicativi`, `monitoraggio` e `log`, che decidono il software di base e gli agenti di osservazione, e `supporti`, che fissa la lettera dei dischi esterni. I nomi dei parametri nell'esempio sono quelli **veri**, letti dal codice degli strumenti alla versione appuntata: se si aggiorna una versione si ricontrollano.
 
 Quello che il profilo toglie sono le interfacce. **Non toglie le conferme**: ogni passo che modifica continua a chiedere `SI`, perche' quello e' il paletto 1 e non e' una scomodita' da aggirare. Un parametro passato a mano sulla riga di comando vince sempre sul profilo.
 
 `profilo.json` e' **ignorato da git** perche' puo' contenere il token di Netdata, che e' un segreto: si versiona solo `profilo.esempio.json`, esattamente come per `baseline-eccezioni.json`.
 
 L'esempio e' tarato su un PC **non** aziendale e lascia fuori di proposito quattro opzioni di Win11Debloat - `-DisableTelemetry`, `-DisableUpdateASAP`, `-DisableDeliveryOptimization`, `-DisableBitlockerAutoEncryption` - e la voce `DisableDefenderAI` di RemoveWindowsAI: sono esattamente cio' che il paletto 4 vieta di toccare su una macchina del tenant.
+
+Dal rilascio `2026.10.30` di Win11Debloat l'esempio aggiunge sei opzioni reversibili e fuori dal paletto 4: `-DisableChromeAI`, nuova in quel rilascio, `-DisableStartRecommended`, `-DisableStartPhoneLink`, `-DisableStoreSearchSuggestions`, `-EnableEndTask` e `-HideDupliDrive`, che toglie dal riquadro di Esplora la seconda voce con cui compaiono i dischi esterni. Restano fuori `-DisableEdgeAds` e `-ForceRemoveEdge`, perche' Edge sta nel paletto 4, e la nuova `-DisableDriverUpdates`, che agisce su Windows Update. Lo stesso rilascio toglie `-DisableSearchHistory`, `-DisableSearchHighlights` e `-DisableDragTray`: un profilo locale che le usa va ripulito.
+
+## I dischi esterni: la lettera fissa
+
+Gli script di backup cercano il loro disco per lettera prima ancora che per modello e numero di serie; quello dei progetti, per esempio, lo vuole su `J:`. Su un PC nuovo Windows gli darebbe la prima lettera libera e il backup non lo troverebbe. Il passo `SUPPORTI` legge dal profilo il blocco `supporti`, un elenco di voci con `nome`, `modello`, `seriale` e `lettera`, e per ogni disco collegato assegna la lettera attesa dopo conferma. Lo fa una volta: Windows ricorda la lettera per quel volume in `HKLM\SYSTEM\MountedDevices` e la riassegna da sola ai collegamenti successivi, finche' resta libera.
+
+Il numero di serie e' facoltativo ma distingue due dischi dello stesso modello, ed e' un identificativo reale: sta solo in `profilo.json`, mai nell'esempio. Lo script non toglie mai la lettera a un altro disco: se e' occupata si ferma e lo dice. Un disco non collegato durante la catena si sistema dopo, con `.\scripts\Prima-Installazione.ps1 -Applica -Passi SUPPORTI -SenzaSnapshot`, oppure direttamente con `.\scripts\Imposta-LetteraSupporto.ps1`, che senza `-Applica` dice soltanto cosa farebbe.
 
 ## Gli applicativi: Ninite o winget
 

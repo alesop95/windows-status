@@ -82,7 +82,7 @@ $VERSIONE = '1.0'
 $Radice     = Split-Path $PSScriptRoot -Parent
 $Manifesto  = Join-Path $PSScriptRoot 'prima-installazione\strumenti.json'
 $PS51       = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$TUTTI      = @('SNAPSHOT','PARACADUTE','APPLICATIVI','AI','DEBLOAT','MONITORAGGIO','LOG','CONTROLLO')
+$TUTTI      = @('SNAPSHOT','PARACADUTE','APPLICATIVI','AI','DEBLOAT','MONITORAGGIO','LOG','SUPPORTI','CONTROLLO')
 
 if (-not $Passi -or $Passi.Count -eq 0) { $Passi = $TUTTI }
 $Passi = @($Passi | ForEach-Object { $_ -split '[,;\s]+' } |
@@ -244,7 +244,9 @@ function Mostra-Piano {
     Write-Host '                   macchina centrale (Prometheus + Grafana OSS), vedi docs/17'
     Write-Host '    7 LOG          Grafana Alloy: registro eventi verso Loki sulla centrale.'
     Write-Host '                   Spinge lui, quindi nessuna porta in ingresso su questo PC'
-    Write-Host '    8 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
+    Write-Host '    8 SUPPORTI     lettera fissa ai dischi esterni del profilo (es. il disco'
+    Write-Host '                   di backup sempre su J:), riconosciuti per modello e serie'
+    Write-Host '    9 CONTROLLO    seconda fotografia e confronto: cosa e'' cambiato davvero'
     Write-Host ''
     Write-Host "  Passi scelti: $($Passi -join ', ')"
     Write-Host ''
@@ -487,6 +489,35 @@ function Passo-Debloat {
     $p = Start-Process -FilePath $PS51 -ArgumentList $arg -Wait -PassThru -Verb RunAs
     Info "Win11Debloat terminato con codice $($p.ExitCode)"
     return $true
+}
+
+function Passo-Supporti {
+    param($Conf)
+    Titolo 'SUPPORTI - lettera fissa ai dischi esterni'
+    Info 'Gli script di backup cercano il disco per lettera: su un PC nuovo Windows'
+    Info 'gli darebbe la prima libera. Si assegna una volta, poi Windows la ricorda.'
+    $voci = @($Conf)
+    if ($voci.Count -eq 0 -or -not $voci[0]) {
+        Info 'profilo: nessuna voce in supporti, passo saltato'
+        return $false
+    }
+    $script = Join-Path $PSScriptRoot 'Imposta-LetteraSupporto.ps1'
+    $fatti = 0
+    foreach ($v in $voci) {
+        Write-Host ''
+        $base = @{ Modello = $v.modello; Lettera = $v.lettera; Nome = $v.nome }
+        if ($v.seriale) { $base.Seriale = $v.seriale }
+        $prova = & $script @base
+        if ($prova.Esito -ne 'anteprima') { continue }
+        if (-not (Conferma "Assegno $($v.lettera): a $($v.nome)?")) { Avviso "$($v.nome): saltato"; continue }
+        $r = & $script @base -Applica
+        if ($r.Esito -eq 'fatto') { $fatti++ }
+    }
+    if ($voci | Where-Object { $_ }) {
+        Info 'Un disco non collegato adesso si sistema dopo: collegalo e rilancia'
+        Info '  .\Prima-Installazione.ps1 -Applica -Passi SUPPORTI -SenzaSnapshot'
+    }
+    return ($fatti -gt 0)
 }
 
 function Passo-Monitoraggio {
@@ -768,6 +799,11 @@ if ($Passi -contains 'LOG') {
     if (Passo-Log ($Strumenti | Where-Object { $_.nome -eq 'Grafana Alloy' }) $conf) {
         $eseguiti += 'Grafana Alloy'
     }
+}
+
+if ($Passi -contains 'SUPPORTI') {
+    $conf = if ($Prof) { $Prof.supporti } else { $null }
+    if (Passo-Supporti $conf) { $eseguiti += 'lettere dei dischi esterni' }
 }
 
 if ($Passi -contains 'CONTROLLO') {
